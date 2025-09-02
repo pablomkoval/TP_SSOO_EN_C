@@ -1,4 +1,4 @@
-#include <utils/hello.h>
+#include <utils/storage.h>
 
 int main(int argc, char* argv[]) {
     saludar("storage");
