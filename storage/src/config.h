@@ -1,5 +1,6 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
+#include <utils/utils.h>
 
 extern char* puerto_escucha;
 extern bool fresh_start;

@@ -1,5 +1,6 @@
 #include <storage.h>
 
+
 t_log* logger;
 t_config* config;
 
