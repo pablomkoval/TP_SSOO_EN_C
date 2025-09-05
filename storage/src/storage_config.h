@@ -1,6 +1,9 @@
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#ifndef STORAGE_CONFIG_H_
+#define STORAGE_CONFIG_H_
 #include <utils/utils.h>
+
+t_config* iniciar_config();
+t_log* iniciar_logger(void);
 
 extern char* puerto_escucha;
 extern bool fresh_start;

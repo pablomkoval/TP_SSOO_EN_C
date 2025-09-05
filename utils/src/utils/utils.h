@@ -3,9 +3,9 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include<commons/config.h>
 #include<commons/log.h>
 #include<commons/string.h>
-#include<commons/config.h>
 #include<commons/collections/queue.h>
 #include<commons/collections/dictionary.h>
 #include<readline/readline.h>

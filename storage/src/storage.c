@@ -2,13 +2,12 @@
 
 
 t_log* logger;
-t_config* config;
+
 
 int main(int argc, char* argv[]) {
     saludar("storage");
 
-    logger = iniciar_logger;
-    config = iniciar_config;
+    logger = iniciar_logger();
 
 
     return 0;
