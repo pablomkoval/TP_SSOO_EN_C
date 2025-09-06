@@ -9,10 +9,12 @@
 #include<commons/collections/queue.h>
 #include<commons/collections/dictionary.h>
 #include<readline/readline.h>
+#include <commons/bitarray.h>
 #include<signal.h>
 #include<unistd.h>
 #include<sys/socket.h>
 #include<netdb.h>
+#include <sys/mman.h>
 
 
 typedef enum

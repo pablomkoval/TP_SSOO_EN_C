@@ -23,12 +23,12 @@ t_log* iniciar_logger(void){
 
 t_config* iniciar_config(void){
     t_config* nueva_config;
-    nueva_config = config_create("memoria.config");
+    nueva_config = config_create("storage.config");
     if(config_has_property(nueva_config, "PUERTO_ESCUCHA"))
     {
         puerto_escucha = config_get_string_value(nueva_config, "PUERTO_ESCUCHA");
         punto_montaje = config_get_string_value(nueva_config, "PUNTO_MONTAJE");
-        fresh_start = config_has_property(nueva_config, "FRESH_START");
+        fresh_start = config_get_int_value(nueva_config, "FRESH_START");
         retardo_acceso_bloque = config_get_int_value(nueva_config, "RETARDO_ACCESO_BLOQUE");
         retardo_operacion = config_get_int_value(nueva_config, "RETARDO_OPERACION");
         log_level = config_get_string_value(nueva_config, "LOG_LEVEL");
