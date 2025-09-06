@@ -10,15 +10,8 @@ int retardo_acceso_bloque;
 char* log_level;
 
 
-void retornar_config(t_config* config){
-    puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
-    punto_montaje = config_get_string_value(config, "PUNTO_MONTAJE");
-    fresh_start = config_has_property(config, "FRESH_START");
-    retardo_acceso_bloque = config_get_int_value(config, "RETARDO_ACCESO_BLOQUE");
-    retardo_operacion = config_get_int_value(config, "RETARDO_OPERACION");
-    log_level = config_get_string_value(config, "LOG_LEVEL");
-    return NULL;
-}
+
+
 
 t_log* iniciar_logger(void){
     t_log_level nivel = log_level_from_string (log_level);
@@ -33,7 +26,12 @@ t_config* iniciar_config(void){
     nueva_config = config_create("memoria.config");
     if(config_has_property(nueva_config, "PUERTO_ESCUCHA"))
     {
-        retornar_config(nueva_config);
+        puerto_escucha = config_get_string_value(nueva_config, "PUERTO_ESCUCHA");
+        punto_montaje = config_get_string_value(nueva_config, "PUNTO_MONTAJE");
+        fresh_start = config_has_property(nueva_config, "FRESH_START");
+        retardo_acceso_bloque = config_get_int_value(nueva_config, "RETARDO_ACCESO_BLOQUE");
+        retardo_operacion = config_get_int_value(nueva_config, "RETARDO_OPERACION");
+        log_level = config_get_string_value(nueva_config, "LOG_LEVEL");
     }
     return nueva_config;
 }
