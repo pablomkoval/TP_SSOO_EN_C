@@ -9,6 +9,10 @@ int retardo_operacion;
 int retardo_acceso_bloque;
 char* log_level;
 
+int fs_size;
+int block_size;
+int cant_blocks; 
+
 
 
 
@@ -32,6 +36,18 @@ t_config* iniciar_config(void){
         retardo_acceso_bloque = config_get_int_value(nueva_config, "RETARDO_ACCESO_BLOQUE");
         retardo_operacion = config_get_int_value(nueva_config, "RETARDO_OPERACION");
         log_level = config_get_string_value(nueva_config, "LOG_LEVEL");
+    }
+    return nueva_config;
+}
+
+t_config* iniciar_config_superblock(void){
+    t_config* nueva_config;
+    nueva_config = config_create("superblock.config");
+    if(config_has_property(nueva_config, "FS_SIZE"))
+    {
+        fs_size = config_get_int_value(nueva_config, "FS_SIZE");
+        block_size = config_get_int_value(nueva_config, "BLOCK_SIZE");
+        cant_blocks = fs_size / block_size;
     }
     return nueva_config;
 }

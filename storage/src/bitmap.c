@@ -5,10 +5,8 @@ t_bitarray* bitmap;
 
 void* inicializar_bitmap()
 {
-    //char* direccion_archivo = "algun_campo_config";
-    char* direccion_archivo = "bitmap.bin";
-    //int tamanio = tamanio fs / cant bloques;
-    int tamanio = 32;
+    char* direccion_archivo = string_from_format("%s%s", punto_montaje, "bitmap.bin");;
+    int tamanio = ( cant_blocks + 7 )  /  8;
 
     FILE *archivo = fopen(direccion_archivo, "a+"); //lo crea, pero si existe no lo sobreescribe
     int fildes = fileno(archivo);
