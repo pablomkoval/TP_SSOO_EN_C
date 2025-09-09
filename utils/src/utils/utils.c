@@ -1,5 +1,11 @@
 #include <utils/utils.h>
 
+
+void enviar_handshake(int socket_cliente){
+    int cod_op = HANDSHAKE;    
+    send(socket_cliente, &cod_op, sizeof(int), 0);
+}
+
 int iniciar_servidor(char* PUERTO, t_log* logger){
     int socket_servidor;
 
