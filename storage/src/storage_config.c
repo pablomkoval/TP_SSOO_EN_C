@@ -30,7 +30,7 @@ t_config* iniciar_config(void){
     nueva_config = config_create("storage.config");
     if(config_has_property(nueva_config, "PUERTO_ESCUCHA"))
     {
-        puerto_escucha = config_get_string_value(nueva_config, "PUERTO_ESCUCHA");
+        puerto_escucha = config_get_int_value(nueva_config, "PUERTO_ESCUCHA");
         punto_montaje = config_get_string_value(nueva_config, "PUNTO_MONTAJE");
         fresh_start = config_get_int_value(nueva_config, "FRESH_START");
         retardo_acceso_bloque = config_get_int_value(nueva_config, "RETARDO_ACCESO_BLOQUE");
