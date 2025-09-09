@@ -2,7 +2,7 @@
 
 t_log* iniciar_logger();
 
-char* puerto_escucha;
+int puerto_escucha;
 bool fresh_start;
 char* punto_montaje;
 int retardo_operacion;
