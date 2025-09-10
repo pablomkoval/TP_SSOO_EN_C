@@ -4,6 +4,6 @@
 #include <utils/utils.h>
 #include <storage.h>
 
-
+void* lanzar_servidor(int socket_servidor);
 
 #endif

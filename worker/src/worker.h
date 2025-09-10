@@ -15,5 +15,6 @@ extern char* path_queries;
 
 extern t_log* logger;
 
+#include <conexiones_worker.h>
 
 #endif

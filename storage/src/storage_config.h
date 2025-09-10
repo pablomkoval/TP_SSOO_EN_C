@@ -6,7 +6,7 @@ t_config* iniciar_config();
 t_log* iniciar_logger(void);
 t_config* iniciar_config_superblock();
 
-extern int puerto_escucha;
+extern char* puerto_escucha;
 extern bool fresh_start;
 extern char* punto_montaje;
 extern int retardo_operacion;

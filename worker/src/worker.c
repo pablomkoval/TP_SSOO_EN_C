@@ -15,16 +15,23 @@ char* algoritmo_reemplazo;
 char* path_queries;
 char* log_level;
 
-int main(int argc, char* argv[]) {
+int socket_storage;
+int socket_master;
+
+int main(int argc, char** argv) {
     if(argc < 3){
         printf("Faltaron argumentos para iniciar el worker");
         return EXIT_FAILURE;
     }
     char* nombre_archivo = argv[1];
-    int worker_id = atoi(argv[2]);
-    
-    config_worker = config_create(nombre_archivo);
-    logger = iniciar_logger(worker_id);
+    //int worker_id = atoi(argv[2]);
+    //config_worker = config_create(nombre_archivo);
+    //logger = iniciar_logger(worker_id);
+
+    log_debug(logger, "hola aca ando, homelo chino");
+
+    socket_storage = conectar_storage();
+    //socket_master = conectar_master(worker_id);
 
     return 0;
 }
