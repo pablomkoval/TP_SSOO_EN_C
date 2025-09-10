@@ -28,7 +28,7 @@ void* manejar_conexiones_memoria(void* socket_ptr) {
     int socket_cliente = *((int*)socket_ptr);
     free(socket_ptr);
 
-    if (recibir_handshake(socket_cliente) == 0) {
+    if (recibir_handshake(socket_cliente) == SIN_DEFINIR) {
         log_trace(logger, "Recibi el handshake de un WORKER");
 
         int* socket_worker = malloc(sizeof(int));

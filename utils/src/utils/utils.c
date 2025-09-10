@@ -1,11 +1,6 @@
 #include <utils/utils.h>
 
 
-void enviar_handshake(int socket_cliente){
-    int cod_op = HANDSHAKE;    
-    send(socket_cliente, &cod_op, sizeof(int), 0);
-}
-
 int iniciar_servidor(char* PUERTO, t_log* logger){
     int socket_servidor;
 
@@ -145,6 +140,12 @@ char* recibir_mensaje(int socket){
     char* mensaje = malloc(size_mensaje);
     recv(socket, mensaje, size_mensaje, MSG_WAITALL);
     return mensaje;
+}
+
+
+
+void enviar_handshake(int socket_servidor, int tipo_handshake){
+    send(socket_servidor, &tipo_handshake, sizeof(int), 0);
 }
 
 

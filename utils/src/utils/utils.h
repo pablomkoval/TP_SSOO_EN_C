@@ -61,7 +61,7 @@ int recibir_opcode(int socket_cliente);
 void borrar_paquete(t_paquete*);
 void* serializar(t_paquete*, int bytes_a_enviar);
 t_list* deserializar(t_buffer* buffer);
-void enviar_handshake(int socket_cliente);
+void enviar_handshake(int socket_servidor);
 int recibir_handshake(int socket_cliente);
 t_list* recibir_paquete (int socket_cliente);
 t_paquete* cambiar_opcode_paquete(t_paquete* paquete, op_code codigo);
