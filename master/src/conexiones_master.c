@@ -1,41 +1,6 @@
 #include<conexiones_master.h>
 
-void* hilo_main_escucha (void* args){
-    pthread_t hilo_cliente;
 
-    while(1){
-        int socket_cliente = esperar_cliente(socket_main_escucha);
-        int tipo_conexion = recibir_handshake(socket_cliente);
-
-
-
-        switch(tipo_conexion){
-            case WORKER:
-                log_trace(logger, "Recibi handshake de un worker");
-                int worker_id;
-                recv(socket_cliente, &worker_id, sizeof(int), MSG_WAITALL);
-                log_trace(logger, "Conexion de Worker ID: %d", worker_id);
-                t_argumentos_worker* args;
-                args->socket = socket_cliente;
-                args->id = worker_id;
-                
-                pthread_create(&hilo_cliente, NULL, manejar_servidor_worker, (void*)args);
-                pthread_detach(hilo_cliente);
-                //agregar el socket a una lista de workers
-                break;
-            case QUERY_CONTROL:
-                log_trace(logger, "Recibi handshake de un query control");
-                int* socket_cliente_ptr = malloc(sizeof(int));
-                *socket_cliente_ptr = socket_cliente;
-                //agregar el socket a una lista de qc's
-                pthread_create(&hilo_cliente, NULL, manejar_servidor_querycontrol, (void*)socket_cliente_ptr);
-                pthread_detach(hilo_cliente);
-                break;
-            case SIN_DEFINIR:
-                break;
-        }
-    }
-}
 
 void* manejar_servidor_worker(void* arg){
     int socket_cliente = *(int*)arg;
@@ -56,7 +21,7 @@ void* manejar_servidor_worker(void* arg){
                 break;
         }
     }
-
+    return NULL;
 }
 
 void* manejar_servidor_querycontrol(void* arg){
@@ -67,7 +32,7 @@ void* manejar_servidor_querycontrol(void* arg){
         int op_code = recibir_opcode(socket_cliente);
 
         if(op_code == -1){
-            log_info(logger, "Se cerro la conexiopn de un query control");
+            log_info(logger, "Se cerro la conexion de un query control");
             break;
         }
 
@@ -78,5 +43,45 @@ void* manejar_servidor_querycontrol(void* arg){
                 break;
         }
     }
+    return NULL;
+}
 
+
+
+void* funcion_main_escucha (void* socket_arg){
+    pthread_t hilo_cliente;
+    int socket_main_escucha = *(int*)socket_arg;
+
+    while(1){
+        int socket_cliente = esperar_cliente(socket_main_escucha, logger);
+        int tipo_conexion = recibir_handshake(socket_cliente);
+
+        switch(tipo_conexion){
+            case WORKER:
+                log_trace(logger, "Recibi handshake de un worker");
+                int worker_id;
+                recv(socket_cliente, &worker_id, sizeof(int), MSG_WAITALL);
+                log_trace(logger, "Conexion de Worker ID: %d", worker_id);
+                t_argumentos_worker* args;
+                args->socket = socket_cliente;
+                args->id = worker_id;
+                
+                pthread_create(&hilo_cliente, NULL, manejar_servidor_worker, (void*)args);
+                pthread_detach(hilo_cliente);
+                //agregar el socket a una lista de workers
+                break;
+
+            case QUERY_CONTROL:
+                log_trace(logger, "Recibi handshake de un query control");
+                int* socket_cliente_ptr = malloc(sizeof(int));
+                *socket_cliente_ptr = socket_cliente;
+                //agregar el socket a una lista de qc's
+                pthread_create(&hilo_cliente, NULL, manejar_servidor_querycontrol, (void*)socket_cliente_ptr);
+                pthread_detach(hilo_cliente);
+                break;
+
+            case SIN_DEFINIR:
+                break;
+        }
+    }
 }

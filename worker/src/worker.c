@@ -6,9 +6,9 @@ t_config* iniciar_config(char* archivo_config);
 t_log* iniciar_logger(int worker_id);
 
 char* ip_master;
-int puerto_master;
+char* puerto_master;
 char* ip_storage;
-int puerto_storage;
+char* puerto_storage;
 int tam_memoria;
 int retardo_memoria;
 char* algoritmo_reemplazo;
@@ -30,8 +30,8 @@ int main(int argc, char** argv) {
 
     log_debug(logger, "se iniciaron logger y config");
 
-    socket_storage = conectar_storage();
-    //socket_master = conectar_master(worker_id);
+    //socket_storage = conectar_storage();
+    socket_master = conectar_master(worker_id);
 
     log_debug(logger, "se iniciaron conexiones");
 
@@ -49,9 +49,9 @@ t_config* iniciar_config(char* archivo_config){
     }
     if(config_has_property(nueva_config, "IP_MASTER")){
         ip_master = config_get_string_value(nueva_config, "IP_MASTER");
-        puerto_master = config_get_int_value(nueva_config, "PUERTO_MASTER");
+        puerto_master = config_get_string_value(nueva_config, "PUERTO_MASTER");
         ip_storage = config_get_string_value(nueva_config, "IP_STORAGE");
-        puerto_storage = config_get_int_value(nueva_config, "PUERTO_STORAGE");
+        puerto_storage = config_get_string_value(nueva_config, "PUERTO_STORAGE");
         tam_memoria = config_get_int_value(nueva_config, "TAM_MEMORIA");
         retardo_memoria = config_get_int_value(nueva_config, "RETARDO_MEMORIA");
         algoritmo_reemplazo = config_get_string_value(nueva_config, "ALGORITMO_REEMPLAZO");
