@@ -13,9 +13,9 @@ t_log* iniciar_logger(void){
     return nuevo_logger;
 }
 
-t_config* iniciar_config(void){
+t_config* iniciar_config(char* nombre_archivo){
     t_config* nueva_config;
-    nueva_config = config_create("query_control.config");
+    nueva_config = config_create(nombre_archivo);
     if(config_has_property(nueva_config, "IP_MASTER"))
     {
         ip_master = config_get_string_value(nueva_config, "IP_MASTER");

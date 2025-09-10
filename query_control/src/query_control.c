@@ -6,9 +6,15 @@ t_config* config;
 int socket_master;
 
 int main(int argc, char* argv[]) {
-    saludar("query_control");
+    if(argc < 4){
+        printf("Faltaron argumentos para iniciar el query control");
+        return EXIT_FAILURE;
+    }
+    char* archivo_config = argv[1];
+    char* archivo_query = argv[2];
+    int prioridad = atoi(argv[3]);
 
-    config = iniciar_config();
+    config = iniciar_config(archivo_config);
     logger = iniciar_logger();
 
     socket_master = conectar_master();

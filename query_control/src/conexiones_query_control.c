@@ -13,7 +13,7 @@ void handshake_master(int socket)
     }
     if(respuesta == OK){
         log_trace(logger, "Recibi el OK de Master");
-        //send(socket, &worker_id, sizeof(int), 0);
+        //despues del ok hay que mandar un paquete con path del archivo query y prioridad
         return;
     }else {
         log_error(logger, "Fallo en el handshake con Master, recibí %d", respuesta);
@@ -33,14 +33,10 @@ int conectar_master(){
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    char* puerto_master_str = string_itoa(puerto_master);
-
-    getaddrinfo(ip_master, puerto_master_str, &hints, &server_info);
+    getaddrinfo(ip_master, puerto_master, &hints, &server_info);
     int socket_servidor = socket(server_info->ai_family,
                                 server_info->ai_socktype,
                                 server_info->ai_protocol);
-    
-    free(puerto_master_str);
 
     connect(socket_servidor, server_info->ai_addr, server_info->ai_addrlen);
     freeaddrinfo(server_info);
