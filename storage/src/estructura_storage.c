@@ -2,11 +2,15 @@
 
 t_bitarray* bitmap;
 
+int fd;
+
 void crear_directorios_y_archivos()
 {
+    fd = open(punto_montaje, O_RDONLY | O_DIRECTORY);
     crear_directorio("files");
     crear_directorio("files/initial_file");
     crear_tag("files/initial_file", "/BASE");
+    crear_bloque_logico("raiz/files/initial_file/BASE/logical_blocks", "/0000.dat");
 
     crear_directorio("physical_blocks");
 
@@ -26,6 +30,7 @@ void* inicializar_bitmap()
     if(fresh_start)
     {
         archivo = fopen(direccion_archivo, "w+"); //lo crea, pero si existe lo sobreescribe
+
     }else
     {
         archivo = fopen(direccion_archivo, "a+"); //lo crea, pero si existe no lo sobreescribe
@@ -45,19 +50,30 @@ void crear_archivo_hash_bloques()
 
     if(fresh_start)
     {
-        
+        FILE *archivo = fopen(direccion_archivo, "a+"); //lo crea, pero si existe lo sobreescribe
+        if(archivo) fclose(archivo);
     }else
     {
-        fopen(direccion_archivo, "a+"); //lo crea, pero si existe no lo sobreescribe
+        FILE *archivo = fopen(direccion_archivo, "w+"); //lo crea, pero si existe no lo sobreescribe
+        if(archivo) fclose(archivo);
     }
 
 }
 
-void crear_directorio(const char* path) {
-    mkdir(path, 0777);
+void crear_bloque_logico(char* path, char* numero)
+{
+
+    char* path_bloque = concatenar_path(path, numero);
+
+    FILE *archivo = fopen(path_bloque, "a+");
+    if(archivo) fclose(archivo);
 }
 
-void crear_tag(const char* file_path, const char* tag)
+void crear_directorio(const char* path) {
+    mkdirat(fd, path , 0777);
+}
+
+void crear_tag(char* file_path, char* tag)
 {
     char* path = concatenar_path(file_path, tag);
     crear_directorio(path);
