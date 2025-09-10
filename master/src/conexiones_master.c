@@ -62,7 +62,7 @@ void* funcion_main_escucha (void* socket_arg){
                 int worker_id;
                 recv(socket_cliente, &worker_id, sizeof(int), MSG_WAITALL);
                 log_trace(logger, "Conexion de Worker ID: %d", worker_id);
-                t_argumentos_worker* args;
+                t_argumentos_worker* args = malloc(sizeof(t_argumentos_worker));
                 args->socket = socket_cliente;
                 args->id = worker_id;
                 

@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 
     log_debug(logger, "se iniciaron logger y config");
 
-    //socket_storage = conectar_storage();
+    socket_storage = conectar_storage();
     socket_master = conectar_master(worker_id);
 
     log_debug(logger, "se iniciaron conexiones");
