@@ -16,7 +16,7 @@
 #include<netdb.h>
 #include <sys/mman.h>
 #include<pthread.h>
-
+#include <sys/stat.h>
 
 typedef enum
 {
