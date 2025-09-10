@@ -20,13 +20,21 @@
 
 typedef enum
 {
-    CERRADO,
     HANDSHAKE,
+    HANDSHAKE_WORKER,
+    HANDSHAKE_QUERY_CONTROL,
     PAQUETE,
     MENSAJE,
     OK,
     ERROR
 } op_code;
+
+typedef enum
+{
+    SIN_DEFINIR,
+    WORKER,
+    QUERY_CONTROL
+} tipo_conexion;
 
 typedef struct
 {
@@ -49,7 +57,7 @@ t_paquete* crear_paquete(void);
 void crear_buffer(t_paquete*);
 void agregar_a_paquete(t_paquete*, void* contenido, int tamanio);
 void enviar_paquete(t_paquete*, int socket, t_log* logger);
-int recibir_operacion(int socket_cliente);
+int recibir_opcode(int socket_cliente);
 void borrar_paquete(t_paquete*);
 void* serializar(t_paquete*, int bytes_a_enviar);
 t_list* deserializar(t_buffer* buffer);

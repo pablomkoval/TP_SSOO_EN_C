@@ -6,18 +6,15 @@ void* manejar_conexion_worker(void* arg) {
     int socket_cliente = *((int*)arg);
     free(arg);
     while(1) {
-        int codigo_operacion = recibir_operacion(socket_cliente);
+        int codigo_operacion = recibir_opcode(socket_cliente);
         if (codigo_operacion < 0) {
-            log_warning(logger, "CPU desconectada");
+            log_warning(logger, "Worker desconectado");
             break;
         }
 
         switch(codigo_operacion) {
-            case CERRADO:
-                log_trace(logger, "Se cerro la conexion con CPU");
-                break;
             default:
-                log_error(logger, "Operación CPU desconocida: %d", codigo_operacion);
+                log_error(logger, "Operación worker desconocida: %d", codigo_operacion);
                 break;
         }
     }
@@ -31,7 +28,7 @@ void* manejar_conexiones_memoria(void* socket_ptr) {
     int socket_cliente = *((int*)socket_ptr);
     free(socket_ptr);
 
-    int codigo_operacion = recibir_operacion(socket_cliente);
+    int codigo_operacion = recibir_opcode(socket_cliente);
     
     if (codigo_operacion == HANDSHAKE) {
         log_trace(logger, "Recibi el handshake de un WORKER");

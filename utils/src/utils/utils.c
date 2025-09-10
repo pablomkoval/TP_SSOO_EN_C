@@ -147,9 +147,32 @@ char* recibir_mensaje(int socket){
     return mensaje;
 }
 
-void enviar_handshake(int socket_cliente){
+void enviar_handshake(int socket_server){
     int cod_op = HANDSHAKE;    
-    send(socket_cliente, &cod_op, sizeof(int), 0);
+    send(socket_server, &cod_op, sizeof(int), 0);
+}
+
+int recibir_handshake(int socket_cliente){
+    int op_code = recibir_opcode(socket_cliente);
+    int respuesta = OK;
+    switch(op_code){
+        case HANDSHAKE:
+            send(socket_cliente, &respuesta, sizeof(int), 0);
+            return SIN_DEFINIR;
+            break;
+        case HANDSHAKE_QUERY_CONTROL:
+            send(socket_cliente, &respuesta, sizeof(int), 0);
+            return QUERY_CONTROL;
+            break;
+        case HANDSHAKE_WORKER:
+            send(socket_cliente, &respuesta, sizeof(int), 0);
+            return WORKER;
+            break;
+        default:
+            printf("Se esperaba un handshake pero se obtuvo el Opcode (%d)", op_code);
+            break;
+    }
+    return 0;
 }
 
 void agregar_a_paquete(t_paquete* paquete, void* contenido, int tamanio){
@@ -173,7 +196,7 @@ void enviar_paquete(t_paquete* paquete, int socket, t_log* logger){
 
     free(stream_a_enviar);
 }
-int recibir_operacion(int socket_cliente){
+int recibir_opcode(int socket_cliente){
     int codigo_operacion;
     int resultado = recv(socket_cliente, &codigo_operacion, sizeof(int), MSG_WAITALL);
     if(resultado > 0){
