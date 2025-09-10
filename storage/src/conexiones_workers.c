@@ -28,16 +28,8 @@ void* manejar_conexiones_memoria(void* socket_ptr) {
     int socket_cliente = *((int*)socket_ptr);
     free(socket_ptr);
 
-    int codigo_operacion = recibir_opcode(socket_cliente);
-    
-    if (codigo_operacion == HANDSHAKE) {
+    if (recibir_handshake(socket_cliente) == 0) {
         log_trace(logger, "Recibi el handshake de un WORKER");
-        t_paquete* paquete = crear_paquete();
-        cambiar_opcode_paquete(paquete, OK);
-
-        op_code respuesta = OK;
-        send(socket_cliente, &respuesta, sizeof(int), 0);
-    
 
         int* socket_worker = malloc(sizeof(int));
         *socket_worker = socket_cliente;
@@ -48,11 +40,7 @@ void* manejar_conexiones_memoria(void* socket_ptr) {
         pthread_detach(hilo_worker);
         return NULL;
     }
-    else {
-        log_error(logger, "Handshake invalido: %d", codigo_operacion);
-        close(socket_cliente);
-        return NULL;
-    }
+    return NULL;
 }
 
 void* manejar_servidor(void* socket_ptr) 

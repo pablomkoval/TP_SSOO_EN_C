@@ -147,10 +147,6 @@ char* recibir_mensaje(int socket){
     return mensaje;
 }
 
-void enviar_handshake(int socket_server){
-    int cod_op = HANDSHAKE;    
-    send(socket_server, &cod_op, sizeof(int), 0);
-}
 
 int recibir_handshake(int socket_cliente){
     int op_code = recibir_opcode(socket_cliente);
