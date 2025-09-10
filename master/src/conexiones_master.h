@@ -3,6 +3,11 @@
 #include <utils/utils.h>
 
 
+typedef struct 
+{
+    int socket;
+    int id;
+} t_argumentos_worker;
 
 
 #endif
