@@ -24,14 +24,18 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
     char* nombre_archivo = argv[1];
-    //int worker_id = atoi(argv[2]);
-    //config_worker = config_create(nombre_archivo);
-    //logger = iniciar_logger(worker_id);
+    int worker_id = atoi(argv[2]);
+    config_worker = iniciar_config(nombre_archivo);
+    logger = iniciar_logger(worker_id);
 
-    log_debug(logger, "hola aca ando, homelo chino");
+    log_debug(logger, "se iniciaron logger y config");
 
     socket_storage = conectar_storage();
     //socket_master = conectar_master(worker_id);
+
+    log_debug(logger, "se iniciaron conexiones");
+
+    pause();
 
     return 0;
 }
