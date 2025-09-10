@@ -11,6 +11,12 @@ void* inicializar_bitmap();
 
 void crear_archivo_hash_bloques();
 
+void crear_tag();
+
+char* concatenar_path(char* path, char* suma);
+
+void crear_directorio(const char* path);
+
 
 extern t_bitarray* bitmap;
 
