@@ -9,6 +9,13 @@ int fd;
 void crear_directorios_y_archivos()
 {
     fd = open(punto_montaje, O_RDONLY | O_DIRECTORY);
+
+    if(fresh_start)
+    {
+        formatear_volumen();
+    }
+
+    crear_bloques_fisicos();
     crear_directorio("files");
     crear_directorio("files/initial_file");
     crear_tag("files/initial_file", "/BASE");
@@ -115,4 +122,37 @@ void crear_metadata_config(char* path)
     config_set_value(metadata, "ESTADO", "WORK_IN_PROGRESS");
 
     config_save(metadata);
+}
+
+void crear_bloques_fisicos()
+{
+    for (int i = 0; i < cant_blocks; i++) {
+        
+        char* nombre_bloque = string_from_format("%sphysical_blocks/bloque%04d.dat", punto_montaje, i); //el %04d hace que tenga 4 digitos
+
+        FILE* archivo = fopen(nombre_bloque, "w+");
+        if (archivo == NULL) {
+            perror("fopen");
+            free(nombre_bloque);
+            exit(EXIT_FAILURE);
+        }
+        fclose(archivo);
+
+        free(nombre_bloque);
+    }
+}
+
+void formatear_volumen()
+{
+    char* dir_files  = concatenar_path(punto_montaje, "files");
+    char* dir_blocks = concatenar_path(punto_montaje, "physical_blocks");
+
+    char* borrar_files  = string_from_format("rm -rf '%s'", dir_files);
+    char* borrar_blocks = string_from_format("rm -rf '%s'", dir_blocks);
+
+    system(borrar_files);
+    system(borrar_blocks);
+
+    free(borrar_files);
+    free(borrar_blocks);
 }

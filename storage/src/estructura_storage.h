@@ -17,5 +17,7 @@ char* concatenar_path(char* path, char* suma);
 void crear_directorio(const char* path);
 void crear_bloque_logico(char* path, char* numero);
 void crear_metadata_config(char* archivo);
+void crear_bloques_fisicos();
+void formatear_volumen();
 
 #endif
