@@ -17,12 +17,9 @@ void crear_directorios_y_archivos()
     crear_directorio("files");
     
     crear_directorio("physical_blocks");
-    crear_directorio("files/initial_file");
     crear_bloques_fisicos();
-    crear_tag("files/initial_file", "/BASE");
+    crear_file("initial_file", "/BASE");
     crear_bloque_logico("raiz/files/initial_file/BASE/logical_blocks", "/0000.dat");
-
-    
 
     void *mapeo = inicializar_bitmap();
 
@@ -87,6 +84,14 @@ void crear_bloque_logico(char* path, char* numero)
 
 void crear_directorio(const char* path) {
     mkdirat(fd, path , 0777);
+}
+
+void crear_file(char* file, char* tag)
+{
+    char* path = concatenar_path("files/", file);
+    crear_directorio(path);
+
+    crear_tag(path, tag);
 }
 
 void crear_tag(char* file_path, char* tag)

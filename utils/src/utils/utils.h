@@ -29,13 +29,13 @@ typedef enum
     MENSAJE,
     OK,
     ERROR,
-    CREAR_FILE,
-    TRUNCAR_ARCHIVO,
-    TAG_FILE,
-    COMMIT_TAG,
-    ESCRIBIR_BLOQUE,
-    LEER_BLOQUE,
-    ELIMINAR_TAG
+    CREATE,
+    TRUNCATE,
+    TAG,
+    COMMIT,
+    WRITE,
+    READ,
+    DELETE
 
 } op_code;
 

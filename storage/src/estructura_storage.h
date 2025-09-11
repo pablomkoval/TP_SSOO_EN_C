@@ -19,5 +19,6 @@ void crear_bloque_logico(char* path, char* numero);
 void crear_metadata_config(char* archivo);
 void crear_bloques_fisicos();
 void formatear_volumen();
+void crear_file(char* file, char* tag);
 
 #endif

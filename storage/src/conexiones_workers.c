@@ -13,25 +13,25 @@ void* manejar_conexion_worker(void* arg) {
         }
 
         switch(codigo_operacion) {
-            case CREAR_FILE:
+            case CREATE:
 
                 break;
-            case TRUNCAR_ARCHIVO:
+            case TRUNCATE:
 
                 break;
-            case TAG_FILE:
+            case TAG:
 
                 break;
-            case COMMIT_TAG:
+            case COMMIT:
 
                 break;
-            case ESCRIBIR_BLOQUE:
+            case WRITE:
 
                 break;
-            case LEER_BLOQUE:
+            case READ:
 
                 break;
-            case ELIMINAR_TAG:
+            case DELETE:
 
                 break;
             default:
