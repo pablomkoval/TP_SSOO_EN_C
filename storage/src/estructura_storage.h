@@ -9,8 +9,8 @@
 #include <bitmap.h>
 
 extern int fd;
-extern t_config* metadata;
-extern t_bitarray* bitmap;
+
+
 extern t_config* hash;
 
 

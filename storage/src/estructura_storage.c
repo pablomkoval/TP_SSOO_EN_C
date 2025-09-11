@@ -1,8 +1,6 @@
 #include <estructura_storage.h>
 
-t_bitarray* bitmap;
 
-t_config* metadata;
 
 t_config* hash;
 

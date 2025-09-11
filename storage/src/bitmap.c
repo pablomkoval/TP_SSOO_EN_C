@@ -1,5 +1,7 @@
 #include <bitmap.h>
 
+t_bitarray* bitmap;
+
 void* inicializar_bitmap()
 {
     
@@ -25,4 +27,22 @@ void* inicializar_bitmap()
     log_trace(logger, "Se inicializó correctamente el BITMAP");
     
     return mapeo;
+}
+
+int buscar_bloque_libre()
+{
+    for(int i = 0; i < cant_blocks; i++)
+    {
+        if(!bitarray_test_bit (bitmap, i))
+        {
+            return i;
+        }
+    }
+    log_info(logger,"No se encontraron bloques libres para asignar");
+    return -1;
+}
+
+void asignar_bloque(int nro)
+{
+    bitarray_set_bit(bitmap, nro);
 }
