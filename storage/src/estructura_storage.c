@@ -129,8 +129,8 @@ void crear_metadata_config(char* path)
 
     metadata = config_create(config);
 
-    config_set_value(metadata, "TAMAÑO", " ");
-    config_set_value(metadata, "BLOCKS", " ");
+    config_set_value(metadata, "TAMAÑO", "0");
+    config_set_value(metadata, "BLOCKS", "[]");
     config_set_value(metadata, "ESTADO", "WORK_IN_PROGRESS");
 
     config_save(metadata);
