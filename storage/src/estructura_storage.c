@@ -2,6 +2,8 @@
 
 t_bitarray* bitmap;
 
+t_config* metadata;
+
 int fd;
 
 void crear_directorios_y_archivos()
@@ -50,11 +52,11 @@ void crear_archivo_hash_bloques()
 
     if(fresh_start)
     {
-        FILE *archivo = fopen(direccion_archivo, "a+"); //lo crea, pero si existe lo sobreescribe
+        FILE *archivo = fopen(direccion_archivo, "w+"); //lo crea, pero si existe lo sobreescribe
         if(archivo) fclose(archivo);
     }else
     {
-        FILE *archivo = fopen(direccion_archivo, "w+"); //lo crea, pero si existe no lo sobreescribe
+        FILE *archivo = fopen(direccion_archivo, "a+"); //lo crea, pero si existe no lo sobreescribe
         if(archivo) fclose(archivo);
     }
 
@@ -65,7 +67,7 @@ void crear_bloque_logico(char* path, char* numero)
 
     char* path_bloque = concatenar_path(path, numero);
 
-    FILE *archivo = fopen(path_bloque, "a+");
+    FILE *archivo = fopen(path_bloque, "w+");
     if(archivo) fclose(archivo);
 }
 
@@ -82,8 +84,11 @@ void crear_tag(char* file_path, char* tag)
     crear_directorio(path_blocks);
 
     char* path_metadata = concatenar_path(path, "/metadata.config");
-    fopen(path_metadata, "w+");
+    crear_metadata_config(path_metadata);
 
+    free(path);
+    free(path_blocks);
+    free(path_metadata);
 }
 
 char* concatenar_path(char* path, char* suma)
@@ -95,4 +100,19 @@ char* concatenar_path(char* path, char* suma)
 void asociar_hash_block()
 {
     
+}
+
+void crear_metadata_config(char* path)
+{
+    char* config = concatenar_path(punto_montaje, path);
+    FILE* archivo = fopen(config, "w+");
+    fclose(archivo);
+
+    metadata = config_create(config);
+
+    config_set_value(metadata, "TAMAÑO", " ");
+    config_set_value(metadata, "BLOCKS", " ");
+    config_set_value(metadata, "ESTADO", "WORK_IN_PROGRESS");
+
+    config_save(metadata);
 }

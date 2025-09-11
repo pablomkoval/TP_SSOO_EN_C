@@ -1,6 +1,7 @@
 #ifndef STORAGE_CONFIG_H_
 #define STORAGE_CONFIG_H_
 #include <utils/utils.h>
+#include <estructura_storage.h>
 
 t_config* iniciar_config();
 t_log* iniciar_logger(void);

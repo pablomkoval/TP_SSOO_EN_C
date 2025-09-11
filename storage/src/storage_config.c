@@ -42,7 +42,8 @@ t_config* iniciar_config(void){
 
 t_config* iniciar_config_superblock(void){
     t_config* nueva_config;
-    nueva_config = config_create("raiz/superblock.config");
+    char* config_path = concatenar_path(punto_montaje, "/superblock.config");
+    nueva_config = config_create(config_path);
     if(config_has_property(nueva_config, "FS_SIZE"))
     {
         fs_size = config_get_int_value(nueva_config, "FS_SIZE");

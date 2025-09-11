@@ -3,6 +3,7 @@
 
 #include <storage_config.h>
 #include <estructura_storage.h>
+#include <conexiones_workers.h>
 
 extern t_log* logger;
 
