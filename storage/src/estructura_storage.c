@@ -27,7 +27,7 @@ void crear_directorios_y_archivos()
 
     crear_archivo_hash_bloques();
 
-    char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0001.dat" );
+    char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0000.dat" );
 
     escribir_archivo(bloque_fisico, "hola mundo");
 
