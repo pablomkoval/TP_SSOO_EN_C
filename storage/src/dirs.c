@@ -33,3 +33,4 @@ char* concatenar_path(char* path, char* suma)
     char* direccion_archivo = string_from_format("%s/%s", path, suma);
     return direccion_archivo;
 }
+

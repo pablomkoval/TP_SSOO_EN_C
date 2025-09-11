@@ -10,8 +10,12 @@ int main(int argc, char *argv[])
     logger = iniciar_logger();
     config_superblock = iniciar_config_superblock();
 
+    
+
     crear_directorios_y_archivos();
 
+    agregar_bloque_metadata("raiz/files/initial_file/BASE/metadata.config", 7);
+ 
     int socket_worker = iniciar_servidor(puerto_escucha, logger);
     lanzar_servidor(socket_worker);
 

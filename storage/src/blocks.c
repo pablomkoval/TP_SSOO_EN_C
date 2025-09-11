@@ -92,3 +92,45 @@ int escribir_archivo(char* path, char* contenido)
     }
     return 0;
 }
+
+void eliminar_bloque_logico(char* path, int nro)
+{
+    char* aux = string_from_format("%06d.dat", nro);
+    char* bloque_logico = string_from_format("%s/%s/%s",punto_montaje, path, aux);
+
+    remove(bloque_logico);
+
+    //falta hacer logica de bitmap y chequeos 
+}
+
+
+
+void truncar_archivo(int nuevo_tamanio, char* file_tag)
+{
+    char* config_path = concatenar_path(file_tag, "metadata.config");
+
+    int tamanio_previo = cambiar_tamanio_metadata(config_path, nuevo_tamanio);
+
+    int bloque_maximo = tamanio_previo / block_size;
+
+    char* logical_blocks_path = concatenar_path(file_tag, "logical_blocks");
+
+    if(nuevo_tamanio > tamanio_previo)
+    {
+        int bloques_necesarios = nuevo_tamanio / block_size;
+
+        for(int i = bloque_maximo; i < bloques_necesarios; i++)
+        {
+            crear_bloque_logico(logical_blocks_path, i);
+        }
+    }else
+    {
+        int bloques_necesarios = (tamanio_previo - nuevo_tamanio) / block_size;
+
+        for(int i = bloque_maximo - 1; i > bloques_necesarios - 1; i--)
+        {
+            eliminar_bloque_logico(logical_blocks_path, i);
+        }
+    }
+    
+}
