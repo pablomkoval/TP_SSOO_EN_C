@@ -13,6 +13,27 @@ void* manejar_conexion_worker(void* arg) {
         }
 
         switch(codigo_operacion) {
+            case CREAR_FILE:
+
+                break;
+            case TRUNCAR_ARCHIVO:
+
+                break;
+            case TAG_FILE:
+
+                break;
+            case COMMIT_TAG:
+
+                break;
+            case ESCRIBIR_BLOQUE:
+
+                break;
+            case LEER_BLOQUE:
+
+                break;
+            case ELIMINAR_TAG:
+
+                break;
             default:
                 log_error(logger, "Operación worker desconocida: %d", codigo_operacion);
                 break;

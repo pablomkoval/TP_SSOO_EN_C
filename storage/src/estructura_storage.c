@@ -14,18 +14,21 @@ void crear_directorios_y_archivos()
     {
         formatear_volumen();
     }
-
-    crear_bloques_fisicos();
     crear_directorio("files");
+    
+    crear_directorio("physical_blocks");
     crear_directorio("files/initial_file");
+    crear_bloques_fisicos();
     crear_tag("files/initial_file", "/BASE");
     crear_bloque_logico("raiz/files/initial_file/BASE/logical_blocks", "/0000.dat");
 
-    crear_directorio("physical_blocks");
+    
 
     void *mapeo = inicializar_bitmap();
 
     crear_archivo_hash_bloques();
+
+    log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
 }
 
 void* inicializar_bitmap()
@@ -49,6 +52,8 @@ void* inicializar_bitmap()
     ftruncate(fildes, tamanio) ;
     void *mapeo = mmap(0, tamanio, PROT_WRITE | PROT_READ, MAP_SHARED, fildes, 0);
     bitmap = bitarray_create_with_mode (mapeo, tamanio, LSB_FIRST);
+
+    log_trace(logger, "Se inicializó correctamente el BITMAP");
     
     return mapeo;
 }
@@ -66,6 +71,8 @@ void crear_archivo_hash_bloques()
         FILE *archivo = fopen(direccion_archivo, "a+"); //lo crea, pero si existe no lo sobreescribe
         if(archivo) fclose(archivo);
     }
+
+    log_trace(logger, "Se inicializó correctamente el archvivo BLOCKS_HASH_INDEX");
 
 }
 
@@ -155,4 +162,6 @@ void formatear_volumen()
 
     free(borrar_files);
     free(borrar_blocks);
+
+    log_trace(logger, "Se formateó correctamente el volumen");
 }

@@ -28,7 +28,15 @@ typedef enum
     PAQUETE,
     MENSAJE,
     OK,
-    ERROR
+    ERROR,
+    CREAR_FILE,
+    TRUNCAR_ARCHIVO,
+    TAG_FILE,
+    COMMIT_TAG,
+    ESCRIBIR_BLOQUE,
+    LEER_BLOQUE,
+    ELIMINAR_TAG
+
 } op_code;
 
 typedef enum
