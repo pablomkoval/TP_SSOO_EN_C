@@ -5,7 +5,7 @@
 #include <query_control.h>
 
 
-void handshake_master(int socket);
+void handshake_master(int socket, t_paquete* paquete_query);
 int conectar_master(t_paquete* paquete_query);
 t_paquete* empaquetar_query(char* archivo_query, int prioridad);
 

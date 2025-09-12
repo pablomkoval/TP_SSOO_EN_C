@@ -2,7 +2,7 @@
 
 t_log* logger;
 t_config* config;
-t_paquete* paquete_query
+t_paquete* paquete_query;
 
 int socket_master;
 
@@ -20,7 +20,6 @@ int main(int argc, char* argv[]) {
     
     
     paquete_query = empaquetar_query(archivo_query, prioridad);
-
     socket_master = conectar_master(paquete_query);
     
     

@@ -10,6 +10,6 @@ extern char* log_level;
 
 
 t_log* iniciar_logger(void);
-t_config* iniciar_config(void);
+t_config* iniciar_config(char* nombre_archivo);
 
 #endif
