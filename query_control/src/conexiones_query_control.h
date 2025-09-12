@@ -6,8 +6,8 @@
 
 
 void handshake_master(int socket);
-int conectar_master();
-
+int conectar_master(t_paquete* paquete_query);
+t_paquete* empaquetar_query(char* archivo_query, int prioridad);
 
 
 

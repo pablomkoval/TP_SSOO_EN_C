@@ -24,7 +24,7 @@ void handshake_master(int socket)
 }
 
 //devuelve el socket del servidor master
-int conectar_master(){
+int conectar_master(t_paquete* paquete_query){
     struct addrinfo hints;
     struct addrinfo *server_info;
 
@@ -45,4 +45,10 @@ int conectar_master(){
     handshake_master(socket_servidor);
 
     return socket_servidor;
+}
+
+t_paquete* empaquetar_query(char* archivo_query, int prioridad){
+    t_paquete* nuevo_paquete = crear_paquete();
+    agregar_a_paquete(nuevo_paquete, archivo_query, );
+    
 }
