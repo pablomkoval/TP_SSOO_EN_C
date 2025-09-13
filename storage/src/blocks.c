@@ -1,5 +1,7 @@
 #include <blocks.h>
 
+t_dictionary* bloques_fisicos;
+
 void crear_bloque_logico(char* path, int numero)
 {
     char* aux = string_from_format("%06d.dat", numero);
@@ -17,26 +19,41 @@ void crear_bloques_fisicos()
         
         char* nombre_bloque = string_from_format("%s/physical_blocks/bloque%04d.dat", punto_montaje, i); //el %04d hace que tenga 4 digitos
 
+        char* nro_str = string_itoa(i);
+
+        t_block* bloque_fisico = malloc(sizeof(t_block));
+        bloque_fisico->nro = i;
+        bloque_fisico->referencias = 0;
+
+        dictionary_put(bloques_fisicos, nro_str, bloque_fisico);   //agregar mutex
+
         FILE* archivo = fopen(nombre_bloque, "w+");
         if (archivo == NULL) {
             perror("fopen");
             free(nombre_bloque);
             exit(EXIT_FAILURE);
         }
+
         fclose(archivo);
 
         free(nombre_bloque);
+        free(nro_str);
     }
+}
+
+char* obtener_hash_block(char* bloque)
+{
+    char* contenido = leer_archivo(bloque);
+    int largo= strlen(contenido);
+    char* md5 = crypto_md5(contenido, largo);
+    free(contenido);
+    return md5;
 }
 
 void asociar_hash_block(char* bloque_fisico)
 {
-    char* contenido = leer_archivo(bloque_fisico);
-    int largo= strlen(contenido);
-    char* md5 = crypto_md5(contenido, largo);
-
-    free(contenido);
-
+    char* md5 = obtener_hash_block(bloque_fisico);
+    
     int numero = obtener_numero_bloque(bloque_fisico);
 
     char* bloque = string_from_format("BLOCK_%04d", numero);
@@ -56,7 +73,8 @@ void asociar_hash_block(char* bloque_fisico)
 
 int obtener_numero_bloque(char* path) {
     const char* nombre = strrchr(path, '/');  
-    nombre++;                            
+    if (!nombre) nombre = path;               
+    else nombre++;                               
     int numero;
     sscanf(nombre, "bloque%d.dat", &numero);
     return numero;
@@ -98,12 +116,34 @@ void eliminar_bloque_logico(char* path, int nro)
     char* aux = string_from_format("%06d.dat", nro);
     char* bloque_logico = string_from_format("%s/%s/%s",punto_montaje, path, aux);
 
+    char* md5 = obtener_hash_block(bloque_logico);
+
+    int nro_bloque = obtener_bloque_por_hash(md5);
+
     remove(bloque_logico);
 
-    //falta hacer logica de bitmap y chequeos 
+    if(cant_bloques_logicos_referencian(nro_bloque) == 0)
+    {
+        bitarray_clean_bit(bitmap, 4);
+    }
 }
 
+int cant_bloques_logicos_referencian(int nro_bloque)
+{
+    char* nro_bloque_str = string_itoa(nro_bloque);
 
+    t_block* bloque_fisico = dictionary_get(bloques_fisicos, nro_bloque_str);
+
+    int referencias = bloque_fisico->referencias;
+
+    return referencias;
+}
+
+int obtener_bloque_por_hash(char* md5)
+{
+    char* bloque = config_get_string_value (hash, md5);
+    int nro_bloque = obtener_numero_bloque(bloque);
+}
 
 void truncar_archivo(int nuevo_tamanio, char* file_tag)
 {

@@ -15,6 +15,8 @@ void crear_directorios_y_archivos()
         formatear_volumen();
     }
     crear_directorio("files");
+
+    bloques_fisicos = dictionary_create();
     
     crear_directorio("physical_blocks");
     crear_bloques_fisicos();

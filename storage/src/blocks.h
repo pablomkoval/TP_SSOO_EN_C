@@ -3,11 +3,21 @@
 
 #include <storage.h>
 
+extern t_dictionary* bloques_fisicos;
+
 void asociar_hash_block(char* bloque_fisico);
 void crear_bloque_logico(char* path, int numero);
 void crear_bloques_fisicos();
 char* leer_archivo(char* path);
 int escribir_archivo(char* path, char* contenido);
 int obtener_numero_bloque(char* path);
+char* obtener_hash_block(char* bloque);
+int cant_bloques_logicos_referencian(int bloque_fisico);
+int obtener_bloque_por_hash(char* md5);
+
+typedef struct{
+    int nro;
+    int referencias;
+}t_block;
 
 #endif
