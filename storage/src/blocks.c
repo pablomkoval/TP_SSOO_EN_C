@@ -1,6 +1,5 @@
 #include <blocks.h>
 
-t_dictionary* bloques_fisicos;
 
 void crear_bloque_logico(char* path, int numero)
 {
@@ -19,25 +18,21 @@ void crear_bloques_fisicos()
         
         char* nombre_bloque = string_from_format("%s/physical_blocks/bloque%04d.dat", punto_montaje, i); //el %04d hace que tenga 4 digitos
 
-        char* nro_str = string_itoa(i);
+        int fd = open(nombre_bloque, O_RDWR | O_CREAT | O_TRUNC, 0666);
 
-        t_block* bloque_fisico = malloc(sizeof(t_block));
-        bloque_fisico->nro = i;
-        bloque_fisico->referencias = 0;
-
-        dictionary_put(bloques_fisicos, nro_str, bloque_fisico);   //agregar mutex
-
-        FILE* archivo = fopen(nombre_bloque, "w+");
-        if (archivo == NULL) {
+        if (fd == -1) {
             perror("fopen");
             free(nombre_bloque);
             exit(EXIT_FAILURE);
         }
 
-        fclose(archivo);
+        if (ftruncate(fd, block_size) == -1) 
+        { 
+            perror("ftruncate"); 
+        }
 
+        close(fd);
         free(nombre_bloque);
-        free(nro_str);
     }
 }
 
@@ -120,25 +115,29 @@ void eliminar_bloque_logico(char* path, int nro)
 
     int nro_bloque = obtener_bloque_por_hash(md5);
 
-    restar_referencia(nro_bloque);
-
     remove(bloque_logico);
 
-    if(cant_bloques_logicos_referencian(nro_bloque) == 0)
+    if(obtener_referencias_bloque(nro_bloque) <= 1)
     {
         bitarray_clean_bit(bitmap, nro_bloque);
     }
 }
 
-int cant_bloques_logicos_referencian(int nro_bloque)
+int obtener_referencias_bloque(int nro_bloque)
 {
-    char* nro_bloque_str = string_itoa(nro_bloque);
+    char* path = string_from_format("%s/physical_blocks/bloque%04d.dat",punto_montaje, nro_bloque);
 
-    t_block* bloque_fisico = dictionary_get(bloques_fisicos, nro_bloque_str);
+    struct stat st;
 
-    int referencias = bloque_fisico->referencias;
+    if (stat(path, &st) == -1) 
+    {        
+        perror("stat");
+        free(path);
+        return -1;
+    }
 
-    return referencias;
+    free(path);
+    return st.st_nlink;
 }
 
 int obtener_bloque_por_hash(char* md5)
@@ -179,27 +178,4 @@ void truncar_archivo(int nuevo_tamanio, char* file_tag)
 
     free(nuevo_tamanio_str);
     
-}
-void sumar_referencia(int nro_block)
-{
-    char* nro_bloque_str = string_itoa(nro_block);
-
-    t_block* bloque_fisico = dictionary_get(bloques_fisicos, nro_bloque_str);
-    t_block* copia = bloque_fisico;
-
-    copia->referencias++;
-
-    free(nro_bloque_str);
-}
-
-void restar_referencia(int nro_block)
-{
-    char* nro_bloque_str = string_itoa(nro_block);
-
-    t_block* bloque_fisico = dictionary_get(bloques_fisicos, nro_bloque_str);
-    t_block* copia = bloque_fisico;
-
-    copia->referencias--;
-
-    free(nro_bloque_str);
 }
