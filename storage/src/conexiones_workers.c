@@ -15,8 +15,18 @@ void* manejar_conexion_worker(void* arg) {
         switch(codigo_operacion) {
             case CREATE:
 
+                char* file;
+                char* tag;
+
+                crear_tag(file, tag);
+
                 break;
             case TRUNCATE:
+
+                int tamanio;
+                char* file_tag;
+
+                truncar_archivo(tamanio, file_tag);
 
                 break;
             case TAG:
