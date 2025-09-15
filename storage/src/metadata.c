@@ -35,7 +35,7 @@ int cambiar_tamanio_metadata(char* path, char* nuevo_tamanio)
     return tamanio_viejo;
 }
 
-int agregar_bloque_metadata(char* path, int bloque)
+void agregar_bloque_metadata(char* path, int bloque)
 {
     t_config* meta = config_create(path);
     char** blocks = config_get_array_value(meta, "BLOCKS");

@@ -2,6 +2,7 @@
 #define BLOCKS_H
 
 #include <storage.h>
+#include <metadata.h>
 
 extern t_dictionary* bloques_fisicos;
 
@@ -14,6 +15,8 @@ int obtener_numero_bloque(char* path);
 char* obtener_hash_block(char* bloque);
 int cant_bloques_logicos_referencian(int bloque_fisico);
 int obtener_bloque_por_hash(char* md5);
+void sumar_referencia(int nro_block);
+void restar_referencia(int nro_block);
 
 typedef struct{
     int nro;

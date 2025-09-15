@@ -120,11 +120,13 @@ void eliminar_bloque_logico(char* path, int nro)
 
     int nro_bloque = obtener_bloque_por_hash(md5);
 
+    restar_referencia(nro_bloque);
+
     remove(bloque_logico);
 
     if(cant_bloques_logicos_referencian(nro_bloque) == 0)
     {
-        bitarray_clean_bit(bitmap, 4);
+        bitarray_clean_bit(bitmap, nro_bloque);
     }
 }
 
@@ -142,14 +144,16 @@ int cant_bloques_logicos_referencian(int nro_bloque)
 int obtener_bloque_por_hash(char* md5)
 {
     char* bloque = config_get_string_value (hash, md5);
-    int nro_bloque = obtener_numero_bloque(bloque);
+    return obtener_numero_bloque(bloque);
 }
 
 void truncar_archivo(int nuevo_tamanio, char* file_tag)
 {
     char* config_path = concatenar_path(file_tag, "metadata.config");
 
-    int tamanio_previo = cambiar_tamanio_metadata(config_path, nuevo_tamanio);
+    char* nuevo_tamanio_str = string_itoa(nuevo_tamanio);
+
+    int tamanio_previo = cambiar_tamanio_metadata(config_path, nuevo_tamanio_str);
 
     int bloque_maximo = tamanio_previo / block_size;
 
@@ -172,5 +176,30 @@ void truncar_archivo(int nuevo_tamanio, char* file_tag)
             eliminar_bloque_logico(logical_blocks_path, i);
         }
     }
+
+    free(nuevo_tamanio_str);
     
+}
+void sumar_referencia(int nro_block)
+{
+    char* nro_bloque_str = string_itoa(nro_block);
+
+    t_block* bloque_fisico = dictionary_get(bloques_fisicos, nro_bloque_str);
+    t_block* copia = bloque_fisico;
+
+    copia->referencias++;
+
+    free(nro_bloque_str);
+}
+
+void restar_referencia(int nro_block)
+{
+    char* nro_bloque_str = string_itoa(nro_block);
+
+    t_block* bloque_fisico = dictionary_get(bloques_fisicos, nro_bloque_str);
+    t_block* copia = bloque_fisico;
+
+    copia->referencias--;
+
+    free(nro_bloque_str);
 }
