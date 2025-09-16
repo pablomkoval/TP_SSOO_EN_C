@@ -15,6 +15,8 @@ void crear_metadata_config(char* path)
     config_set_value(metadata, "ESTADO", "WORK_IN_PROGRESS");
 
     config_save(metadata);
+
+    free(config);
 }
 
 void cambiar_estado_metadata(char* path, char* nuevo_estado)

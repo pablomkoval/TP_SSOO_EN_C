@@ -10,6 +10,10 @@ void crear_bloque_logico(char* path, int numero)
     char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0000.dat");
 
     link(bloque_fisico, bloque_logico);
+
+    free(aux);
+    free(bloque_logico);
+    free(bloque_fisico);
 }
 
 void crear_bloques_fisicos()

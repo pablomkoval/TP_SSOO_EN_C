@@ -30,6 +30,8 @@ void crear_directorios_y_archivos()
     escribir_archivo(bloque_fisico, "hola mundo");
 
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
+
+    free(bloque_fisico);
 }
 
 
@@ -52,6 +54,8 @@ void crear_archivo_hash_bloques()
 
     log_trace(logger, "Se inicializó correctamente el archvivo BLOCKS_HASH_INDEX");
 
+    free(config_block_hash);
+
 }
 
 void formatear_volumen()
@@ -67,6 +71,9 @@ void formatear_volumen()
 
     free(borrar_files);
     free(borrar_blocks);
+
+    free(dir_files);
+    free(dir_blocks);
 
     log_trace(logger, "Se formateó correctamente el volumen");
 }

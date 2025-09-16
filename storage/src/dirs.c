@@ -8,8 +8,9 @@ void crear_file(char* file, char* tag)
 {
     char* path = concatenar_path("files", file);
     crear_directorio(path);
-
     crear_tag(path, tag);
+
+    free(path);
 }
 
 void crear_tag(char* file_path, char* tag)
