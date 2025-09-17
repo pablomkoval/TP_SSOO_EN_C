@@ -31,6 +31,11 @@ void crear_directorios_y_archivos()
 
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
 
+  /// pruebas
+    crear_file("jose", "hola");
+
+    copiar_tag("raiz/files/initial_file/BASE", "raiz/files/jose/hola");
+
     free(bloque_fisico);
 }
 

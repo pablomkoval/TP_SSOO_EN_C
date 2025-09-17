@@ -35,3 +35,12 @@ char* concatenar_path(char* path, char* suma)
     return direccion_archivo;
 }
 
+void copiar_tag(char* origen, char* destino)
+{
+    char* comando = string_from_format("cp -r '%s/.' '%s'", origen, destino);
+
+    system(comando);
+
+    free(comando);
+}
+
