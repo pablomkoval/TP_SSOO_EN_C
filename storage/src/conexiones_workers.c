@@ -31,6 +31,11 @@ void* manejar_conexion_worker(void* arg) {
                 break;
             case TAG:
 
+                char* origen;
+                char* destino;
+
+                copiar_tag(origen, destino);
+
                 break;
             case COMMIT:
 

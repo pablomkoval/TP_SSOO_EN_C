@@ -34,6 +34,8 @@ void crear_directorios_y_archivos()
   /// pruebas
     crear_file("jose", "hola");
 
+    crear_file("jose", "chau");
+
     copiar_tag("raiz/files/initial_file/BASE", "raiz/files/jose/hola");
 
     free(bloque_fisico);
