@@ -18,6 +18,8 @@ char* log_level;
 int socket_storage;
 int socket_master;
 
+pthread_t query_interpreter;
+
 int main(int argc, char** argv) {
     if(argc < 3){
         printf("Faltaron argumentos para iniciar el worker");

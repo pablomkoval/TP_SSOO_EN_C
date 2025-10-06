@@ -37,7 +37,10 @@ typedef enum
     COMMIT,
     WRITE,
     READ,
-    DELETE
+    DELETE,
+    FLUSH,
+    END,
+    SOLICITUD_NUEVA_QUERY
 
 } op_code;
 
