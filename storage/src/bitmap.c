@@ -25,6 +25,8 @@ void* inicializar_bitmap()
     bitmap = bitarray_create_with_mode (mapeo, tamanio, LSB_FIRST);
 
     log_trace(logger, "Se inicializó correctamente el BITMAP");
+
+    free(direccion_archivo);
     
     return mapeo;
 }

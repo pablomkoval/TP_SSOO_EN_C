@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     config_superblock = iniciar_config_superblock();
 
     crear_directorios_y_archivos();
-
+ 
     int socket_worker = iniciar_servidor(puerto_escucha, logger);
     lanzar_servidor(socket_worker);
 

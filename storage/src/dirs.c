@@ -8,8 +8,9 @@ void crear_file(char* file, char* tag)
 {
     char* path = concatenar_path("files", file);
     crear_directorio(path);
-
     crear_tag(path, tag);
+
+    free(path);
 }
 
 void crear_tag(char* file_path, char* tag)
@@ -33,3 +34,13 @@ char* concatenar_path(char* path, char* suma)
     char* direccion_archivo = string_from_format("%s/%s", path, suma);
     return direccion_archivo;
 }
+
+void copiar_tag(char* origen, char* destino)
+{
+    char* comando = string_from_format("cp -r '%s/.' '%s'", origen, destino);
+
+    system(comando);
+
+    free(comando);
+}
+

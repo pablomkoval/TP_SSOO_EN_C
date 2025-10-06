@@ -37,7 +37,9 @@ void* manejar_servidor_querycontrol(void* arg){
         }
 
         switch(op_code){
-
+            case PAQUETE:
+                log_trace(logger, "Recibi paquete de query");
+                break;
             default:
                 log_debug(logger, "Error al recibir opcode, %d", op_code);
                 break;

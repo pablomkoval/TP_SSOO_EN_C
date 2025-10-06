@@ -50,5 +50,7 @@ t_config* iniciar_config_superblock(void){
         block_size = config_get_int_value(nueva_config, "BLOCK_SIZE");
         cant_blocks = fs_size / block_size;
     }
+
+    free(config_path);
     return nueva_config;
 }
