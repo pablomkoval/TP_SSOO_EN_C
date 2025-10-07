@@ -43,15 +43,15 @@ query_t leer_query(char* nombre_archivo, int pc){
 }
 
 id_query_t parsear_query_id(char* identificador) {
-    if (strcmp(identificador, "CREATE") == 0) return CREATE;
-    if (strcmp(identificador, "TRUNCATE") == 0) return TRUNCATE;
-    if (strcmp(identificador, "WRITE") == 0) return WRITE;
-    if (strcmp(identificador, "READ") == 0) return READ;
-    if (strcmp(identificador, "TAG") == 0) return TAG;
-    if (strcmp(identificador, "COMMIT") == 0) return COMMIT;
-    if (strcmp(identificador, "FLUSH") == 0) return FLUSH;
-    if (strcmp(identificador, "DELETE") == 0) return DELETE;
-    if (strcmp(identificador, "END") == 0) return END;
+    if (strcmp(identificador, "CREATE") == 0) return CREATE_Q;
+    if (strcmp(identificador, "TRUNCATE") == 0) return TRUNCATE_Q;
+    if (strcmp(identificador, "WRITE") == 0) return WRITE_Q;
+    if (strcmp(identificador, "READ") == 0) return READ_Q;
+    if (strcmp(identificador, "TAG") == 0) return TAG_Q;
+    if (strcmp(identificador, "COMMIT") == 0) return COMMIT_Q;
+    if (strcmp(identificador, "FLUSH") == 0) return FLUSH_Q;
+    if (strcmp(identificador, "DELETE") == 0) return DELETE_Q;
+    if (strcmp(identificador, "END") == 0) return END_Q;
 
     log_error(logger, "la query que llego no es valida");
     return END;
