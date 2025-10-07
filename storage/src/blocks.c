@@ -230,3 +230,10 @@ void cambiar_hard_link(char* bloque_logico, char* bloque_fisico)
     unlink(bloque_logico);
     link(bloque_fisico, bloque_logico);
 }
+
+void escribir_bloque(char* bloque_logico, char* contenido)
+{
+    
+}
+
+/////// MANU ACORDATE DE AGREGAR LOS CASOS DE ERROR GRACIAS ATTE MANU :P
