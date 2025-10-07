@@ -63,6 +63,12 @@ int copiar_tag(char* file_origen, char* tag_origen, char* file_destino, char* ta
     return 1;
 }
 
+
+int eliminar_tag(char* path)
+{
+    
+}
+
 //CASOS ERROR
 
 bool file_tag_existe(char* path)
@@ -73,6 +79,8 @@ bool file_tag_existe(char* path)
     }
     else return 0;
 }
+
+
 
 
 
