@@ -19,28 +19,99 @@ void* ciclo_query_interpreter(){
     }
 }
 
-int leer_query(char* nombre_archivo, int pc){
+query_t leer_query(char* nombre_archivo, int pc){
     
-    //fopen(path_queries+nombre_archivo)
-    char* archivo = string_from_format("%s%s", path_queries, nombre_archivo);
-    FILE* archivo = fopen( archivo, "r");
+    char* path_completo = string_from_format("%s%s", path_queries, nombre_archivo);
+    FILE* archivo = fopen( path_completo, "r");
+    free(path_completo);
     //t_list* lista_queries = list_create();
 
-    char linea[256];
-    fgets(pc, sizeof(linea), archivo);
-    linea[strcspn(linea, "\n")] = 0; // eliminar \n
-    //list_add(lista_instrucciones, strdup(linea)); // guardar copia
+    char* buffer;
+    int linea_actual;
+
+    while(fgets(buffer, sizeof(buffer), archivo)){
+        if(linea_actual == pc){
+            buffer[strcspn(linea, "\n")] = 0; // eliminar \n
+            fclose(archivo);
+            int query = parsear_query(buffer);
+        }
+        linea_actual++;
+    }
     
     fclose(archivo);
-
-
-    //leer del archivo y guardar en query
-    int query;
-    //query = parsear_query(query_str)
-
-    return query;
+    return NULL;
 }
 
+id_query_t parsear_query_id(char* identificador) {
+    if (strcmp(identificador, "CREATE") == 0) return CREATE;
+    if (strcmp(identificador, "TRUNCATE") == 0) return TRUNCATE;
+    if (strcmp(identificador, "WRITE") == 0) return WRITE;
+    if (strcmp(identificador, "READ") == 0) return READ;
+    if (strcmp(identificador, "TAG") == 0) return TAG;
+    if (strcmp(identificador, "COMMIT") == 0) return COMMIT;
+    if (strcmp(identificador, "FLUSH") == 0) return FLUSH;
+    if (strcmp(identificador, "DELETE") == 0) return DELETE;
+    if (strcmp(identificador, "END") == 0) return END;
+
+    log_error(logger, "la query que llego no es valida");
+    return END;
+}
+
+query_t* parsear_query(char* query_raw){
+
+    query_t* query = malloc(sizeof(query_t));
+    query->file_tag = NULL;
+    query->param1 = NULL;
+    query->param2 = NULL;
+
+    char **separado = string_split(query_raw, " ");
+
+    int cant_param = 0;
+    while(separado[cant_param] != NULL) cant_param++;
+    
+    query->identificador = parsear_query_id(separado[0]);
+
+
+    // if (cant_param > 1){
+    //     //aca iria algo para separar el :
+    //     query->file_tag = strdup(separado[1]);
+    // }
+    // if (cant_param > 2){
+    //     if(query->identificador == TAG){
+    //         char* file_tag_destino = strdup(separado[2]);
+    //         query->param1 = file_tag_destino;
+    //     }else{
+    //         int* param1 = malloc(sizeof(int));
+    //         *param1 = atoi(separado[2]);
+    //         query->param1 = strdup(separado[2]);
+    //     }
+    // }
+    // if (cant_param > 3){
+    //     if(query->identificador == READ){
+    //         int* tam = malloc(sizeof(int));
+    //         *tam = atoi(separado[3]);
+    //         query->param2 = tam;
+    //     }else{
+    //         query->param2 = strdup(separado[3]);
+    //     }
+    // }
+    if(cant_param > 1){
+        char** partes = string_split(separado[1], ":");
+        query->file = strdup(partes[0]);
+        query->tag = strdup(partes[1]);
+        string_array_destroy;
+    }
+    if(cant_param > 2){
+        query->param1 = strdup(separado[2]);
+    }
+    if(cant_param > 3){
+        query->param2 = strdup(separado[3]);
+    }
+    
+    string_array_destroy(separado);
+    free(query_raw);
+    return query;
+}
 
 
 void ejecutar_query(int query){
@@ -49,39 +120,39 @@ void ejecutar_query(int query){
             log_error(logger, "No se recibio query de master: Conexion cerrada");
             break;
 
-        case CREATE:
+        case CREATE_Q:
 
             break;
         
-        case TRUNCATE:
+        case TRUNCATE_Q:
 
             break;
         
-        case WRITE:
+        case WRITE_Q:
 
             break;
 
-        case READ:
+        case READ_Q:
 
             break;
 
-        case TAG:
+        case TAG_Q:
 
             break;
             
-        case COMMIT:
+        case COMMIT_Q:
 
             break;
 
-        case FLUSH:
+        case FLUSH_Q:
 
             break;
 
-        case DELETE:
+        case DELETE_Q:
 
             break;
 
-        case END:
+        case END_Q:
 
             break;
         
