@@ -7,21 +7,50 @@ void* ciclo_query_interpreter(){
             log_error(logger, "blabla");
             return NULL;
         }
-        recibir_query();
+        t_list* archivo_recibido = recibir_paquete(socket_memoria);
+        void* nombre_elem = list_get(recibido, 0);
+        void* pc_elem = list_get(recibido, 1);
+        char* nombre_archivo = strdup((char*)nombre_elem);
+        int pc = *((int*)pc_elem);
+
+        leer_query();
         //chequear interrupcion 
+        list_destroy_and_destroy_elements(recibido, free);
     }
 }
 
-void recibir_query(){
-    int opcode = recibir_opcode(socket_master);
+int leer_query(char* nombre_archivo, int pc){
+    
+    //fopen(path_queries+nombre_archivo)
+    char* archivo = string_from_format("%s%s", path_queries, nombre_archivo);
+    FILE* archivo = fopen( archivo, "r");
+    //t_list* lista_queries = list_create();
 
-    switch(opcode){
+    char linea[256];
+    fgets(pc, sizeof(linea), archivo);
+    linea[strcspn(linea, "\n")] = 0; // eliminar \n
+    //list_add(lista_instrucciones, strdup(linea)); // guardar copia
+    
+    fclose(archivo);
+
+
+    //leer del archivo y guardar en query
+    int query;
+    //query = parsear_query(query_str)
+
+    return query;
+}
+
+
+
+void ejecutar_query(int query){
+    switch(query){
         case -1:
             log_error(logger, "No se recibio query de master: Conexion cerrada");
             break;
 
         case CREATE:
-            
+
             break;
         
         case TRUNCATE:

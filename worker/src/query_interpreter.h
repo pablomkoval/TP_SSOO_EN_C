@@ -4,6 +4,6 @@
 #include <utils/utils.h>
 #include <worker.h>
 
-void recibir_query();
+void leer_query();
 
 #endif
