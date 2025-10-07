@@ -18,7 +18,7 @@ char* log_level;
 int socket_storage;
 int socket_master;
 
-pthread_t query_interpreter;
+pthread_t thread_query_interpreter;
 
 int main(int argc, char** argv) {
     if(argc < 3){
@@ -36,6 +36,12 @@ int main(int argc, char** argv) {
     socket_master = conectar_master(worker_id);
 
     log_debug(logger, "se iniciaron conexiones");
+
+    //pthread_create(&thread_query_interpreter, NULL, ciclo_query_interpreter, NULL);
+    //pthread_detach(thread_query_interpreter);
+
+    query_t* query_a_ejecutar = leer_query("query1", 0);
+    ejecutar_query(query_a_ejecutar);
 
     pause();
 

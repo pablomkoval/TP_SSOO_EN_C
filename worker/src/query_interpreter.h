@@ -23,6 +23,10 @@ typedef struct {
     char* param2;
 } query_t;
 
-query_t leer_query();
+
+query_t* parsear_query(char* query_raw);
+query_t* leer_query();
+void ejecutar_query(query_t* query);
+void* ciclo_query_interpreter();
 
 #endif

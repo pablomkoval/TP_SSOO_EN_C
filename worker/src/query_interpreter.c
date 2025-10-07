@@ -7,39 +7,53 @@ void* ciclo_query_interpreter(){
             log_error(logger, "blabla");
             return NULL;
         }
-        t_list* archivo_recibido = recibir_paquete(socket_memoria);
+        t_list* recibido = recibir_paquete(socket_storage);
         void* nombre_elem = list_get(recibido, 0);
         void* pc_elem = list_get(recibido, 1);
         char* nombre_archivo = strdup((char*)nombre_elem);
         int pc = *((int*)pc_elem);
 
-        leer_query();
+        query_t* query_a_ejecutar = leer_query(nombre_archivo, pc);
+        ejecutar_query(query_a_ejecutar);
         //chequear interrupcion 
         list_destroy_and_destroy_elements(recibido, free);
     }
+    return NULL;
 }
 
-query_t leer_query(char* nombre_archivo, int pc){
+query_t* leer_query(char* nombre_archivo, int pc){
     
     char* path_completo = string_from_format("%s%s", path_queries, nombre_archivo);
+    log_debug(logger, "El Archivo queda (%s)", path_completo);
     FILE* archivo = fopen( path_completo, "r");
     free(path_completo);
     //t_list* lista_queries = list_create();
 
-    char* buffer;
-    int linea_actual;
+    if (!archivo) 
+    {
+        log_error(logger, "No se logro abrir el archivo");
+        query_t* vacio = {0};
+        return vacio;
+    }
+
+    char buffer[256];
+    int linea_actual = 0;
+    query_t* query = NULL;
 
     while(fgets(buffer, sizeof(buffer), archivo)){
+        log_debug(logger, "linea actual (%d), pc (%d)", linea_actual, pc);
         if(linea_actual == pc){
-            buffer[strcspn(linea, "\n")] = 0; // eliminar \n
+            buffer[strcspn(buffer, "\n")] = 0; // eliminar \n
+            query = parsear_query(buffer);
             fclose(archivo);
-            int query = parsear_query(buffer);
+            return query;
         }
         linea_actual++;
     }
     
+    log_debug(logger, "No paso por la linea del pc %d", pc);
     fclose(archivo);
-    return NULL;
+    return query;
 }
 
 id_query_t parsear_query_id(char* identificador) {
@@ -60,7 +74,8 @@ id_query_t parsear_query_id(char* identificador) {
 query_t* parsear_query(char* query_raw){
 
     query_t* query = malloc(sizeof(query_t));
-    query->file_tag = NULL;
+    query->file = NULL;
+    query->tag = NULL;
     query->param1 = NULL;
     query->param2 = NULL;
 
@@ -70,7 +85,6 @@ query_t* parsear_query(char* query_raw){
     while(separado[cant_param] != NULL) cant_param++;
     
     query->identificador = parsear_query_id(separado[0]);
-
 
     // if (cant_param > 1){
     //     //aca iria algo para separar el :
@@ -95,11 +109,12 @@ query_t* parsear_query(char* query_raw){
     //         query->param2 = strdup(separado[3]);
     //     }
     // }
+    
     if(cant_param > 1){
         char** partes = string_split(separado[1], ":");
         query->file = strdup(partes[0]);
         query->tag = strdup(partes[1]);
-        string_array_destroy;
+        string_array_destroy(partes);
     }
     if(cant_param > 2){
         query->param1 = strdup(separado[2]);
@@ -109,51 +124,50 @@ query_t* parsear_query(char* query_raw){
     }
     
     string_array_destroy(separado);
-    free(query_raw);
     return query;
 }
 
 
-void ejecutar_query(int query){
-    switch(query){
+void ejecutar_query(query_t* query){
+    switch(query->identificador){
         case -1:
             log_error(logger, "No se recibio query de master: Conexion cerrada");
             break;
 
         case CREATE_Q:
-
+            log_info(logger, "se quiso ejecutar un create");
             break;
         
         case TRUNCATE_Q:
-
+            log_info(logger, "se quiso ejecutar un ");
             break;
         
         case WRITE_Q:
-
+            log_info(logger, "se quiso ejecutar un ");
             break;
 
         case READ_Q:
-
+            log_info(logger, "se quiso ejecutar un ");
             break;
 
         case TAG_Q:
-
+            log_info(logger, "se quiso ejecutar un ");
             break;
             
         case COMMIT_Q:
-
+            log_info(logger, "se quiso ejecutar un ");
             break;
 
         case FLUSH_Q:
-
+            log_info(logger, "se quiso ejecutar un ");
             break;
 
         case DELETE_Q:
-
+            log_info(logger, "se quiso ejecutar un ");
             break;
 
         case END_Q:
-
+            log_info(logger, "se quiso ejecutar un ");
             break;
         
         default:
