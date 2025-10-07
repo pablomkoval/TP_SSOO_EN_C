@@ -45,6 +45,13 @@ void* manejar_conexion_worker(void* arg) {
                 break;
             case READ:
 
+                char* data;
+                char* path;
+                int offset;
+                int size;
+
+                leer_bloque(path, offset, size, &data);
+
                 break;
             case DELETE:
 

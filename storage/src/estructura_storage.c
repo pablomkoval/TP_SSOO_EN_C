@@ -27,7 +27,7 @@ void crear_directorios_y_archivos()
 
     char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0000.dat" );
 
-    escribir_archivo(bloque_fisico, "hola mundo");
+    escribir_archivo(bloque_fisico, "hola mundo", 10);
 
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
 

@@ -13,6 +13,7 @@ void agregar_bloque_metadata(char* path, int bloque);
 char* estado_metadata(char* path);
 int cant_bloques_logicos(char* path);
 int commmit_file(char* path);
+bool escritura_no_permitida(char* file_tag);
 
 
 #endif

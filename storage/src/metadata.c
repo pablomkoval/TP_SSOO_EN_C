@@ -19,12 +19,14 @@ void crear_metadata_config(char* path)
     free(config);
 }
 
-void cambiar_estado_metadata(char* path, char* nuevo_estado)
+void cambiar_estado_metadata(char *path, char *nuevo_estado)
 {
-    t_config* meta = config_create(path);
+    char* path_config = concatenar_path(path,"metadata.config");
+    t_config* meta = config_create(path_config);
     config_set_value (meta, "ESTADO", nuevo_estado);
     config_save(meta);
     config_destroy(meta);
+    free(path_config);
 }
 
 int cambiar_tamanio_metadata(char* path, char* nuevo_tamanio)
@@ -132,7 +134,12 @@ int commmit_file(char* path)
             asociar_hash_block(bloque_fisico);
         }
     }
+    return 1;
+}
+
+bool escritura_no_permitida(char* file_tag)
+{
+    if(strcmp(estado_metadata(file_tag), "COMMITED") == 1);
 
     return 1;
-
 }
