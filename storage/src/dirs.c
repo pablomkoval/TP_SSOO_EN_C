@@ -4,13 +4,18 @@ void crear_directorio(const char* path) {
     mkdirat(fd, path, 0777);
 }
 
-void crear_file(char* file, char* tag)
+int crear_file(char* file, char* tag)
 {
     char* path = concatenar_path("files", file);
+
+    if(file_tag_existe(file)) return -1;
+
     crear_directorio(path);
     crear_tag(path, tag);
 
     free(path);
+    
+    return 1;
 }
 
 void crear_tag(char* file_path, char* tag)
@@ -35,14 +40,41 @@ char* concatenar_path(char* path, char* suma)
     return direccion_archivo;
 }
 
-void copiar_tag(char* origen, char* destino)
+int copiar_tag(char* file_origen, char* tag_origen, char* file_destino, char* tag_destino)
 {
-    char* comando = string_from_format("cp -r '%s/.' '%s'", origen, destino);
+    
+
+    char* path_origen = string_from_format("%s/files/%s/%s", punto_montaje, file_origen, tag_origen);
+
+    char* path_destino = string_from_format("%s/files/%s/%s", punto_montaje, file_destino, tag_destino);
+    
+    if(file_tag_existe(path_destino)) return -1;
+
+    crear_file(file_destino, tag_destino);
+
+    char* comando = string_from_format("cp -r '%s/.' '%s'", path_origen, path_destino);
 
     system(comando);
 
     free(comando);
 
-    cambiar_estado_metadata(destino, "WORK_IN_PROGRESS");
+    cambiar_estado_metadata(path_destino, "WORK_IN_PROGRESS");
+
+    return 1;
 }
+
+//CASOS ERROR
+
+bool file_tag_existe(char* path)
+{
+    if(access(path, F_OK) == 0)
+    {
+        return 1;
+    }
+    else return 0;
+}
+
+
+
+
 

@@ -52,7 +52,7 @@ void crear_bloques_fisicos()
 
 char* obtener_hash_block(char* bloque)
 {
-    char* contenido = leer_archivo(bloque);
+    char* contenido = leer_archivo(bloque, 0, block_size);
     int largo= strlen(contenido);
     char* md5 = crypto_md5(contenido, largo);
     free(contenido);
@@ -94,34 +94,32 @@ int obtener_numero_bloque(char* path) {
     return numero;
 }
 
-char* leer_archivo(char* path)
-{
-    FILE* f = fopen(path, "r");
 
-    fseek(f, 0, SEEK_END);
-    long size = ftell(f);
-    rewind(f);
+char* leer_archivo(char* path, int offset, int cantidad) {
+    FILE* f = fopen(path, "r");        
 
-    char* buffer = malloc(size + 1);
+    fseek(f, offset, SEEK_SET);
 
-    size_t leidos = fread(buffer, 1, size, f);
-    buffer[leidos] = '\0';  
+    char* buffer = malloc(cantidad + 1);
+
+    size_t leidos = fread(buffer, 1, cantidad, f);
+
+    buffer[leidos] = '\0';
 
     fclose(f);
-    return buffer;
+    return buffer;          
 }
 
-int escribir_archivo(char* path, char* contenido)
+int escribir_archivo(char* path, char* contenido, int offset)
 {
     FILE* f = fopen(path, "w");
 
-    size_t escritos = fwrite(contenido, 1, strlen(contenido), f);
+    fseek(f, offset, SEEK_SET);
+
+    fwrite(contenido, 1, strlen(contenido), f);
+
     fclose(f);
 
-    if (escritos < strlen(contenido)) {
-        fprintf(stderr, "Error: no se escribieron todos los bytes\n");
-        return -1;
-    }
     return 0;
 }
 
@@ -191,8 +189,10 @@ int obtener_bloque_por_hash(char* md5)
 
 }
 
-void truncar_archivo(int nuevo_tamanio, char* file_tag)
+int truncar_archivo(int nuevo_tamanio, char* file_tag)
 {
+    if(!file_tag_existe(file_tag)) return -2;
+
     char* config_path = concatenar_path(file_tag, "metadata.config");
 
     char* nuevo_tamanio_str = string_itoa(nuevo_tamanio);
@@ -222,11 +222,65 @@ void truncar_archivo(int nuevo_tamanio, char* file_tag)
     }
 
     free(nuevo_tamanio_str);
+
+    return 1;
     
 }
+
+
 
 void cambiar_hard_link(char* bloque_logico, char* bloque_fisico)
 {
     unlink(bloque_logico);
     link(bloque_fisico, bloque_logico);
+}
+
+int escribir_bloque(char* path, int offset, char* contenido)
+{
+    int tamanio = strlen(contenido);
+
+    if(!file_tag_existe(path)) return -2;
+    if(escritura_no_permitida(path)) return -4;
+    if(operacion_fuera_de_rango(offset, tamanio, path)) return -5;
+
+    int nro_bloque = offset/block_size;
+    int offset_interno = offset - (nro_bloque * block_size);
+
+    char* aux = string_from_format("%06d.dat", nro_bloque);
+    char* bloque_logico = string_from_format("%s/%s/%s",punto_montaje, path, aux);
+
+    
+
+    escribir_archivo(path, contenido, offset_interno);
+
+    return 1;
+}
+
+/////// MANU ACORDATE DE AGREGAR LOS CASOS DE ERROR GRACIAS ATTE MANU :P
+int leer_bloque(char* path, int offset, int tamanio, char** buffer)
+{
+    if(!file_tag_existe(path)) return -2;
+    if(operacion_fuera_de_rango(offset, tamanio, path)) return -5;
+
+    int nro_bloque = offset/block_size;
+    int offset_interno = offset - (nro_bloque * block_size);
+
+    char* aux = string_from_format("%06d.dat", nro_bloque);
+    char* bloque_logico = string_from_format("%s/%s/%s",punto_montaje, path, aux);
+
+    char* contenido = leer_archivo(path, offset_interno, tamanio);
+
+    *buffer = contenido;
+
+    return 1;
+
+}
+
+
+bool operacion_fuera_de_rango(int offset, int tamanio, char* path)
+{
+    t_config* meta = config_create(path);
+    int tamanio_tag = config_get_int_value(meta, "TAMAÑO");
+
+    if((offset + tamanio) > tamanio_tag) return true;
 }
