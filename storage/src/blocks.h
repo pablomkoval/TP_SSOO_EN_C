@@ -19,6 +19,7 @@ void truncar_archivo(int nuevo_tamanio, char* file_tag);
 char* obtener_bloque_fisico_asociado(char* bloque_logico);
 void cambiar_hard_link(char* bloque_logico, char* bloque_fisico);
 char* obtener_bloque_logico(char* path, int numero);
+char* bloque_fisico_por_nro(int nro);
 
 typedef struct{
     int nro;
