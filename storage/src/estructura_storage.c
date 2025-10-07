@@ -32,9 +32,9 @@ void crear_directorios_y_archivos()
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
 
   /// pruebas
-    //crear_file("jose", "hola");
+    crear_file("jose", "hola");
 
-    //crear_file("jose", "chau");
+    crear_file("jose", "chau");
 
     copiar_tag("raiz/files/initial_file/BASE", "raiz/files/jose/hola");
 

@@ -110,10 +110,24 @@ void commmit_file(char* path)
     for(int i = 0; i < cant; i++)
     {
         char* bloque_logico = obtener_bloque_logico(path, i);
-        obtener_hash_block(bloque_logico);
-        obtener_bloque_fisico_asociado(bloque_logico);
-        
-        
+        char* md5 = obtener_hash_block(bloque_logico);
+        char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
+        int nro_bloque = obtener_bloque_por_hash(md5);
+        char* bloque_fisico_nuevo = bloque_fisico_por_nro(nro_bloque);
+
+        if(nro_bloque != -1)  // obtener bloque por hash devuelve -1 si no hay ninguno :p
+        {
+            cambiar_hard_link(bloque_logico, bloque_fisico_nuevo);
+
+            if(obtener_referencias_bloque(nro_bloque) <= 1)
+            {
+                bitarray_clean_bit(bitmap, nro_bloque);
+            }
+            
+        }else
+        {
+            asociar_hash_block(bloque_fisico);
+        }
     }
 
 }

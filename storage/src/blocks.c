@@ -21,11 +21,16 @@ char* obtener_bloque_logico(char* path, int numero)
     return bloque_logico;
 }
 
+char* bloque_fisico_por_nro(int nro)
+{
+    return string_from_format("%s/physical_blocks/bloque%04d.dat", punto_montaje, nro);
+}
+
 void crear_bloques_fisicos()
 {
     for (int i = 0; i < cant_blocks; i++) {
         
-        char* nombre_bloque = string_from_format("%s/physical_blocks/bloque%04d.dat", punto_montaje, i); //el %04d hace que tenga 4 digitos
+        char* nombre_bloque = bloque_fisico_por_nro(i);
 
         int fd = open(nombre_bloque, O_RDWR | O_CREAT | O_TRUNC, 0666);
 
@@ -75,7 +80,7 @@ void asociar_hash_block(char* bloque_fisico)
     free(bloque);
 }
 
-int obtener_numero_bloque_fisico(char* path) {
+int obtener_numero_bloque(char* path) {
     const char* nombre = strrchr(path, '/');  
 
     if (!nombre) 
@@ -178,8 +183,12 @@ int obtener_referencias_bloque(int nro_bloque)
 
 int obtener_bloque_por_hash(char* md5)
 {
-    char* bloque = config_get_string_value (hash, md5);
-    return obtener_numero_bloque(bloque);
+    if(config_has_property (hash, md5))
+    {
+        char* bloque = config_get_string_value (hash, md5);
+        return obtener_numero_bloque(bloque);
+    }else return -1;
+
 }
 
 void truncar_archivo(int nuevo_tamanio, char* file_tag)
