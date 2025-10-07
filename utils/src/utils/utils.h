@@ -41,8 +41,16 @@ typedef enum
     FLUSH,
     END,
     SOLICITUD_NUEVA_QUERY
-
 } op_code;
+
+typedef enum 
+{
+    FILE_TAG_PREEXISTENTE = -1,
+    FILE_TAG_INEXISTENTE = -2,
+    ESPACIO_INSUFICIENTE = -3,
+    ESCRITURA_NO_PERMITIDA = -4,
+    LECTURA_O_ESCRITURA_FUERA_DE_RANGO = -5
+} errores_storage;
 
 typedef enum
 {

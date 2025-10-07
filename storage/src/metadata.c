@@ -96,11 +96,14 @@ int cant_bloques_logicos(char* path)
     return cant;
 }
 
-void commmit_file(char* path)
+int commmit_file(char* path)
 {
+
+    if(!file_tag_existe(path)) return -2;
+
     if(strcmp(estado_metadata(path), "COMMITED") == 1)
     {
-        return; 
+        return 1; 
     }
 
     cambiar_estado_metadata(path, "COMMITED");
@@ -129,5 +132,7 @@ void commmit_file(char* path)
             asociar_hash_block(bloque_fisico);
         }
     }
+
+    return 1;
 
 }

@@ -191,8 +191,10 @@ int obtener_bloque_por_hash(char* md5)
 
 }
 
-void truncar_archivo(int nuevo_tamanio, char* file_tag)
+int truncar_archivo(int nuevo_tamanio, char* file_tag)
 {
+    if(!file_tag_existe(nuevo_tamanio)) return -2;
+
     char* config_path = concatenar_path(file_tag, "metadata.config");
 
     char* nuevo_tamanio_str = string_itoa(nuevo_tamanio);
@@ -222,6 +224,8 @@ void truncar_archivo(int nuevo_tamanio, char* file_tag)
     }
 
     free(nuevo_tamanio_str);
+
+    return 1;
     
 }
 
@@ -233,7 +237,7 @@ void cambiar_hard_link(char* bloque_logico, char* bloque_fisico)
 
 void escribir_bloque(char* bloque_logico, char* contenido)
 {
-    
+    if(!file_tag_existe(bloque_logico)) return -2;
 }
 
 /////// MANU ACORDATE DE AGREGAR LOS CASOS DE ERROR GRACIAS ATTE MANU :P

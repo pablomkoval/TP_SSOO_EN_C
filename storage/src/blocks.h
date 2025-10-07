@@ -15,7 +15,7 @@ int obtener_referencias_bloque(int bloque_fisico);
 int obtener_bloque_por_hash(char* md5);
 void sumar_referencia(int nro_block);
 void restar_referencia(int nro_block);
-void truncar_archivo(int nuevo_tamanio, char* file_tag);
+int truncar_archivo(int nuevo_tamanio, char* file_tag);
 char* obtener_bloque_fisico_asociado(char* bloque_logico);
 void cambiar_hard_link(char* bloque_logico, char* bloque_fisico);
 char* obtener_bloque_logico(char* path, int numero);
