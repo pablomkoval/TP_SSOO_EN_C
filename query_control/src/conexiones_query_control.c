@@ -41,13 +41,13 @@ void handshake_master(int socket, t_paquete* paquete_query){
                 close(socket);
                 return;
             default:
-                log_error(logger, "Codigo desconocido recibido: %d", codigo_operacion);
+                log_error(logger, "Código desconocido recibido: %d", codigo_operacion);
                 break;
         }
         }
         return;
     }else {
-        log_error(logger, "Fallo en el handshake con Master, recibí %d", respuesta);
+        log_error(logger, "Falló en el handshake con Master, recibí %d", respuesta);
         return;
     }
 
@@ -79,7 +79,7 @@ int conectar_master(t_paquete* paquete_query){
 }
 
 t_paquete* empaquetar_query(char* archivo_query, int prioridad){
-    log_trace(logger, "Comenze a empaquetar");
+    log_trace(logger, "Comencé a empaquetar");
     
     int* prioridad_ptr = &prioridad;
     void *prioridad_ptr_void = (void*)prioridad_ptr;

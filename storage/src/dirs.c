@@ -42,5 +42,7 @@ void copiar_tag(char* origen, char* destino)
     system(comando);
 
     free(comando);
+
+    cambiar_estado_metadata(destino, "WORK_IN_PROGRESS");
 }
 

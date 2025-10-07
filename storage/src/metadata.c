@@ -37,6 +37,15 @@ int cambiar_tamanio_metadata(char* path, char* nuevo_tamanio)
     return tamanio_viejo;
 }
 
+char* estado_metadata(char* path)
+{
+    t_config* meta = config_create(path);
+    char* estado = config_get_string_value(meta, "ESTADO");
+    config_destroy(meta);
+
+    return estado;
+}
+
 void agregar_bloque_metadata(char* path, int bloque)
 {
     t_config* meta = config_create(path);
@@ -72,4 +81,39 @@ void agregar_bloque_metadata(char* path, int bloque)
     string_array_destroy(blocks);
 }
 
+int cant_bloques_logicos(char* path)
+{
+    t_config* meta = config_create(path);
+    char** bloques = config_get_array_value(meta, "BLOCKS");
+    config_destroy(meta);
 
+    int cant = 0;
+    while (bloques[cant] != NULL) 
+    {
+        cant++;
+    }
+
+    return cant;
+}
+
+void commmit_file(char* path)
+{
+    if(strcmp(estado_metadata(path), "COMMITED") == 1)
+    {
+        return; 
+    }
+
+    cambiar_estado_metadata(path, "COMMITED");
+
+    int cant = cant_bloques_logicos(path);
+
+    for(int i = 0; i < cant; i++)
+    {
+        char* bloque_logico = obtener_bloque_logico(path, i);
+        obtener_hash_block(bloque_logico);
+        obtener_bloque_fisico_asociado(bloque_logico);
+        
+        
+    }
+
+}
