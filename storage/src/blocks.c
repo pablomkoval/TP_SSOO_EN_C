@@ -3,17 +3,22 @@
 
 void crear_bloque_logico(char* path, int numero)
 {
-    char* aux = string_from_format("%06d.dat", numero);
-
-    char* bloque_logico = string_from_format("%s/%s/%s",punto_montaje, path, aux);
+    char* bloque_logico = obtener_bloque_logico(path, numero);
 
     char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0000.dat");
 
     link(bloque_fisico, bloque_logico);
 
-    free(aux);
     free(bloque_logico);
     free(bloque_fisico);
+}
+
+char* obtener_bloque_logico(char* path, int numero)
+{
+    char* aux = string_from_format("%06d.dat", numero);
+    char* bloque_logico = string_from_format("%s/%s/%s",punto_montaje, path, aux);
+    free(aux);
+    return bloque_logico;
 }
 
 void crear_bloques_fisicos()
@@ -70,9 +75,14 @@ void asociar_hash_block(char* bloque_fisico)
     free(bloque);
 }
 
-int obtener_numero_bloque(char* path) {
+int obtener_numero_bloque_fisico(char* path) {
     const char* nombre = strrchr(path, '/');  
-    if (!nombre) nombre = path;               
+
+    if (!nombre) 
+    {
+        nombre = path;   
+    }
+
     else nombre++;                               
     int numero;
     sscanf(nombre, "bloque%d.dat", &numero);
@@ -108,6 +118,28 @@ int escribir_archivo(char* path, char* contenido)
         return -1;
     }
     return 0;
+}
+
+char* obtener_bloque_fisico_asociado(char* bloque_logico)
+{
+    struct stat st_logico;
+    struct stat st_fisico;
+
+    for(int i = 0; i < cant_blocks; i++)
+    {
+        char* bloque_fisico = string_from_format("%s/physical_blocks/bloque%04d.dat", punto_montaje, i);
+        
+        if(stat(bloque_fisico, &st_fisico) == -1) 
+        {
+            continue; 
+        }
+
+        if (st_fisico.st_ino == st_logico.st_ino && st_fisico.st_dev == st_logico.st_dev) 
+        {
+            return bloque_fisico;
+        }
+    }
+    return NULL;
 }
 
 void eliminar_bloque_logico(char* path, int nro)
@@ -182,4 +214,10 @@ void truncar_archivo(int nuevo_tamanio, char* file_tag)
 
     free(nuevo_tamanio_str);
     
+}
+
+void cambiar_hard_link(char* bloque_logico, char* bloque_fisico)
+{
+    unlink(bloque_logico);
+    link(bloque_fisico, bloque_logico);
 }
