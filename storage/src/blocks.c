@@ -21,11 +21,16 @@ char* obtener_bloque_logico(char* path, int numero)
     return bloque_logico;
 }
 
+char* bloque_fisico_por_nro(int nro)
+{
+    return string_from_format("%s/physical_blocks/bloque%04d.dat", punto_montaje, nro);
+}
+
 void crear_bloques_fisicos()
 {
     for (int i = 0; i < cant_blocks; i++) {
         
-        char* nombre_bloque = string_from_format("%s/physical_blocks/bloque%04d.dat", punto_montaje, i); //el %04d hace que tenga 4 digitos
+        char* nombre_bloque = bloque_fisico_por_nro(i);
 
         int fd = open(nombre_bloque, O_RDWR | O_CREAT | O_TRUNC, 0666);
 
@@ -47,7 +52,7 @@ void crear_bloques_fisicos()
 
 char* obtener_hash_block(char* bloque)
 {
-    char* contenido = leer_archivo(bloque);
+    char* contenido = leer_archivo(bloque, 0, block_size);
     int largo= strlen(contenido);
     char* md5 = crypto_md5(contenido, largo);
     free(contenido);
@@ -75,7 +80,7 @@ void asociar_hash_block(char* bloque_fisico)
     free(bloque);
 }
 
-int obtener_numero_bloque_fisico(char* path) {
+int obtener_numero_bloque(char* path) {
     const char* nombre = strrchr(path, '/');  
 
     if (!nombre) 
@@ -89,34 +94,32 @@ int obtener_numero_bloque_fisico(char* path) {
     return numero;
 }
 
-char* leer_archivo(char* path)
-{
-    FILE* f = fopen(path, "r");
 
-    fseek(f, 0, SEEK_END);
-    long size = ftell(f);
-    rewind(f);
+char* leer_archivo(char* path, int offset, int cantidad) {
+    FILE* f = fopen(path, "r");        
 
-    char* buffer = malloc(size + 1);
+    fseek(f, offset, SEEK_SET);
 
-    size_t leidos = fread(buffer, 1, size, f);
-    buffer[leidos] = '\0';  
+    char* buffer = malloc(cantidad + 1);
+
+    size_t leidos = fread(buffer, 1, cantidad, f);
+
+    buffer[leidos] = '\0';
 
     fclose(f);
-    return buffer;
+    return buffer;          
 }
 
-int escribir_archivo(char* path, char* contenido)
+int escribir_archivo(char* path, char* contenido, int offset)
 {
     FILE* f = fopen(path, "w");
 
-    size_t escritos = fwrite(contenido, 1, strlen(contenido), f);
+    fseek(f, offset, SEEK_SET);
+
+    fwrite(contenido, 1, strlen(contenido), f);
+
     fclose(f);
 
-    if (escritos < strlen(contenido)) {
-        fprintf(stderr, "Error: no se escribieron todos los bytes\n");
-        return -1;
-    }
     return 0;
 }
 
@@ -178,12 +181,18 @@ int obtener_referencias_bloque(int nro_bloque)
 
 int obtener_bloque_por_hash(char* md5)
 {
-    char* bloque = config_get_string_value (hash, md5);
-    return obtener_numero_bloque(bloque);
+    if(config_has_property (hash, md5))
+    {
+        char* bloque = config_get_string_value (hash, md5);
+        return obtener_numero_bloque(bloque);
+    }else return -1;
+
 }
 
-void truncar_archivo(int nuevo_tamanio, char* file_tag)
+int truncar_archivo(int nuevo_tamanio, char* file_tag)
 {
+    if(!file_tag_existe(file_tag)) return -2;
+
     char* config_path = concatenar_path(file_tag, "metadata.config");
 
     char* nuevo_tamanio_str = string_itoa(nuevo_tamanio);
@@ -213,11 +222,85 @@ void truncar_archivo(int nuevo_tamanio, char* file_tag)
     }
 
     free(nuevo_tamanio_str);
+
+    return 1;
     
 }
+
+
 
 void cambiar_hard_link(char* bloque_logico, char* bloque_fisico)
 {
     unlink(bloque_logico);
     link(bloque_fisico, bloque_logico);
 }
+
+int escribir_bloque(char* path, int offset, char* contenido)
+{
+    int tamanio = strlen(contenido);
+
+    if(!file_tag_existe(path)) return -2;
+    if(escritura_no_permitida(path)) return -4;
+    if(operacion_fuera_de_rango(offset, tamanio, path)) return -5;
+
+    int nro_bloque = offset/block_size;
+    int offset_interno = offset - (nro_bloque * block_size);
+
+    char* aux = string_from_format("%06d.dat", nro_bloque);
+    char* bloque_logico = string_from_format("%s/%s/%s",punto_montaje, path, aux);
+
+    char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
+
+    int nro_block_f = obtener_numero_bloque(bloque_fisico);
+
+    if (obtener_referencias_bloque(nro_block_f) <= 1)
+    {
+        escribir_archivo(bloque_fisico, contenido, offset_interno);
+    }else
+    {
+        int nro_bloque_f_nuevo = buscar_bloque_libre()
+        char* nuevo_bloque_fisico = bloque_fisico_por_nro(nro_bloque_f_nuevo);
+
+        escribir_archivo(nuevo_bloque_fisico, contenido, offset_interno);
+
+        cambiar_hard_link(bloque_logico, nuevo_bloque_fisico);
+
+        agregar_bloque_metadata(path, nro_bloque_f_nuevo);
+
+        eliminar_bloque_metadata(path, nro_block_f);
+
+    }
+
+    return 1;
+}
+
+/////// MANU ACORDATE DE AGREGAR LOS CASOS DE ERROR GRACIAS ATTE MANU :P
+int leer_bloque(char* path, int offset, int tamanio, char** buffer)
+{
+    if(!file_tag_existe(path)) return -2;
+    if(operacion_fuera_de_rango(offset, tamanio, path)) return -5;
+
+    int nro_bloque = offset/block_size;
+    int offset_interno = offset - (nro_bloque * block_size);
+
+    char* aux = string_from_format("%06d.dat", nro_bloque);
+    char* bloque_logico = string_from_format("%s/%s/%s",punto_montaje, path, aux);
+
+    char* contenido = leer_archivo(path, offset_interno, tamanio);
+
+    *buffer = contenido;
+
+    return 1;
+
+}
+
+bool operacion_fuera_de_rango(int offset, int tamanio, char* path)
+{
+    t_config* meta = config_create(path);
+    int tamanio_tag = config_get_int_value(meta, "TAMAÑO");
+
+    if((offset + tamanio) > tamanio_tag) return true;
+}
+
+
+

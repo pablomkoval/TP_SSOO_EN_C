@@ -134,6 +134,10 @@ void enviar_mensaje(int socket, char* mensaje){
     send(socket, mensaje, size, 0);
 }
 
+void enviar_cod_op(int socket, int opcode){
+    send(socket, &opcode, sizeof(int), 0);
+}
+
 char* recibir_mensaje(int socket){
     int size_mensaje;
     recv(socket, &size_mensaje, sizeof(int), MSG_WAITALL);

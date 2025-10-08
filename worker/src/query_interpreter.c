@@ -7,82 +7,168 @@ void* ciclo_query_interpreter(){
             log_error(logger, "blabla");
             return NULL;
         }
-        t_list* archivo_recibido = recibir_paquete(socket_memoria);
+        t_list* recibido = recibir_paquete(socket_storage);
         void* nombre_elem = list_get(recibido, 0);
         void* pc_elem = list_get(recibido, 1);
         char* nombre_archivo = strdup((char*)nombre_elem);
         int pc = *((int*)pc_elem);
 
-        leer_query();
+        query_t* query_a_ejecutar = leer_query(nombre_archivo, pc);
+        ejecutar_query(query_a_ejecutar);
         //chequear interrupcion 
+        //aguardar respuesta siempre, todas las instrucciones son bloqueantes
         list_destroy_and_destroy_elements(recibido, free);
     }
+    return NULL;
 }
 
-int leer_query(char* nombre_archivo, int pc){
+query_t* leer_query(char* nombre_archivo, int pc){
     
-    //fopen(path_queries+nombre_archivo)
-    char* archivo = string_from_format("%s%s", path_queries, nombre_archivo);
-    FILE* archivo = fopen( archivo, "r");
+    char* path_completo = string_from_format("%s%s", path_queries, nombre_archivo);
+    log_debug(logger, "El Archivo queda (%s)", path_completo);
+    FILE* archivo = fopen( path_completo, "r");
+    free(path_completo);
     //t_list* lista_queries = list_create();
 
-    char linea[256];
-    fgets(pc, sizeof(linea), archivo);
-    linea[strcspn(linea, "\n")] = 0; // eliminar \n
-    //list_add(lista_instrucciones, strdup(linea)); // guardar copia
+    if (!archivo) 
+    {
+        log_error(logger, "No se logro abrir el archivo");
+        query_t* vacio = {0};
+        return vacio;
+    }
+
+    char buffer[256];
+    int linea_actual = 0;
+    query_t* query = NULL;
+
+    while(fgets(buffer, sizeof(buffer), archivo)){
+        log_debug(logger, "linea actual (%d), pc (%d)", linea_actual, pc);
+        if(linea_actual == pc){
+            buffer[strcspn(buffer, "\n")] = 0; // eliminar \n
+            query = parsear_query(buffer);
+            fclose(archivo);
+            return query;
+        }
+        linea_actual++;
+    }
     
+    log_debug(logger, "No paso por la linea del pc %d", pc);
     fclose(archivo);
+    return query;
+}
 
+id_query_t parsear_query_id(char* identificador) {
+    if (strcmp(identificador, "CREATE") == 0) return CREATE_Q;
+    if (strcmp(identificador, "TRUNCATE") == 0) return TRUNCATE_Q;
+    if (strcmp(identificador, "WRITE") == 0) return WRITE_Q;
+    if (strcmp(identificador, "READ") == 0) return READ_Q;
+    if (strcmp(identificador, "TAG") == 0) return TAG_Q;
+    if (strcmp(identificador, "COMMIT") == 0) return COMMIT_Q;
+    if (strcmp(identificador, "FLUSH") == 0) return FLUSH_Q;
+    if (strcmp(identificador, "DELETE") == 0) return DELETE_Q;
+    if (strcmp(identificador, "END") == 0) return END_Q;
 
-    //leer del archivo y guardar en query
-    int query;
-    //query = parsear_query(query_str)
+    log_error(logger, "la query que llego no es valida");
+    return END;
+}
 
+query_t* parsear_query(char* query_raw){
+
+    query_t* query = malloc(sizeof(query_t));
+    query->file = NULL;
+    query->tag = NULL;
+    query->param1 = NULL;
+    query->param2 = NULL;
+
+    char **separado = string_split(query_raw, " ");
+
+    int cant_param = 0;
+    while(separado[cant_param] != NULL) cant_param++;
+    
+    query->identificador = parsear_query_id(separado[0]);
+
+    // if (cant_param > 1){
+    //     //aca iria algo para separar el :
+    //     query->file_tag = strdup(separado[1]);
+    // }
+    // if (cant_param > 2){
+    //     if(query->identificador == TAG){
+    //         char* file_tag_destino = strdup(separado[2]);
+    //         query->param1 = file_tag_destino;
+    //     }else{
+    //         int* param1 = malloc(sizeof(int));
+    //         *param1 = atoi(separado[2]);
+    //         query->param1 = strdup(separado[2]);
+    //     }
+    // }
+    // if (cant_param > 3){
+    //     if(query->identificador == READ){
+    //         int* tam = malloc(sizeof(int));
+    //         *tam = atoi(separado[3]);
+    //         query->param2 = tam;
+    //     }else{
+    //         query->param2 = strdup(separado[3]);
+    //     }
+    // }
+    
+    if(cant_param > 1){
+        char** partes = string_split(separado[1], ":");
+        query->file = strdup(partes[0]);
+        query->tag = strdup(partes[1]);
+        string_array_destroy(partes);
+    }
+    if(cant_param > 2){
+        query->param1 = strdup(separado[2]);
+    }
+    if(cant_param > 3){
+        query->param2 = strdup(separado[3]);
+    }
+    
+    string_array_destroy(separado);
     return query;
 }
 
 
-
-void ejecutar_query(int query){
-    switch(query){
+void ejecutar_query(query_t* query){
+    switch(query->identificador){
         case -1:
             log_error(logger, "No se recibio query de master: Conexion cerrada");
             break;
 
-        case CREATE:
-
+        case CREATE_Q:
+            log_info(logger, "se quiso ejecutar un create");
             break;
         
-        case TRUNCATE:
-
+        case TRUNCATE_Q:
+            log_info(logger, "se quiso ejecutar un ");
             break;
         
-        case WRITE:
-
+        case WRITE_Q:
+            log_info(logger, "se quiso ejecutar un ");
             break;
 
-        case READ:
-
+        case READ_Q:
+            log_info(logger, "se quiso ejecutar un ");
             break;
 
-        case TAG:
-
+        case TAG_Q:
+            log_info(logger, "se quiso ejecutar un ");
             break;
             
-        case COMMIT:
-
+        case COMMIT_Q:
+            log_info(logger, "se quiso ejecutar un ");
             break;
 
-        case FLUSH:
-
+        case FLUSH_Q:
+            log_info(logger, "se quiso ejecutar un ");
             break;
 
-        case DELETE:
-
+        case DELETE_Q:
+            log_info(logger, "se quiso ejecutar un ");
             break;
 
-        case END:
-
+        case END_Q:
+            log_info(logger, "se quiso ejecutar un ");
             break;
         
         default:

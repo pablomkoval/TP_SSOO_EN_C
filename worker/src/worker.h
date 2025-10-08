@@ -13,8 +13,11 @@ extern char* algoritmo_reemplazo;
 extern char* path_queries;
 
 
+extern int socket_storage;
+extern int socket_master;
 extern t_log* logger;
 
 #include <conexiones_worker.h>
+#include <query_interpreter.h>
 
 #endif

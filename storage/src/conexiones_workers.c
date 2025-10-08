@@ -34,7 +34,7 @@ void* manejar_conexion_worker(void* arg) {
                 char* origen;
                 char* destino;
 
-                copiar_tag(origen, destino);
+                copiar_tag(origen, origen, destino, destino);
 
                 break;
             case COMMIT:
@@ -44,6 +44,13 @@ void* manejar_conexion_worker(void* arg) {
 
                 break;
             case READ:
+
+                char* data;
+                char* path;
+                int offset;
+                int size;
+
+                leer_bloque(path, offset, size, &data);
 
                 break;
             case DELETE:

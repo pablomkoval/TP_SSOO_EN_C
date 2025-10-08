@@ -27,16 +27,13 @@ void crear_directorios_y_archivos()
 
     char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0000.dat" );
 
-    escribir_archivo(bloque_fisico, "hola mundo");
+    escribir_archivo(bloque_fisico, "hola mundo", 10);
 
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
 
   /// pruebas
-    //crear_file("jose", "hola");
 
-    //crear_file("jose", "chau");
-
-    copiar_tag("raiz/files/initial_file/BASE", "raiz/files/jose/hola");
+    copiar_tag("initial_file", "BASE", "jose", "hola");
 
     free(bloque_fisico);
 }

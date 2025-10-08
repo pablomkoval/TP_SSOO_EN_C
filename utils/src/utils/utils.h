@@ -41,8 +41,16 @@ typedef enum
     FLUSH,
     END,
     SOLICITUD_NUEVA_QUERY
-
 } op_code;
+
+typedef enum 
+{
+    FILE_TAG_PREEXISTENTE = -1,
+    FILE_TAG_INEXISTENTE = -2,
+    ESPACIO_INSUFICIENTE = -3,
+    ESCRITURA_NO_PERMITIDA = -4,
+    LECTURA_O_ESCRITURA_FUERA_DE_RANGO = -5
+} errores_storage;
 
 typedef enum
 {
@@ -81,6 +89,7 @@ int recibir_handshake(int socket_cliente);
 t_list* recibir_paquete (int socket_cliente);
 t_paquete* cambiar_opcode_paquete(t_paquete* paquete, op_code codigo);
 void enviar_mensaje(int socket, char* mensaje);
+void enviar_cod_op(int socket, int opcode);
 char* recibir_mensaje(int socket);
 
 
