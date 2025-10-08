@@ -249,9 +249,27 @@ int escribir_bloque(char* path, int offset, char* contenido)
     char* aux = string_from_format("%06d.dat", nro_bloque);
     char* bloque_logico = string_from_format("%s/%s/%s",punto_montaje, path, aux);
 
-    
+    char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
 
-    escribir_archivo(path, contenido, offset_interno);
+    int nro_block_f = obtener_numero_bloque(bloque_fisico);
+
+    if (obtener_referencias_bloque(nro_block_f) <= 1)
+    {
+        escribir_archivo(bloque_fisico, contenido, offset_interno);
+    }else
+    {
+        int nro_bloque_f_nuevo = buscar_bloque_libre()
+        char* nuevo_bloque_fisico = bloque_fisico_por_nro(nro_bloque_f_nuevo);
+
+        escribir_archivo(nuevo_bloque_fisico, contenido, offset_interno);
+
+        cambiar_hard_link(bloque_logico, nuevo_bloque_fisico);
+
+        agregar_bloque_metadata(path, nro_bloque_f_nuevo);
+
+        eliminar_bloque_metadata(path, nro_block_f);
+
+    }
 
     return 1;
 }
@@ -276,7 +294,6 @@ int leer_bloque(char* path, int offset, int tamanio, char** buffer)
 
 }
 
-
 bool operacion_fuera_de_rango(int offset, int tamanio, char* path)
 {
     t_config* meta = config_create(path);
@@ -284,3 +301,6 @@ bool operacion_fuera_de_rango(int offset, int tamanio, char* path)
 
     if((offset + tamanio) > tamanio_tag) return true;
 }
+
+
+
