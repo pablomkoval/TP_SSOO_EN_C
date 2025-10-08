@@ -16,6 +16,7 @@ void* ciclo_query_interpreter(){
         query_t* query_a_ejecutar = leer_query(nombre_archivo, pc);
         ejecutar_query(query_a_ejecutar);
         //chequear interrupcion 
+        //aguardar respuesta siempre, todas las instrucciones son bloqueantes
         list_destroy_and_destroy_elements(recibido, free);
     }
     return NULL;

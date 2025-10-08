@@ -89,6 +89,7 @@ int recibir_handshake(int socket_cliente);
 t_list* recibir_paquete (int socket_cliente);
 t_paquete* cambiar_opcode_paquete(t_paquete* paquete, op_code codigo);
 void enviar_mensaje(int socket, char* mensaje);
+void enviar_cod_op(int socket, int opcode);
 char* recibir_mensaje(int socket);
 
 
