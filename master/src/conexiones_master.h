@@ -3,8 +3,7 @@
 #include <utils/utils.h>
 #include <master.h>
 
-typedef struct 
-{
+typedef struct {
     int socket;
     int id;
 } t_argumentos_worker;
