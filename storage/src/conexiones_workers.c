@@ -5,6 +5,21 @@
 void* manejar_conexion_worker(void* arg) {
     int socket_cliente = *((int*)arg);
     free(arg);
+
+    char* query_id;
+    char* file;
+    char* tag;
+    int tamanio;
+    char* file_origen;
+    char* file_destino;
+    char* tag_origen;
+    char* tag_destino;
+    char* path;
+    int offset;
+    int contenido;
+    int bloque;
+
+
     while(1) {
         int codigo_operacion = recibir_opcode(socket_cliente);
         if (codigo_operacion < 0) {
@@ -14,9 +29,7 @@ void* manejar_conexion_worker(void* arg) {
 
         switch(codigo_operacion) {
             case CREATE:
-                char* query_id;
-                char* file;
-                char* tag;
+
 
                 if(crear_file(file, tag) == 1)
                 {
@@ -30,10 +43,7 @@ void* manejar_conexion_worker(void* arg) {
                 break;
             case TRUNCATE:
 
-                char* query_id;
-                int tamanio;
-                char* file;
-                char* tag;
+
 
                 if(truncar_archivo(tamanio, file, tag) == 1)
                 {
@@ -42,13 +52,9 @@ void* manejar_conexion_worker(void* arg) {
 
                 break;
             case TAG:
-                char* query_id;
-                char* file_origen;
-                char* file_destino;
-                char* tag_origen;
-                char* tag_destino;
 
-                if(copiar_tag(origen, origen, destino, destino) == 1)
+
+                if(copiar_tag(file_origen, tag_origen, file_destino, tag_destino) == 1)
                 {
                     log_info(logger, "##<%s> - File Creado <%s>:<%s>", query_id, file_destino, tag_destino);
                     log_info(logger, "##<%s> - Tag Creado <%s>:<%s>", query_id, file_destino, tag_destino);
@@ -56,7 +62,6 @@ void* manejar_conexion_worker(void* arg) {
 
                 break;
             case COMMIT:
-                char* query_id;
 
                 if(commmit_file(file, tag) == 1)
                 {
@@ -65,19 +70,15 @@ void* manejar_conexion_worker(void* arg) {
 
                 break;
             case WRITE:
-                char* query_id;
 
-                if(escribir_bloque(path, offet, contenido) == 1)
+                if(escribir_bloque(path, offset, contenido) == 1)
                 {
                     log_info(logger, "##<%s> - Bloque Lógico Escrito <%s>:<%s> - Número de Bloque <%s>", query_id, file, tag, bloque);
                 }
 
                 break;
             case READ:
-                char* query_id;
                 char* data;
-                char* path;
-                int offset;
                 int size;
                 char* bloque;
 
@@ -94,9 +95,9 @@ void* manejar_conexion_worker(void* arg) {
                 log_error(logger, "Operación worker desconocida: %d", codigo_operacion);
                 break;
         }
-    }
-    close(socket_cliente);
-    return NULL;
+     }
+     close(socket_cliente);
+     return NULL;
 }
 
 

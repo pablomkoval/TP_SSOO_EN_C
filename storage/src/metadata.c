@@ -43,7 +43,7 @@ int cambiar_tamanio_metadata(char *path, char *nuevo_tamanio)
 
 char *estado_metadata(char *path)
 {
-    char* path_config = path_config_meta(path);
+    char *path_config = path_config_meta(path);
     t_config *meta = config_create(path_config);
     char *estado = config_get_string_value(meta, "ESTADO");
     config_destroy(meta);
@@ -53,17 +53,18 @@ char *estado_metadata(char *path)
     return estado;
 }
 
-void cambiar_bloque_metadata(char* path, int bloque, int pos)
+void cambiar_bloque_metadata(char *path, int bloque, int pos)
 {
     char *path_config = path_config_meta(path);
     t_config *meta = config_create(path_config);
     char **blocks = config_get_array_value(meta, "BLOCKS");
 
-    char* bloque_str = string_itoa (bloque);
+    char *bloque_str = string_itoa(bloque);
 
     int contador = 0;
 
-    while (blocks && blocks[contador]) contador++;
+    while (blocks && blocks[contador])
+        contador++;
 
     blocks[pos] = bloque_str;
 
@@ -74,8 +75,8 @@ void cambiar_bloque_metadata(char* path, int bloque, int pos)
     for (int i = 0; i < contador; i++)
     {
         string_append(&blocks_str, blocks[i]);
-        if (i < contador-1)
-        string_append(&blocks_str, ",");
+        if (i < contador - 1)
+            string_append(&blocks_str, ",");
     }
     string_append(&blocks_str, "]");
 
@@ -87,23 +88,24 @@ void cambiar_bloque_metadata(char* path, int bloque, int pos)
     free(path_config);
 }
 
-void agregar_bloque_metadata(char* path, int bloque, int pos)
+void agregar_bloque_metadata(char *path, int bloque, int pos)
 {
     char *path_config = path_config_meta(path);
     t_config *meta = config_create(path_config);
     char **blocks = config_get_array_value(meta, "BLOCKS");
 
-    char* bloque_str = string_itoa (bloque);
+    char *bloque_str = string_itoa(bloque);
 
     char *blocks_str = string_new();
 
     int cantidad = 0;
-    while (blocks && blocks[cantidad]) cantidad++;
+    while (blocks && blocks[cantidad])
+        cantidad++;
 
-    char** nuevos = malloc(sizeof(char*) * (cantidad + 2));
+    char **nuevos = malloc(sizeof(char *) * (cantidad + 2));
 
     for (int i = 0; i < cantidad; i++)
-        nuevos[i] = string_duplicate(blocks[i]); 
+        nuevos[i] = string_duplicate(blocks[i]);
 
     nuevos[cantidad] = string_duplicate(bloque_str);
     nuevos[cantidad + 1] = NULL;
@@ -114,14 +116,15 @@ void agregar_bloque_metadata(char* path, int bloque, int pos)
     {
         string_append(&blocks_str, nuevos[i]);
         if (i < cantidad)
-        string_append(&blocks_str, ",");
+            string_append(&blocks_str, ",");
     }
     string_append(&blocks_str, "]");
 
     config_set_value(meta, "BLOCKS", blocks_str);
     config_save(meta);
 
-    for (int i = 0; i < cantidad + 1; i++) free(nuevos[i]);
+    for (int i = 0; i < cantidad + 1; i++)
+        free(nuevos[i]);
     free(nuevos);
 
     free(blocks_str);
@@ -147,33 +150,38 @@ int cant_bloques_logicos(char *path)
     free(path_config);
 }
 
-int commmit_file(char *file, char* tag)
+int commmit_file(char *file, char *tag)
 {
-    char* file_tag = concatenar_path(file, tag);
+    char *file_tag = concatenar_path(file, tag);
 
     if (!file_tag_existe(file_tag))
         return -2;
 
-    if (strcmp(estado_metadata(path), "COMMITED") == 1)
+    if (strcmp(estado_metadata(file_tag), "COMMITED") == 1)
     {
         return 1;
     }
 
-    cambiar_estado_metadata(path, "COMMITED");
+    cambiar_estado_metadata(file_tag, "COMMITED");
 
-    int cant = cant_bloques_logicos(path);
+    int cant = cant_bloques_logicos(file_tag);
 
     for (int i = 0; i < cant; i++)
     {
-        char *bloque_logico = obtener_bloque_logico(path, i);
+        char *bloque_logico = obtener_bloque_logico(file_tag, i);
         char *md5 = obtener_hash_block(bloque_logico);
         char *bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
         int nro_bloque = obtener_bloque_por_hash(md5);
         char *bloque_fisico_nuevo = bloque_fisico_por_nro(nro_bloque);
+        int nro_block_f = obtener_numero_bloque(bloque_fisico);
 
         if (nro_bloque != -1) // obtener bloque por hash devuelve -1 si no hay ninguno :p
         {
             cambiar_hard_link(bloque_logico, bloque_fisico_nuevo);
+
+            cambiar_bloque_metadata(file_tag, nro_block_f, i);
+
+            // log_info(logger, "##<%s> - Bloque Lógico <%i> se reasigna de <%i> a <%i>", query_id, i, nro_bloque, nro_bloque_f);
 
             if (obtener_referencias_bloque(nro_bloque) <= 1)
             {
@@ -185,6 +193,9 @@ int commmit_file(char *file, char* tag)
             asociar_hash_block(bloque_fisico);
         }
     }
+
+    free(file_tag);
+
     return 1;
 }
 
@@ -196,7 +207,7 @@ bool escritura_no_permitida(char *file_tag)
     return 1;
 }
 
-char* path_config_meta(char* file_tag)
+char *path_config_meta(char *file_tag)
 {
     return string_from_format("%s/files/%s/metadata.config", punto_montaje, file_tag);
 }

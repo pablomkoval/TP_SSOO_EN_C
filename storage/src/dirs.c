@@ -21,6 +21,8 @@ int crear_file(char *file, char *tag)
     free(path_tag);
     free(chequeo);
 
+    
+
     return 1;
 }
 

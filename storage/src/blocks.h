@@ -24,9 +24,4 @@ int escribir_bloque(char* path, int offset, char* contenido);
 bool operacion_fuera_de_rango(int offset, int contenido, char* path);
 int leer_bloque(char* path, int offset, int tamanio, char** buffer);
 
-typedef struct{
-    int nro;
-    int referencias;
-}t_block;
-
 #endif
