@@ -11,7 +11,7 @@ void crear_metadata_config(char *path)
     metadata = config_create(config);
 
     config_set_value(metadata, "TAMAÑO", "0");
-    config_set_value(metadata, "BLOCKS", "[]");
+    config_set_value(metadata, "BLOCKS", "[0,1,3]");
     config_set_value(metadata, "ESTADO", "WORK_IN_PROGRESS");
 
     config_save(metadata);
@@ -21,7 +21,7 @@ void crear_metadata_config(char *path)
 
 void cambiar_estado_metadata(char *path, char *nuevo_estado)
 {
-    char *path_config = concatenar_path(path, "metadata.config");
+    char *path_config = path_config_meta(path);
     t_config *meta = config_create(path_config);
     config_set_value(meta, "ESTADO", nuevo_estado);
     config_save(meta);
@@ -31,7 +31,7 @@ void cambiar_estado_metadata(char *path, char *nuevo_estado)
 
 int cambiar_tamanio_metadata(char *path, char *nuevo_tamanio)
 {
-    char *path_config = concatenar_path(path, "metadata.config");
+    char *path_config = path_config_meta(path);
     t_config *meta = config_create(path_config);
     int tamanio_viejo = config_get_int_value(meta, "TAMAÑO");
     config_set_value(meta, "TAMAÑO", nuevo_tamanio);
@@ -43,81 +43,39 @@ int cambiar_tamanio_metadata(char *path, char *nuevo_tamanio)
 
 char *estado_metadata(char *path)
 {
-    t_config *meta = config_create(path);
+    char* path_config = path_config_meta(path);
+    t_config *meta = config_create(path_config);
     char *estado = config_get_string_value(meta, "ESTADO");
     config_destroy(meta);
+
+    free(path_config);
 
     return estado;
 }
 
-void agregar_bloque_metadata(char *path, int bloque)
+void cambiar_bloque_metadata(char* path, int bloque, int pos)
 {
-    char *path_config = concatenar_path(path, "metadata.config");
+    char *path_config = path_config_meta(path);
     t_config *meta = config_create(path_config);
     char **blocks = config_get_array_value(meta, "BLOCKS");
+
+    char* bloque_str = string_itoa (bloque);
 
     int contador = 0;
 
     while (blocks && blocks[contador]) contador++;
 
-    char **nuevos = malloc(sizeof(char *) * (contador + 2));
-    for (int i = 0; i < contador; i++)
-    {
-        nuevos[i] = string_duplicate(blocks[i]);
-    }
-
-    nuevos[contador] = string_from_format("%d", bloque);
-    nuevos[contador + 1] = NULL;
+    blocks[pos] = bloque_str;
 
     char *blocks_str = string_new();
+
     string_append(&blocks_str, "[");
-    for (int i = 0; i <= contador; i++)
-    {
-        string_append(&blocks_str, nuevos[i]);
-        if (i < contador)
-            string_append(&blocks_str, ",");
-    }
-    string_append(&blocks_str, "]");
 
-    config_set_value(metadata, "BLOCKS", blocks_str);
-    config_save(metadata);
-
-    free(blocks_str);
-    for (int i = 0; i <= contador; i++) free(nuevos[i]);
-    free(nuevos);
-    string_array_destroy(blocks);
-    free(path_config);
-}
-
-void eliminar_bloque_metadata(char *path, int bloque)
-{
-    char *path_config = concatenar_path(path, "metadata.config");
-    t_config *meta = config_create(path_config);
-
-    char **blocks = config_get_array_value(meta, "BLOCKS");
-
-    int contador = 0;
-    while (blocks[contador]) contador++;
-
-    char **nuevos = malloc(sizeof(char *) * (contador + 1));
-    int idx = 0;
     for (int i = 0; i < contador; i++)
     {
-        int b = atoi(blocks[i]);
-        if (b != bloque)
-        {
-            nuevos[idx++] = string_duplicate(blocks[i]);
-        }
-    }
-    nuevos[idx] = NULL;
-
-    char *blocks_str = string_new();
-    string_append(&blocks_str, "[");
-    for (int i = 0; i < idx; i++)
-    {
-        string_append(&blocks_str, nuevos[i]);
-        if (i < idx - 1)
-            string_append(&blocks_str, ",");
+        string_append(&blocks_str, blocks[i]);
+        if (i < contador-1)
+        string_append(&blocks_str, ",");
     }
     string_append(&blocks_str, "]");
 
@@ -125,16 +83,13 @@ void eliminar_bloque_metadata(char *path, int bloque)
     config_save(meta);
 
     free(blocks_str);
-    for (int i = 0; i < idx; i++) free(nuevos[i]);
-    free(nuevos);
-    string_array_destroy(blocks);
     config_destroy(meta);
     free(path_config);
 }
 
 int cant_bloques_logicos(char *path)
 {
-    char *path_config = concatenar_path(path, "metadata.config");
+    char *path_config = path_config_meta(path);
     t_config *meta = config_create(path_config);
     char **bloques = config_get_array_value(meta, "BLOCKS");
     config_destroy(meta);
@@ -196,4 +151,9 @@ bool escritura_no_permitida(char *file_tag)
         ;
 
     return 1;
+}
+
+char* path_config_meta(char* file_tag)
+{
+    return string_from_format("%s/metadata.config", file_tag);
 }

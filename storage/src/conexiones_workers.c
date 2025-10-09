@@ -18,7 +18,7 @@ void* manejar_conexion_worker(void* arg) {
                 char* file;
                 char* tag;
 
-                crear_tag(file, tag);
+                crear_file(file, tag);
 
                 break;
             case TRUNCATE:

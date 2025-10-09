@@ -36,6 +36,8 @@ void crear_directorios_y_archivos()
     copiar_tag("initial_file", "BASE", "jose", "hola");
 
     free(bloque_fisico);
+
+    cambiar_bloque_metadata("raiz/files/initial_file/BASE",55, 2);
 }
 
 
@@ -81,4 +83,3 @@ void formatear_volumen()
 
     log_trace(logger, "Se formateó correctamente el volumen");
 }
-

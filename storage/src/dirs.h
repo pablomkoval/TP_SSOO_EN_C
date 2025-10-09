@@ -3,7 +3,7 @@
 
 #include <storage.h>
 
-void crear_tag(char* file_path, char* tag);
+void crear_tag(char* tag_path);
 char* concatenar_path(char* path, char* suma);
 void crear_directorio(const char* path);
 int crear_file(char* file, char* tag);

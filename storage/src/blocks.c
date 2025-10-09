@@ -258,16 +258,14 @@ int escribir_bloque(char* path, int offset, char* contenido)
         escribir_archivo(bloque_fisico, contenido, offset_interno);
     }else
     {
-        int nro_bloque_f_nuevo = buscar_bloque_libre()
+        int nro_bloque_f_nuevo = buscar_bloque_libre();
         char* nuevo_bloque_fisico = bloque_fisico_por_nro(nro_bloque_f_nuevo);
 
         escribir_archivo(nuevo_bloque_fisico, contenido, offset_interno);
 
         cambiar_hard_link(bloque_logico, nuevo_bloque_fisico);
 
-        agregar_bloque_metadata(path, nro_bloque_f_nuevo);
-
-        eliminar_bloque_metadata(path, nro_block_f);
+        cambiar_bloque_metadata(path, nro_bloque_f_nuevo, nro_bloque);
 
     }
 
