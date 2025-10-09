@@ -9,6 +9,8 @@ void crear_bloque_logico(char* path, int numero)
 
     link(bloque_fisico, bloque_logico);
 
+    agregar_bloque_metadata(path, 0, numero);
+
     free(bloque_logico);
     free(bloque_fisico);
 }
@@ -189,15 +191,17 @@ int obtener_bloque_por_hash(char* md5)
 
 }
 
-int truncar_archivo(int nuevo_tamanio, char* file_tag)
+int truncar_archivo(int nuevo_tamanio, char* file, char* tag)    
 {
+    char* file_tag = concatenar_path(file, tag);
+
     if(!file_tag_existe(file_tag)) return -2;
 
-    char* config_path = concatenar_path(file_tag, "metadata.config");
+    char* config_path = path_config_meta(file_tag);
 
     char* nuevo_tamanio_str = string_itoa(nuevo_tamanio);
 
-    int tamanio_previo = cambiar_tamanio_metadata(config_path, nuevo_tamanio_str);
+    int tamanio_previo = cambiar_tamanio_metadata(file_tag, nuevo_tamanio_str);
 
     int bloque_maximo = tamanio_previo / block_size;
 

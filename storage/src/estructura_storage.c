@@ -19,7 +19,9 @@ void crear_directorios_y_archivos()
     crear_directorio("physical_blocks");
     crear_bloques_fisicos();
     crear_file("initial_file", "BASE");
-    crear_bloque_logico("files/initial_file/BASE/logical_blocks", 0);
+    crear_bloque_logico("initial_file/BASE", 0);
+    crear_bloque_logico("initial_file/BASE", 1);
+    crear_bloque_logico("initial_file/BASE", 2);
 
     void *mapeo = inicializar_bitmap();
 
@@ -37,7 +39,7 @@ void crear_directorios_y_archivos()
 
     free(bloque_fisico);
 
-    cambiar_bloque_metadata("raiz/files/initial_file/BASE",55, 2);
+    cambiar_bloque_metadata("initial_file/BASE",55, 2);
 }
 
 
