@@ -11,7 +11,7 @@ void crear_metadata_config(char *path)
     metadata = config_create(config);
 
     config_set_value(metadata, "TAMAÑO", "0");
-    config_set_value(metadata, "BLOCKS", "[0,1,3]");
+    config_set_value(metadata, "BLOCKS", "[]");
     config_set_value(metadata, "ESTADO", "WORK_IN_PROGRESS");
 
     config_save(metadata);
@@ -87,6 +87,48 @@ void cambiar_bloque_metadata(char* path, int bloque, int pos)
     free(path_config);
 }
 
+void agregar_bloque_metadata(char* path, int bloque, int pos)
+{
+    char *path_config = path_config_meta(path);
+    t_config *meta = config_create(path_config);
+    char **blocks = config_get_array_value(meta, "BLOCKS");
+
+    char* bloque_str = string_itoa (bloque);
+
+    char *blocks_str = string_new();
+
+    int cantidad = 0;
+    while (blocks && blocks[cantidad]) cantidad++;
+
+    char** nuevos = malloc(sizeof(char*) * (cantidad + 2));
+
+    for (int i = 0; i < cantidad; i++)
+        nuevos[i] = string_duplicate(blocks[i]); 
+
+    nuevos[cantidad] = string_duplicate(bloque_str);
+    nuevos[cantidad + 1] = NULL;
+
+    string_append(&blocks_str, "[");
+
+    for (int i = 0; i < cantidad + 1; i++)
+    {
+        string_append(&blocks_str, nuevos[i]);
+        if (i < cantidad)
+        string_append(&blocks_str, ",");
+    }
+    string_append(&blocks_str, "]");
+
+    config_set_value(meta, "BLOCKS", blocks_str);
+    config_save(meta);
+
+    for (int i = 0; i < cantidad + 1; i++) free(nuevos[i]);
+    free(nuevos);
+
+    free(blocks_str);
+    config_destroy(meta);
+    free(path_config);
+}
+
 int cant_bloques_logicos(char *path)
 {
     char *path_config = path_config_meta(path);
@@ -105,10 +147,11 @@ int cant_bloques_logicos(char *path)
     free(path_config);
 }
 
-int commmit_file(char *path)
+int commmit_file(char *file, char* tag)
 {
+    char* file_tag = concatenar_path(file, tag);
 
-    if (!file_tag_existe(path))
+    if (!file_tag_existe(file_tag))
         return -2;
 
     if (strcmp(estado_metadata(path), "COMMITED") == 1)
@@ -155,5 +198,5 @@ bool escritura_no_permitida(char *file_tag)
 
 char* path_config_meta(char* file_tag)
 {
-    return string_from_format("%s/metadata.config", file_tag);
+    return string_from_format("%s/files/%s/metadata.config", punto_montaje, file_tag);
 }

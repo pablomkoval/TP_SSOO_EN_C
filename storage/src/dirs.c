@@ -51,6 +51,8 @@ int copiar_tag(char *file_origen, char *tag_origen, char *file_destino, char *ta
 
     char *path_destino = string_from_format("%s/files/%s/%s", punto_montaje, file_destino, tag_destino);
 
+    char* file_tag_destino = concatenar_path(file_destino, tag_destino);
+
     if (file_tag_existe(path_destino))
         return -1;
 
@@ -62,7 +64,7 @@ int copiar_tag(char *file_origen, char *tag_origen, char *file_destino, char *ta
 
     free(comando);
 
-    cambiar_estado_metadata(path_destino, "WORK_IN_PROGRESS");
+    cambiar_estado_metadata(file_tag_destino, "WORK_IN_PROGRESS");
 
     return 1;
 }
@@ -73,8 +75,10 @@ int eliminar_tag(char *path)
 
 // CASOS ERROR
 
-bool file_tag_existe(char *path)
+bool file_tag_existe(char *file_tag)
 {
+    char* path = string_from_format("%s/files/%s", punto_montaje, file_tag);
+
     if (access(path, F_OK) == 0)
     {
         return 1;
