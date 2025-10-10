@@ -48,7 +48,7 @@ void *manejar_servidor_querycontrol(void *arg){
     int socket_cliente = *(int *)arg;
     free(arg);
 
-    while (1){
+    while(1){
         int op_code = recibir_opcode(socket_cliente);
 
         if (op_code == -1){
@@ -60,10 +60,9 @@ void *manejar_servidor_querycontrol(void *arg){
         switch (op_code){
             case PAQUETE:
                 log_info(logger, "Recibi paquete de query");
+                
                 t_list* elementos = recibir_paquete(socket_cliente);
                 char* path_query = list_get(elementos, 0);
-
-                //fijarse q se manda mal la prioridad debe ser algo de punteros seguro
                 int prioridad_query = *(int*)list_get(elementos,1);
 
                 log_info(logger, "Query recibida con path: %s, prioridad: %d", path_query, prioridad_query);
