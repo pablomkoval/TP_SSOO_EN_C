@@ -1,5 +1,10 @@
 #include <master.h>
 
+//hacer una funcion que arme una query, como la pcb de antes
+// y de ahi hacer lo de cambiar estado y todo ese chiche ¿¿¿¿
+// preguntar!!
+
+
 pthread_t hilo_main_escucha;
 
 t_dictionary* diccionario_workers;   // key: id_worker, valor: socket_worker
@@ -40,4 +45,9 @@ int main(int argc, char* argv[]){
     pause();
 
     return 0;
+}
+
+//void cambiar_estado(query,nuevo estado) {
+   // pcb->estado_actual = nuevo_estado;
+   // pcb->metricas_estado[nuevo_estado]++;
 }

@@ -19,4 +19,6 @@ extern t_log* logger;
 
 extern int id_query;
 
+void cambiar_estado();
+
 #endif
