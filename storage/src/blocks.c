@@ -271,6 +271,8 @@ int escribir_bloque(char* path, int offset, char* contenido)
 
         cambiar_bloque_metadata(path, nro_bloque_f_nuevo, nro_bloque);
 
+        //log_info(logger, "##<%s> - Bloque Lógico <%i> se reasigna de <%i> a <%i>", query_id, nro_bloque, nro_bloque_f, nro_bloque_f_nuevo);
+
     }
 
     return 1;

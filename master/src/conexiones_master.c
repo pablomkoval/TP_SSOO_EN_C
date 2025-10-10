@@ -4,22 +4,24 @@ void *manejar_servidor_worker(void *arg){
     int socket_cliente = *(int *)arg;
     free(arg);
 
-    while (1)
-    {
+    while (1){
         int op_code = recibir_opcode(socket_cliente);
 
-        if (op_code == -1)
-        {
+        if (op_code == -1){
             log_info(logger, "Se cerro la conexiopn de un worker");
             break;
         }
 
-        switch (op_code)
-        {
+        switch (op_code){
+            case MENSAJE:
+                //dsp agregar en el loginfo el id del worker que mando el mensaje
+                char* mensaje_worker = recibir_mensaje(socket_cliente);
 
-        default:
-            log_debug(logger, "Error al recibir opcode, %d", op_code);
-            break;
+                log_info(logger,"Recibi mensaje de worker: %s", mensaje_worker);
+                //buscar query_control asociado y reenviar mensaje
+            default:
+                log_debug(logger, "Error al recibir opcode, %d", op_code);
+                break;
         }
     }
     return NULL;
@@ -45,7 +47,7 @@ void *manejar_servidor_querycontrol(void *arg){
                 char* path_query = list_get(elementos, 0);
 
                 //fijarse q se manda mal la prioridad debe ser algo de punteros seguro
-                int prioridad_query = list_get(elementos,1);
+                int prioridad_query = *(int*)list_get(elementos,1);
 
                 log_info(logger, "Query recibida con path: %s, prioridad: %d", path_query, prioridad_query);
 
@@ -60,18 +62,15 @@ void *manejar_servidor_querycontrol(void *arg){
     return NULL;
 }
 
-void *funcion_main_escucha(void *socket_arg)
-{
+void *funcion_main_escucha(void *socket_arg){
     pthread_t hilo_cliente;
     int socket_main_escucha = *(int *)socket_arg;
 
-    while (1)
-    {
+    while (1){
         int socket_cliente = esperar_cliente(socket_main_escucha, logger);
         int tipo_conexion = recibir_handshake(socket_cliente);
 
-        switch (tipo_conexion)
-        {
+        switch (tipo_conexion){
         case WORKER:
             log_trace(logger, "Recibi handshake de un worker");
             int worker_id;
@@ -80,21 +79,28 @@ void *funcion_main_escucha(void *socket_arg)
             t_argumentos_worker *args = malloc(sizeof(t_argumentos_worker));
             args->socket = socket_cliente;
             args->id = worker_id;
+            
+            char* worker_id_str = string_itoa(worker_id);
+
+            int *socket_worker_ptr = malloc(sizeof(int));
+            *socket_worker_ptr = socket_cliente;
+
+            dictionary_put(diccionario_workers, worker_id_str, (void *)socket_worker_ptr);
 
             pthread_create(&hilo_cliente, NULL, manejar_servidor_worker, (void *)args);
             pthread_detach(hilo_cliente);
+
             // agregar el socket a una lista de workers
             break;
 
         case QUERY_CONTROL:
             log_trace(logger, "Recibi handshake de un query control");
-            int *socket_cliente_ptr = malloc(sizeof(int));
-            *socket_cliente_ptr = socket_cliente;
+            int *socket_query_ptr = malloc(sizeof(int));
+            *socket_query_ptr = socket_cliente;
             // agregar el socket a una lista de qc's
-            pthread_create(&hilo_cliente, NULL, manejar_servidor_querycontrol, (void *)socket_cliente_ptr);
+            pthread_create(&hilo_cliente, NULL, manejar_servidor_querycontrol, (void *)socket_query_ptr);
             pthread_detach(hilo_cliente);
 
-            log_info(logger, "aaaa");
             break;
 
         case SIN_DEFINIR:
