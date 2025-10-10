@@ -14,6 +14,7 @@ int retardo_memoria;
 char* algoritmo_reemplazo;
 char* path_queries;
 char* log_level;
+int tam_pagina;
 
 int socket_storage;
 int socket_master;

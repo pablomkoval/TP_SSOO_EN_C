@@ -26,13 +26,18 @@ void handshake_storage(int socket){
     enviar_handshake(socket, HANDSHAKE);
     log_info(logger, "Envié el handshake a Storage");
 
-    int respuesta;
-    if(0 >= recv(socket, &respuesta, sizeof(int), MSG_WAITALL)){
+
+    
+    int respuesta = recibir_opcode(socket);
+    if(0 >= respuesta){
         log_error(logger, "Fallo al recibir OK de Storage");
         return;
     }
     if(respuesta == OK){
         log_trace(logger, "Recibi el OK de Storage");
+        t_list* recibido = recibir_paquete(socket);
+        int tam_bloque = *((int*)list_get(recibido, 0));
+        tam_pagina = tam_bloque;
         return;
     }else {
         log_error(logger, "Fallo en el handshake con Storage, recibí %d", respuesta);
