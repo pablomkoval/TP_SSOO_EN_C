@@ -10,6 +10,8 @@ pthread_mutex_t mutex_diccionario;
 t_config* config_master;
 t_log* logger;
 
+int id_query = 0;
+
 int main(int argc, char* argv[]){
     
     diccionario_workers = dictionary_create();
