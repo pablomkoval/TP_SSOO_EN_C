@@ -3,6 +3,6 @@
 
 #include <utils/utils.h>
 #include <worker.h>
-
+#include <memoria_interna.h>
 
 #endif

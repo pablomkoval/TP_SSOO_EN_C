@@ -19,5 +19,6 @@ typedef struct
 
 
 extern t_dictionary* tablas_de_paginas;
+extern void* memoria_interna;
 
 #endif

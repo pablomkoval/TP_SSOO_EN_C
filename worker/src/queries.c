@@ -1,6 +1,6 @@
 #include <queries.h>
 
-void ejecutar_create(char* nombre_file, char* tag){
+void ejecutar_create(char* file_tag){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, CREATE);
 
@@ -28,8 +28,36 @@ void ejecutar_write(char* nombre_file, char* tag, int direccion_base, char* cont
 }
 
 
-void ejecutar_read(char* nombre_file, char* tag, int direccion_base, int tamanio){
-    
+void ejecutar_read(char* file_tag, int direccion_base, int tamanio){
+    int bytes_restantes = tamanio;
+    char* buffer = malloc(tamanio);
+    int direccion_actual = direccion_base;
+    int bytes_leidos = 0;
+
+    while(bytes_restantes > 0){
+        int pagina_logica = obtener_pagina_logica(direccion_actual);
+        int offset = obtener_offset_pagina(direccion_actual);
+
+        t_pagina* pag = obtener_pagina(file_tag, pagina_logica);
+
+        int faltante_pagina = tam_pagina - offset;
+        int cant_lectura;
+        if(faltante_pagina < bytes_a_leer){
+            cant_lectura = faltante_pagina;
+        }else{
+            cant_lectura = bytes_a_leer;
+        }
+
+        void* inicio = memoria_interna + pag->frame * tam_pagina + offset;
+
+        memcpy(buffer + bytes_leidos, inicio, cant_lectura);
+
+        bytes_restantes -= cant_lectura;
+        bytes_leidos += cant_lectura;
+        direccion_actual += cant_lectura;
+    }
+    //mandarselo a master
+    return;
 }
 
 void ejecutar_tag(char* file_origen, char* tag_origen, char* file_destino, char* tag_destino){

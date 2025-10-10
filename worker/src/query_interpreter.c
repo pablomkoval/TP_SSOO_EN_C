@@ -112,10 +112,7 @@ query_t* parsear_query(char* query_raw){
     // }
     
     if(cant_param > 1){
-        char** partes = string_split(separado[1], ":");
-        query->file = strdup(partes[0]);
-        query->tag = strdup(partes[1]);
-        string_array_destroy(partes);
+        query->file_tag = separado[1];
     }
     if(cant_param > 2){
         query->param1 = strdup(separado[2]);
@@ -130,6 +127,11 @@ query_t* parsear_query(char* query_raw){
 
 
 void ejecutar_query(query_t* query){
+    char** partes = separar_file_tag(query->file_tag);
+    char* file = strdup(partes[0]);
+    char* tag = strdup(partes[1]);
+    string_array_destroy(partes);
+
     switch(query->identificador){
         case -1:
             log_error(logger, "No se recibio query de master: Conexion cerrada");
@@ -175,4 +177,9 @@ void ejecutar_query(query_t* query){
             log_error(logger, "Error al recibir el query por parte de master");
             break;
     }
+}
+
+char** separar_file_tag(char* file_tag){
+    char** partes = string_split(file_tag, ":");
+    return partes;
 }
