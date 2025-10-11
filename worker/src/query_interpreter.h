@@ -3,6 +3,7 @@
 
 #include <utils/utils.h>
 #include <worker.h>
+#include <queries.h>
 typedef enum {
     CREATE_Q,
     TRUNCATE_Q,

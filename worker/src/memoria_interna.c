@@ -99,6 +99,10 @@ void cargar_pagina_de_storage(char* file_tag, int nro_pagina, int frame){
     memset(memoria_interna + frame * tam_pagina, contenido, tam_pagina);
 }
 
+void hacer_flush_de_pagina(){
+    return;
+}
+
 int obtener_pagina_logica(int direccion_logica){
     return direccion_logica / tam_pagina;
 }

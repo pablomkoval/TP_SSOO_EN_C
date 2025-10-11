@@ -146,7 +146,8 @@ void ejecutar_query(query_t* query){
             break;
         
         case WRITE_Q:
-            log_info(logger, "se quiso ejecutar un ");
+            log_info(logger, "se quiso ejecutar un WRITE");
+            ejecutar_write(query->file_tag, query->param1, query->param2);
             break;
 
         case READ_Q:

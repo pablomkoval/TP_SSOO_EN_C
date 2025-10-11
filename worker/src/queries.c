@@ -23,8 +23,40 @@ void ejecutar_trucate(char* nombre_file, char* tag, int tamanio){
     borrar_paquete(paquete);
 }
 
-void ejecutar_write(char* nombre_file, char* tag, int direccion_base, char* contenido){
+void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido){
+    int direccion_base = atoi(direccion_base_str);
+    int bytes_restantes = strlen(contenido);
+    //char* buffer = malloc(bytes_restantes);
+    int direccion_actual = direccion_base;
+    int bytes_escritos = 0;
 
+    while(bytes_restantes > 0){
+        int pagina_logica = obtener_pagina_logica(direccion_actual);
+        int offset = obtener_offset_pagina(direccion_actual);
+
+        t_pagina* pag = obtener_pagina(file_tag, pagina_logica);
+
+        int faltante_pagina = tam_pagina - offset;
+        int cant_escritura;
+        if(faltante_pagina < bytes_restantes){
+            cant_escritura = faltante_pagina;
+        }else{
+            cant_lectura = bytes_restantes;
+        }
+
+        void* destino = memoria_interna + pag->frame * tam_pagina + offset;
+
+        memcpy(destino, contenido + bytes_escritos, cant_escritura);
+
+        pag->bit_modificado = true;
+
+        bytes_restantes -= cant_escritura;
+        bytes_escritos += cant_escritura;
+        direccion_actual += cant_escritura;
+    }
+    log_info(logger, "WRITE de %s desde %d (%d bytes): '%s'",
+             file_tag, direccion_base, (int)strlen(contenido), contenido);
+    return;
 }
 
 
@@ -42,10 +74,10 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio){
 
         int faltante_pagina = tam_pagina - offset;
         int cant_lectura;
-        if(faltante_pagina < bytes_a_leer){
+        if(faltante_pagina < bytes_restantes){
             cant_lectura = faltante_pagina;
         }else{
-            cant_lectura = bytes_a_leer;
+            cant_lectura = bytes_restantes;
         }
 
         void* inicio = memoria_interna + pag->frame * tam_pagina + offset;
