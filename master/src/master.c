@@ -9,6 +9,7 @@ pthread_t hilo_main_escucha;
 
 t_dictionary* diccionario_workers;   // key: id_worker, valor: socket_worker
 t_dictionary* diccionario_querys;   //key: id_worker, valor: socket del query a procesar
+//El diccionario de querys es el representante del estado running, asigna cada worker a su query que esta laburando
 
 pthread_mutex_t mutex_diccionario;
 

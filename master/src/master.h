@@ -1,5 +1,5 @@
-#ifndef MASTER_H_
-#define MASTER_H_
+#ifndef MASTERH
+#define MASTERH
 
 #include<utils/utils.h>
 #include<master_config.h>

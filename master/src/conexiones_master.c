@@ -17,19 +17,20 @@ void *manejar_servidor_worker(void *arg){
             break;
         }
 
+        char* worker_id_str = string_itoa(worker_id);
+
+        int* socket_qc_ptr;
+
         switch (op_code){
-            case MENSAJE:
+            case READ:
                 char* mensaje_worker = recibir_mensaje(socket_cliente);
 
-                //mutex¿ o uno mas abajo nose
-                char* worker_id_str = string_itoa(worker_id);
-
-                int* socket_qc_ptr = dictionary_get(diccionario_querys, worker_id_str);
-                //mutex
+                //ponerle mutex
+                socket_qc_ptr = dictionary_get(diccionario_querys, worker_id_str);
 
                 log_info(logger,"Recibi mensaje de worker: %s, id: %s", mensaje_worker, worker_id_str);
 
-                free(worker_id_str);
+                
 
                 if(socket_qc_ptr != NULL) {
                     log_info(logger, "Reenviando mensaje a Query Control con socket: %d", *socket_qc_ptr);
@@ -41,11 +42,23 @@ void *manejar_servidor_worker(void *arg){
                 free(mensaje_worker);
 
                 break;
+            case END:
+                //ponerle mutex
+                socket_qc_ptr = dictionary_get(diccionario_querys, worker_id_str);
+
+                t_paquete* paquete = crear_paquete();
+                cambiar_opcode_paquete(paquete, END);
+                char* motivo = "Fin de instrucciones.";
+                agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
+                enviar_paquete(paquete, *socket_qc_ptr, logger);
+                borrar_paquete(paquete);
+                break;
             default:
                 log_info(logger, "Error al recibir opcode, %d", op_code);
                 break;
         }
     }
+    free(worker_id_str);
     return NULL;
 }
 
