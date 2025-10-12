@@ -45,7 +45,7 @@ void *manejar_servidor_worker(void *arg){
                     log_error(logger, "No se encontró Query Control asociado al Worker ID: %d", worker_id);
                 }
 
-                list_destroy_and_destroy_elements(recibido);
+                list_destroy_and_destroy_elements(recibido, free);
 
                 break;
             case END:
@@ -65,7 +65,6 @@ void *manejar_servidor_worker(void *arg){
                 break;
         }
     }
-    free(worker_id_str);
     return NULL;
 }
 

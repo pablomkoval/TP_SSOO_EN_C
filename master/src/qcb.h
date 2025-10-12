@@ -6,6 +6,7 @@
 typedef struct{
     int socket;
     int qid;
+    int pc;
     int prioridad;
     char* path;
     int id_worker_asociado;
