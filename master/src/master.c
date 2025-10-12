@@ -7,9 +7,10 @@
 
 pthread_t hilo_main_escucha;
 
+t_dictionary* diccionario_querys;    // key: qid, valor: qcb
 t_dictionary* diccionario_workers;   // key: id_worker, valor: socket_worker
-t_dictionary* diccionario_querys;   //key: id_worker, valor: socket del query a procesar
-//El diccionario de querys es el representante del estado running, asigna cada worker a su query que esta laburando
+t_dictionary* diccionario_exec;   //key: id_worker, valor: socket del query a procesar
+//El diccionario de exec es el representante del estado running, asigna cada worker a su query que esta laburando
 
 pthread_mutex_t mutex_diccionario;
 
@@ -21,6 +22,7 @@ int id_query = 0;
 int main(int argc, char* argv[]){
     
     diccionario_workers = dictionary_create();
+    diccionario_exec = dictionary_create();
     diccionario_querys = dictionary_create();
     pthread_mutex_init(&mutex_diccionario, NULL);
 
@@ -51,4 +53,4 @@ int main(int argc, char* argv[]){
 //void cambiar_estado(query,nuevo estado) {
    // pcb->estado_actual = nuevo_estado;
    // pcb->metricas_estado[nuevo_estado]++;
-}
+//}

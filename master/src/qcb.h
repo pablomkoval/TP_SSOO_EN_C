@@ -9,4 +9,6 @@ typedef struct{
     estados_query estado;
 } t_qcb;
 
-t_qcb* crear_qcb (char* query_entrante);
+extern int qid_global;
+
+t_qcb* crear_qcb (char* query_entrante, int socket);

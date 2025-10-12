@@ -2,12 +2,12 @@
 
 void *manejar_servidor_worker(void *arg){
     t_argumentos_worker *worker_args = (t_argumentos_worker *)arg;
-    int socket_cliente = worker_args->socket;
+    int socket_worker = worker_args->socket;
     int worker_id = worker_args->id;
     free(arg);
 
     while (1){
-        int op_code = recibir_opcode(socket_cliente);
+        int op_code = recibir_opcode(socket_worker);
 
         if (op_code == -1){
             log_info(logger, "Se cerro la conexion de un worker");
@@ -19,38 +19,45 @@ void *manejar_servidor_worker(void *arg){
 
         char* worker_id_str = string_itoa(worker_id);
 
-        int* socket_qc_ptr;
+        t_qcb* qcb = NULL;
 
         switch (op_code){
             case READ:
-                char* mensaje_worker = recibir_mensaje(socket_cliente);
+                t_list* recibido = recibir_paquete(socket_worker);
+                char* mensaje_worker = list_get(recibido, 0);
 
                 //ponerle mutex
-                socket_qc_ptr = dictionary_get(diccionario_querys, worker_id_str);
+                qcb = dictionary_get(diccionario_exec, worker_id_str);
+                
 
                 log_info(logger,"Recibi mensaje de worker: %s, id: %s", mensaje_worker, worker_id_str);
 
                 
 
-                if(socket_qc_ptr != NULL) {
-                    log_info(logger, "Reenviando mensaje a Query Control con socket: %d", *socket_qc_ptr);
-                    enviar_mensaje(*socket_qc_ptr, mensaje_worker);
+                if(qcb->socket != NULL) {
+                    log_info(logger, "Reenviando mensaje a Query Control con socket: %d", qcb->socket);
+                    t_paquete* paquete = crear_paquete();
+                    cambiar_opcode_paquete(paquete, READ);
+                    agregar_a_paquete(paquete, mensaje_worker, strlen(mensaje_worker) + 1);
+                    enviar_paquete(paquete, qcb->socket, logger);
+                    borrar_paquete(paquete);
                 } else{
                     log_error(logger, "No se encontró Query Control asociado al Worker ID: %d", worker_id);
                 }
 
-                free(mensaje_worker);
+                list_destroy_and_destroy_elements(recibido);
 
                 break;
             case END:
                 //ponerle mutex
-                socket_qc_ptr = dictionary_get(diccionario_querys, worker_id_str);
+                qcb = dictionary_remove(diccionario_exec, worker_id_str);
+                log_info(logger, "## Se terminó la Query %d en el Worker %d", qcb->qid, worker_id);
 
                 t_paquete* paquete = crear_paquete();
                 cambiar_opcode_paquete(paquete, END);
                 char* motivo = "Fin de instrucciones.";
                 agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
-                enviar_paquete(paquete, *socket_qc_ptr, logger);
+                enviar_paquete(paquete, qcb->socket, logger);
                 borrar_paquete(paquete);
                 break;
             default:
@@ -83,8 +90,10 @@ void *manejar_servidor_querycontrol(void *arg){
                 char* path_query = list_get(elementos, 0);
                 int prioridad_query = *(int*)list_get(elementos,1);
 
-                //guardar este valor en algun lado, una lista o paquete o algo
-                int id_query = id_query++
+                t_qcb* qcb = crear_qcb(path_query, socket_cliente);
+                char* qid_str = string_itoa(qcb->qid);
+                dictionary_put(diccionario_querys, qid_str, qcb);
+                free(qid_str);
 
                 log_info(logger, "Query recibida con id: %d, path: %s, prioridad: %d", id_query, path_query, prioridad_query);
 

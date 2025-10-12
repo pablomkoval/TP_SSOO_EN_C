@@ -1,12 +1,12 @@
 #include <qcb.h>
 
-static int qid_global = 0;
+int qid_global = 0;
 
-t_qcb* crear_qcb(char* query_entrante){
+t_qcb* crear_qcb(char* query_entrante, int socket){
     t_qcb* qcb = malloc(sizeof(t_qcb));
-    // qcb->socket = ; esto q poronga es
+    qcb->socket = socket; 
     qcb->qid = qid_global++;
-    qcb->prioridad = 0 //despues con el de prioridades vamos viendo
+    qcb->prioridad = 0;
     qcb->path = strdup(query_entrante);
     qcb->id_worker_asociado = -1;
     qcb->estado = READY;
