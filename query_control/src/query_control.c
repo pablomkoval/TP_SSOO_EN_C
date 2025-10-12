@@ -2,7 +2,7 @@
 
 t_log* logger;
 t_config* config;
-t_paquete* paquete_query;
+
 
 int socket_master;
 
@@ -17,12 +17,17 @@ int main(int argc, char* argv[]) {
 
     config = iniciar_config(archivo_config);
     logger = iniciar_logger();
-    
-    
-    paquete_query = empaquetar_query(archivo_query, prioridad);
-    socket_master = conectar_master(paquete_query);
-    
-    
+       
+    socket_master = conectar_master();
 
+    if (socket_master == -1){
+        log_trace(logger, "Falló conexión con master");
+        return EXIT_FAILURE;
+    } else{
+        t_paquete* paquete_query = empaquetar_query(archivo_query, prioridad);
+        enviar_paquete(paquete_query, socket_master, logger);
+        log_info(logger, "## Solicitud de ejecución de Query: %s, prioridad: %d", archivo_query, prioridad);
+        recibir_mensajes_de_master(socket_master);
+    }
     return 0;
 }
