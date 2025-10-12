@@ -1,3 +1,6 @@
+#ifndef QCB_H_
+#define QCB_H_
+
 #include <master.h>
 
 typedef struct{
@@ -12,3 +15,5 @@ typedef struct{
 extern int qid_global;
 
 t_qcb* crear_qcb (char* query_entrante, int socket);
+
+#endif

@@ -1,5 +1,5 @@
-#ifndef MASTER_CONFIG_H
-#define MASTER_CONFIG_H
+#ifndef MASTER_CONFIG_H_
+#define MASTER_CONFIG_H_
 
 #include <utils/utils.h>
 

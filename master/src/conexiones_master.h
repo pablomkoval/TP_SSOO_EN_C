@@ -22,5 +22,6 @@ void* manejar_servidor_worker(void* arg);
 void* manejar_servidor_querycontrol(void* arg);
 
 #include <qcb.h>
+#include <planificador.h>
 
 #endif

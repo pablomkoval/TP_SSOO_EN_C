@@ -93,6 +93,8 @@ void *manejar_servidor_querycontrol(void *arg){
                 t_qcb* qcb = crear_qcb(path_query, socket_cliente);
                 char* qid_str = string_itoa(qcb->qid);
                 dictionary_put(diccionario_querys, qid_str, qcb);
+                //ponerle mutex
+                queue_push(cola_ready, qcb);
                 free(qid_str);
 
                 log_info(logger, "Query recibida con id: %d, path: %s, prioridad: %d", id_query, path_query, prioridad_query);
@@ -133,6 +135,10 @@ void *funcion_main_escucha(void *socket_arg){
                 *socket_worker_ptr = socket_cliente;
 
                 dictionary_put(diccionario_workers, worker_id_str, (void *)socket_worker_ptr);
+                
+                int* worker_id_ptr = malloc(sizeof(int));
+                *worker_id_ptr = worker_id;
+                list_add(workers_libres, worker_id_ptr);
 
                 pthread_create(&hilo_cliente, NULL, manejar_servidor_worker, (void *)args);
                 pthread_detach(hilo_cliente);
