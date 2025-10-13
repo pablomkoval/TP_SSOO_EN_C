@@ -161,10 +161,14 @@ int commmit_file(char *file, char *tag)
     {
         return 1;
     }
-
+    
+    lock_metadata(file_tag);
     cambiar_estado_metadata(file_tag, "COMMITED");
+    unlock_metadata(file_tag);
 
+    lock_metadata(file_tag);
     int cant = cant_bloques_logicos(file_tag);
+    unlock_metadata(file_tag);
 
     for (int i = 0; i < cant; i++)
     {
@@ -177,20 +181,25 @@ int commmit_file(char *file, char *tag)
 
         if (nro_bloque != -1) // obtener bloque por hash devuelve -1 si no hay ninguno :p
         {
+            lock_metadata(file_tag);
             cambiar_hard_link(bloque_logico, bloque_fisico_nuevo);
-
             cambiar_bloque_metadata(file_tag, nro_block_f, i);
+            unlock_metadata(file_tag);
 
             // log_info(logger, "##<%s> - Bloque Lógico <%i> se reasigna de <%i> a <%i>", query_id, i, nro_bloque, nro_bloque_f);
 
             if (obtener_referencias_bloque(nro_bloque) <= 1)
             {
+                pthread_mutex_lock(mutex_bitmap);
                 bitarray_clean_bit(bitmap, nro_bloque);
+                pthread_mutex_unlock(mutex_bitmap);
             }
         }
         else
         {
+            pthread_mutex_lock(mutex_hash_index);
             asociar_hash_block(bloque_fisico);
+            pthread_mutex_unlock(mutex_hash_index);
         }
     }
 

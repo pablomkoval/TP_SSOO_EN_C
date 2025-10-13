@@ -13,29 +13,29 @@ void crear_directorios_y_archivos()
     if(fresh_start)
     {
         formatear_volumen();
+        crear_directorio("files");
+        crear_directorio("physical_blocks");
+        crear_bloques_fisicos();
+        crear_file("initial_file", "BASE");
+        crear_bloque_logico("initial_file/BASE", 0);
     }
-    crear_directorio("files");
     
-    crear_directorio("physical_blocks");
-    crear_bloques_fisicos();
-    crear_file("initial_file", "BASE");
-    crear_bloque_logico("initial_file/BASE", 0);
-    crear_bloque_logico("initial_file/BASE", 1);
-    crear_bloque_logico("initial_file/BASE", 2);
-
     void *mapeo = inicializar_bitmap();
-
+    
     crear_archivo_hash_bloques();
-
-    char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0000.dat" );
-
-    escribir_archivo(bloque_fisico, "hola mundo", 10);
-
+    
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
 
-  /// pruebas
+  /// pruebas 
+  
+    char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0000.dat" );
+  
+    escribir_archivo(bloque_fisico, "hola mundo", 10);
 
     copiar_tag("initial_file", "BASE", "jose", "hola");
+    
+    crear_bloque_logico("initial_file/BASE", 1);
+    crear_bloque_logico("initial_file/BASE", 2);
 
     free(bloque_fisico);
 

@@ -73,6 +73,7 @@ int copiar_tag(char *file_origen, char *tag_origen, char *file_destino, char *ta
 
 int eliminar_tag(char *path)
 {
+    
 }
 
 // CASOS ERROR

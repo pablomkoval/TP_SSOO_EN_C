@@ -3,6 +3,7 @@
 
 #include <storage.h>
 #include <metadata.h>
+#include <sincronizacion.h>
 
 void asociar_hash_block(char* bloque_fisico);
 void crear_bloque_logico(char* path, int numero);
