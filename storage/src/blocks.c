@@ -10,28 +10,30 @@ void crear_bloque_logico(char *file_tag, int numero)
     char *bloque_fisico = concatenar_path(punto_montaje, "physical_blocks/bloque0000.dat");
 
     lock_metadata(file_tag);
+    unlink(bloque_logico);
     link(bloque_fisico, bloque_logico);
-    agregar_bloque_metadata(path, 0, numero);
+    agregar_bloque_metadata(file_tag, 0, numero);
     unlock_metadata(file_tag);
 
+    free(logical_blocks_path);
     free(bloque_logico);
     free(bloque_fisico);
 }
 
-char *obtener_bloque_logico(char *path, int numero)
+char *obtener_bloque_logico(char *path, int numero)  //no hace falta sincro
 {
     char *aux = string_from_format("%06d.dat", numero);
-    char *bloque_logico = string_from_format("%s/%s/%s", punto_montaje, path, aux);
+    char *bloque_logico = string_from_format("%s/files/%s/%s", punto_montaje, path, aux);
     free(aux);
     return bloque_logico;
 }
 
-char *bloque_fisico_por_nro(int nro)
+char *bloque_fisico_por_nro(int nro) //no hace falta sincro
 {
     return string_from_format("%s/physical_blocks/bloque%04d.dat", punto_montaje, nro);
 }
 
-void crear_bloques_fisicos()
+void crear_bloques_fisicos() //no hace falta sincro
 {
     for (int i = 0; i < cant_blocks; i++)
     {
@@ -52,14 +54,18 @@ void crear_bloques_fisicos()
             perror("ftruncate");
         }
 
+        pthread_mutex_t* mutex = malloc(sizeof(pthread_mutex_t));
+        pthread_mutex_init(mutex, NULL);
+        dictionary_put(mutex_por_bloque_fisico, string_duplicate(nombre_bloque), mutex);
+
         close(fd);
         free(nombre_bloque);
     }
 }
 
-char *obtener_hash_block(char *bloque)
+char *obtener_hash_block(char *bloque) 
 {
-    char *contenido = leer_archivo(bloque, 0, block_size);
+    char *contenido = leer_archivo(bloque);
     int largo = strlen(contenido);
     char *md5 = crypto_md5(contenido, largo);
     free(contenido);
@@ -87,7 +93,7 @@ void asociar_hash_block(char *bloque_fisico)
     free(bloque);
 }
 
-int obtener_numero_bloque(char *path)
+int obtener_numero_bloque(char *path) //no hace falta sincro
 {
     const char *nombre = strrchr(path, '/');
 
@@ -103,23 +109,24 @@ int obtener_numero_bloque(char *path)
     return numero;
 }
 
-char *leer_archivo(char *path, int offset, int cantidad)
+char *leer_archivo(char *path) //sincro cuando se usa
 {
-    FILE *f = fopen(path, "r");
+    FILE* f = fopen(path, "r");
 
-    fseek(f, offset, SEEK_SET);
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    rewind(f);
 
-    char *buffer = malloc(cantidad + 1);
+    char* buffer = malloc(size + 1);
 
-    size_t leidos = fread(buffer, 1, cantidad, f);
-
-    buffer[leidos] = '\0';
+    size_t leidos = fread(buffer, 1, size, f);
+    buffer[leidos] = '\0';  
 
     fclose(f);
     return buffer;
 }
 
-int escribir_archivo(char *path, char *contenido, int offset)
+int escribir_archivo(char *path, char *contenido, int offset) //sincro cuando se usa
 {
     FILE *f = fopen(path, "w");
 
@@ -132,10 +139,15 @@ int escribir_archivo(char *path, char *contenido, int offset)
     return 0;
 }
 
-char *obtener_bloque_fisico_asociado(char *bloque_logico)
+char *obtener_bloque_fisico_asociado(char *bloque_logico) //no se si se necesita sincro (?)
 {
     struct stat st_logico;
     struct stat st_fisico;
+
+    if (stat(bloque_logico, &st_logico) == -1) {
+        perror("Error al acceder al bloque lógico");
+        return NULL;
+    }
 
     for (int i = 0; i < cant_blocks; i++)
     {
@@ -150,11 +162,13 @@ char *obtener_bloque_fisico_asociado(char *bloque_logico)
         {
             return bloque_fisico;
         }
+
+        free(bloque_fisico);
     }
     return NULL;
 }
 
-void eliminar_bloque_logico(char *file_tag, int nro)
+void eliminar_bloque_logico(char *file_tag, int nro)   //ya sincro, no se obtener bloque fisico asociado
 {
 
     char *logical_blocks_path = concatenar_path(file_tag, "logical_blocks");
@@ -164,21 +178,24 @@ void eliminar_bloque_logico(char *file_tag, int nro)
 
     char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
 
-    int nro_bloque = obtener_numero_bloque(bloque_fisico)
+    int nro_bloque = obtener_numero_bloque(bloque_fisico);
 
     remove(bloque_logico);
 
     if (obtener_referencias_bloque(nro_bloque) <= 1)
     {
-        pthread_mutex_lock(mutex_bitmap);
+        pthread_mutex_lock(&mutex_bitmap);
         bitarray_clean_bit(bitmap, nro_bloque);
-        pthread_mutex_unlock(mutex_bitmap);
+        pthread_mutex_unlock(&mutex_bitmap);
     }
 
     free(logical_blocks_path);
+    free(aux);
+    free(bloque_logico);
+    free(bloque_fisico);
 }
 
-int obtener_referencias_bloque(int nro_bloque)
+int obtener_referencias_bloque(int nro_bloque) //no se si hace falta sincro (?)
 {
     char *path = string_from_format("%s/physical_blocks/bloque%04d.dat", punto_montaje, nro_bloque);
 
@@ -195,7 +212,7 @@ int obtener_referencias_bloque(int nro_bloque)
     return st.st_nlink;
 }
 
-int obtener_bloque_por_hash(char *md5)
+int obtener_bloque_por_hash(char *md5) 
 {
     if (config_has_property(hash, md5))
     {
@@ -239,7 +256,8 @@ int truncar_archivo(int nuevo_tamanio, char *file, char *tag)
             eliminar_bloque_logico(file_tag, i);
         }
     }
-
+    
+    free(file_tag);
     free(nuevo_tamanio_str);
 
     return 1;
@@ -251,22 +269,26 @@ void cambiar_hard_link(char *bloque_logico, char *bloque_fisico)
     link(bloque_fisico, bloque_logico);
 }
 
-int escribir_bloque(char *path, int offset, char *contenido)
+int escribir_bloque(int query_id, char *file, char* tag, int offset, char *contenido)
 {
+    char *path = concatenar_path(file, tag);
     int tamanio = strlen(contenido);
 
     if (!file_tag_existe(path))
         return -2;
+
+    lock_metadata(path);
     if (escritura_no_permitida(path))
         return -4;
     if (operacion_fuera_de_rango(offset, tamanio, path))
         return -5;
+    unlock_metadata(path);
 
     int nro_bloque = offset / block_size;
     int offset_interno = offset - (nro_bloque * block_size);
 
     char *aux = string_from_format("%06d.dat", nro_bloque);
-    char *bloque_logico = string_from_format("%s/%s/%s", punto_montaje, path, aux);
+    char *bloque_logico = string_from_format("%s/files/%s/logical_blocks/%s", punto_montaje, path, aux);
 
     char *bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
 
@@ -277,6 +299,8 @@ int escribir_bloque(char *path, int offset, char *contenido)
         lock_bloque_fisico(bloque_fisico);
         escribir_archivo(bloque_fisico, contenido, offset_interno);
         unlock_bloque_fisico(bloque_fisico);
+
+        log_info(logger, "##<QUERY_ID> - Bloque Lógico Escrito <%s>:<$s%s> - Número de Bloque: <%i>", "gol", "hol", 1);
     }
     else
     {
@@ -288,45 +312,54 @@ int escribir_bloque(char *path, int offset, char *contenido)
             pthread_mutex_unlock(&mutex_bitmap);
             return -3;
         }
-        asignar_bloque(mro_bloque_f_nuevo);
+        asignar_bloque(nro_bloque_f_nuevo);
 
         pthread_mutex_unlock(&mutex_bitmap);
 
         char *nuevo_bloque_fisico = bloque_fisico_por_nro(nro_bloque_f_nuevo);
 
+        lock_metadata(path);
         lock_bloque_fisico(nuevo_bloque_fisico);
+
         escribir_archivo(nuevo_bloque_fisico, contenido, offset_interno);
-        unlock_bloque_fisico(nuevo_bloque_fisico)
-
-            asociar_hash_block(nuevo_bloque_fisico);
-
+        asociar_hash_block(nuevo_bloque_fisico);
         cambiar_hard_link(bloque_logico, nuevo_bloque_fisico);
-
         cambiar_bloque_metadata(path, nro_bloque_f_nuevo, nro_bloque);
 
-        // log_info(logger, "##<%s> - Bloque Lógico <%i> se reasigna de <%i> a <%i>", query_id, nro_bloque, nro_bloque_f, nro_bloque_f_nuevo);
-    }
+        unlock_bloque_fisico(nuevo_bloque_fisico);
+        unlock_metadata(path);
 
+        free(nuevo_bloque_fisico);
+
+        log_info(logger, "##<> - Bloque Lógico <%i> se reasigna de <%i> a <%i>",nro_bloque, nro_block_f, nro_bloque_f_nuevo);
+    }
+    free(aux);
+    free(bloque_logico);
+    free(bloque_fisico);
+    free(path);
     return 1;
 }
 
-/////// MANU ACORDATE DE AGREGAR LOS CASOS DE ERROR GRACIAS ATTE MANU :P
-int leer_bloque(char file_tag, int nro_bloque, char **buffer)
+///// MANU ACORDATE DE AGREGAR LOS CASOS DE ERROR GRACIAS ATTE MANU :P
+int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buffer )
 {
-    if (!file_tag_existe(path))
+    char *file_tag = concatenar_path(file, tag);
+
+    if (!file_tag_existe(file_tag))
         return -2;
-    if (operacion_fuera_de_rango(offset, tamanio, path))
+    if (operacion_fuera_de_rango(nro_bloque * block_size, block_size, file_tag))
         return -5;
 
-    int nro_bloque = offset / block_size;
-    int offset_interno = offset - (nro_bloque * block_size);
+    //int nro_bloque = offset / block_size;
+    //int offset_interno = offset - (nro_bloque * block_size);
 
     char *aux = string_from_format("%06d.dat", nro_bloque);
-    char *bloque_logico = string_from_format("%s/%s/%s", punto_montaje, path, aux);
+    char *bloque_logico = string_from_format("%s/%s/%s", punto_montaje, file_tag, aux);
+    char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
 
-    lock_bloque_fisico(path);
-    char *contenido = leer_archivo(path, offset_interno, tamanio);
-    unlock_bloque_fisico(path);
+    lock_bloque_fisico(bloque_fisico);
+    char *contenido = leer_archivo(bloque_fisico);
+    unlock_bloque_fisico(bloque_fisico);
 
     *buffer = contenido;
 
@@ -335,9 +368,17 @@ int leer_bloque(char file_tag, int nro_bloque, char **buffer)
 
 bool operacion_fuera_de_rango(int offset, int tamanio, char *path)
 {
-    t_config *meta = config_create(path);
+    char* path_meta = path_config_meta(path);
+    t_config *meta = config_create(path_meta);
     int tamanio_tag = config_get_int_value(meta, "TAMAÑO");
+
+    free(path_meta);
+    config_destroy(meta);
 
     if ((offset + tamanio) > tamanio_tag)
         return true;
+
+    return false;
+    
+    
 }

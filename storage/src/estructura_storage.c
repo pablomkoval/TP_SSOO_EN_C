@@ -17,11 +17,11 @@ void crear_directorios_y_archivos()
         crear_directorio("physical_blocks");
         crear_bloques_fisicos();
         crear_file("initial_file", "BASE");
-        crear_bloque_logico("initial_file/BASE", 0);
+        truncar_archivo(block_size,"initial_file","BASE");
     }
     
     void *mapeo = inicializar_bitmap();
-    
+    asignar_bloque(0);
     crear_archivo_hash_bloques();
     
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
@@ -29,17 +29,19 @@ void crear_directorios_y_archivos()
   /// pruebas 
   
     char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0000.dat" );
-  
-    escribir_archivo(bloque_fisico, "hola mundo", 10);
 
-    copiar_tag("initial_file", "BASE", "jose", "hola");
-    
-    crear_bloque_logico("initial_file/BASE", 1);
-    crear_bloque_logico("initial_file/BASE", 2);
+    crear_file("materias", "sistemas");
+
+    truncar_archivo(512, "materias", "sistemas");
+
+    int a = escribir_bloque(0, "materias","sistemas",130, "manu lindo" );
+
+    log_error(logger, "ss%i", a);
+
+    copiar_tag(0, "initial_file", "BASE", "jose", "hola");
 
     free(bloque_fisico);
 
-    cambiar_bloque_metadata("initial_file/BASE",55, 2);
 }
 
 

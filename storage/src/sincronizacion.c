@@ -3,8 +3,8 @@
 pthread_mutex_t mutex_bitmap;
 pthread_mutex_t mutex_hash_index;
 
-t_dictionary* mutex_por_metadata;
-t_dictionary* mutex_por_bloque_fisico;
+t_dictionary* mutex_por_metadata = NULL;
+t_dictionary* mutex_por_bloque_fisico = NULL;
 
 void inicializar_mutexes(void) {
     pthread_mutex_init(&mutex_bitmap, NULL);
@@ -13,13 +13,9 @@ void inicializar_mutexes(void) {
     mutex_por_bloque_fisico = dictionary_create();
 }
 
-static pthread_mutex_t* obtener_mutex(t_dictionary* dict, char* path) {
+static pthread_mutex_t* obtener_mutex(t_dictionary* dict, char* path)
+{
     pthread_mutex_t* mutex = dictionary_get(dict, path);
-    if (!mutex) {
-        mutex = malloc(sizeof(pthread_mutex_t));
-        pthread_mutex_init(mutex, NULL);
-        dictionary_put(dict, string_duplicate(path), mutex);
-    }
     return mutex;
 }
 
@@ -36,12 +32,14 @@ void lock_metadata(char* path) {
     char *path_meta = path_config_meta(path);
     pthread_mutex_t* m = obtener_mutex_metadata(path_meta);
     pthread_mutex_lock(m);
+    free(path_meta);
 }
 
 void unlock_metadata(char* path) {
     char *path_meta = path_config_meta(path);
     pthread_mutex_t* m = obtener_mutex_metadata(path_meta);
     pthread_mutex_unlock(m);
+    free(path_meta);
 }
 
 void lock_bloque_fisico(char* path) {

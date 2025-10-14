@@ -17,5 +17,6 @@ int main(int argc, char *argv[])
     lanzar_servidor(socket_worker);
 
     pause();
+
     return 0;
 }

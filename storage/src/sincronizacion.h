@@ -2,6 +2,7 @@
 #define SINCRONIZACION_H
 
 #include <utils/utils.h>
+#include <metadata.h>
 
 extern pthread_mutex_t mutex_bitmap;
 extern pthread_mutex_t mutex_hash_index;

@@ -3,6 +3,7 @@
 
 #include <utils/utils.h>
 #include <storage.h>
+#include <sincronizacion.h>
 
 extern t_config* metadata;
 
@@ -11,7 +12,7 @@ int cambiar_tamanio_metadata(char* path, char* nuevo_tamanio);
 void cambiar_estado_metadata(char* path, char* nuevo_estado);
 char* estado_metadata(char* path);
 int cant_bloques_logicos(char* path);
-int commmit_file(char* file, char* tag);
+int commmit_file(int query_id, char* file, char* tag);
 bool escritura_no_permitida(char* file_tag);
 void cambiar_bloque_metadata(char* path, int bloque, int pos);
 char* path_config_meta(char* file_tag);
