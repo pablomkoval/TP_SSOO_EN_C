@@ -10,6 +10,8 @@ void crear_directorios_y_archivos()
 {
     fd = open(punto_montaje, O_RDONLY | O_DIRECTORY);
 
+    void *mapeo = inicializar_bitmap();
+
     if(fresh_start)
     {
         formatear_volumen();
@@ -17,12 +19,10 @@ void crear_directorios_y_archivos()
         crear_directorio("physical_blocks");
         crear_bloques_fisicos();
         crear_file("initial_file", "BASE");
-        truncar_archivo(block_size,"initial_file","BASE");
+        truncar_archivo(0, block_size,"initial_file","BASE");
+        asignar_bloque(0);
+        crear_archivo_hash_bloques();
     }
-    
-    void *mapeo = inicializar_bitmap();
-    asignar_bloque(0);
-    crear_archivo_hash_bloques();
     
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
 
@@ -32,7 +32,9 @@ void crear_directorios_y_archivos()
 
     crear_file("materias", "sistemas");
 
-    truncar_archivo(512, "materias", "sistemas");
+    truncar_archivo(0, 512, "materias", "sistemas");
+
+    truncar_archivo(0, 384, "materias", "sistemas");
 
     int a = escribir_bloque(0, "materias","sistemas",130, "manu lindo" );
 

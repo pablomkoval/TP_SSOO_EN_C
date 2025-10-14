@@ -93,6 +93,9 @@ bool file_tag_existe(char *file_tag)
         return 1;
     }
     else
+    {
         free(path);
         return 0;
+    }
+        
 }

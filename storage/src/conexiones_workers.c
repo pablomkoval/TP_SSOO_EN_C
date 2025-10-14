@@ -145,7 +145,7 @@ void manejar_truncate(int socket_worker)
     char* tag = list_get(datos, 2);
     int* tamanio = list_get(datos, 3);
 
-    int resultado = truncar_archivo(*tamanio, file, tag);
+    int resultado = truncar_archivo(*query_id, *tamanio, file, tag);
 
     if(resultado == 1)
     {
@@ -259,13 +259,13 @@ void manejar_delete(int socket_worker)
 
 // log_info(logger, "##Se conecta el Worker <%i> - Cantidad de Workers: <CANTIDAD", worker_id);
 // log_info(logger, "##Se desconecta el Worker <%i> - Cantidad de Workers: <CANTIDAD", worker_id);
-// log_info(logger, "##<%i> - File Creado <%s>:<%s>", query_id, file, tag);
-// log_info(logger, "##<%i> - File Truncado <%s>:<%s> - Tamaño: <%i>", query_id, file, tag, tamanio);
-// log_info(logger, "##<%i> - Tag creado <%s>:<%s>", query_id, file, tag);
-// log_info(logger, "##<%i> - Commit de File:Tag <%s>:<%s>", query_id, file, tag);
-// log_info(logger, "##<%i> - Tag Eliminado <%s>:<%s>", query_id, file, tag);
-// log_info(logger, "##<%i> - Bloque Lógico Leído <%s>:<%s> - Número de Bloque: <%i>", query_id, file, tag, bloque);
-// log_info(logger, "##<%i> - Bloque Lógico Escrito <%s>:<%s> - Número de Bloque: <%i>", query_id, file, tag, bloque);
+// log_info(logger, "##<%i> - File Creado <%s>:<%s>", query_id, file, tag);  SI
+// log_info(logger, "##<%i> - File Truncado <%s>:<%s> - Tamaño: <%i>", query_id, file, tag, tamanio); SI
+// log_info(logger, "##<%i> - Tag creado <%s>:<%s>", query_id, file, tag);  SI
+// log_info(logger, "##<%i> - Commit de File:Tag <%s>:<%s>", query_id, file, tag);  SI
+// log_info(logger, "##<%i> - Tag Eliminado <%s>:<%s>", query_id, file, tag);  SI
+// log_info(logger, "##<%i> - Bloque Lógico Leído <%s>:<%s> - Número de Bloque: <%i>", query_id, file, tag, bloque);  SI
+// log_info(logger, "##<%i> - Bloque Lógico Escrito <%s>:<%s> - Número de Bloque: <%i>", query_id, file, tag, bloque);  SI
 // log_info(logger, "##<%i> - Bloque Físico Reservado - Número de Bloque: <%i>", query_id, bloque);
 // log_info(logger, "##<%i> - Bloque Físico Liberado - Número de Bloque: <%i>", query_id, bloque);
 // log_info(logger, "##<%i> - <%s>:<%s> Se agregó el hard link del bloque lógico <BLOQUE_LOGICO> al bloque físico <BLOQUE_FISICO>", query_id, file, tag, bloque_logico, bloque_fisico);

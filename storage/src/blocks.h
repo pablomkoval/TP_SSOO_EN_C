@@ -17,7 +17,7 @@ int obtener_referencias_bloque(int bloque_fisico);
 int obtener_bloque_por_hash(char* md5);
 void sumar_referencia(int nro_block);
 void restar_referencia(int nro_block);
-int truncar_archivo(int nuevo_tamanio, char* file, char* tag);
+int truncar_archivo(int query_id, int nuevo_tamanio, char* file, char* tag);
 char* obtener_bloque_fisico_asociado(char* bloque_logico);
 void cambiar_hard_link(char* bloque_logico, char* bloque_fisico);
 char* obtener_bloque_logico(char* path, int numero);
@@ -25,5 +25,6 @@ char* bloque_fisico_por_nro(int nro);
 int escribir_bloque(int query_id, char* file, char* tag, int offset, char* contenido);
 bool operacion_fuera_de_rango(int offset, int contenido, char* path);
 int leer_bloque(int query_id, char* file, char* tag, int tamanio, char** buffer);
+void eliminar_bloque_logico(int query_id, char* file_tag, int i);
 
 #endif

@@ -168,25 +168,30 @@ char *obtener_bloque_fisico_asociado(char *bloque_logico) //no se si se necesita
     return NULL;
 }
 
-void eliminar_bloque_logico(char *file_tag, int nro)   //ya sincro, no se obtener bloque fisico asociado
+void eliminar_bloque_logico(int query_id, char *file_tag, int nro)   //ya sincro, no se obtener bloque fisico asociado
 {
 
     char *logical_blocks_path = concatenar_path(file_tag, "logical_blocks");
 
     char *aux = string_from_format("%06d.dat", nro);
-    char *bloque_logico = string_from_format("%s/%s/%s", punto_montaje, logical_blocks_path, aux);
+    char *bloque_logico = string_from_format("%s/files/%s/%s", punto_montaje, logical_blocks_path, aux);
 
     char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
 
     int nro_bloque = obtener_numero_bloque(bloque_fisico);
 
     remove(bloque_logico);
+    
+    lock_metadata(file_tag);
+    quitar_ultimo_bloque_metadata(file_tag);
+    unlock_metadata(file_tag);
 
     if (obtener_referencias_bloque(nro_bloque) <= 1)
     {
         pthread_mutex_lock(&mutex_bitmap);
         bitarray_clean_bit(bitmap, nro_bloque);
         pthread_mutex_unlock(&mutex_bitmap);
+        log_info(logger, "##<%i> - Bloque Físico Liberado - Número de Bloque: <%i>", query_id, nro_bloque);
     }
 
     free(logical_blocks_path);
@@ -223,7 +228,7 @@ int obtener_bloque_por_hash(char *md5)
         return -1;
 }
 
-int truncar_archivo(int nuevo_tamanio, char *file, char *tag)
+int truncar_archivo(int query_id, int nuevo_tamanio, char *file, char *tag)
 {
     char *file_tag = concatenar_path(file, tag);
 
@@ -245,15 +250,16 @@ int truncar_archivo(int nuevo_tamanio, char *file, char *tag)
         for (int i = bloque_maximo; i < bloques_necesarios; i++)
         {
             crear_bloque_logico(file_tag, i);
+            log_info(logger, "##<%i> - <%s>:<%s> Se agregó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, i, 0);
         }
     }
     else
     {
-        int bloques_necesarios = (tamanio_previo - nuevo_tamanio) / block_size;
+        int bloques_necesarios = (tamanio_previo - nuevo_tamanio) / block_size;           //hice mal la lógica, despues lo arreglo
 
         for (int i = bloque_maximo - 1; i > bloques_necesarios - 1; i--)
         {
-            eliminar_bloque_logico(file_tag, i);
+            eliminar_bloque_logico(query_id, file_tag, i);
         }
     }
     
@@ -278,10 +284,12 @@ int escribir_bloque(int query_id, char *file, char* tag, int offset, char *conte
         return -2;
 
     lock_metadata(path);
+
     if (escritura_no_permitida(path))
         return -4;
     if (operacion_fuera_de_rango(offset, tamanio, path))
         return -5;
+
     unlock_metadata(path);
 
     int nro_bloque = offset / block_size;
@@ -300,7 +308,7 @@ int escribir_bloque(int query_id, char *file, char* tag, int offset, char *conte
         escribir_archivo(bloque_fisico, contenido, offset_interno);
         unlock_bloque_fisico(bloque_fisico);
 
-        log_info(logger, "##<QUERY_ID> - Bloque Lógico Escrito <%s>:<$s%s> - Número de Bloque: <%i>", "gol", "hol", 1);
+        log_info(logger, "##<%d> - Bloque Lógico Escrito <%s>:<$s%s> - Número de Bloque: <%i>",query_id, file, tag, nro_bloque);
     }
     else
     {
@@ -331,7 +339,12 @@ int escribir_bloque(int query_id, char *file, char* tag, int offset, char *conte
 
         free(nuevo_bloque_fisico);
 
-        log_info(logger, "##<> - Bloque Lógico <%i> se reasigna de <%i> a <%i>",nro_bloque, nro_block_f, nro_bloque_f_nuevo);
+        log_info(logger, "##<%i> - Bloque Físico Reservado - Número de Bloque: <%i>", query_id, nro_bloque_f_nuevo);
+        log_info(logger, "##<%i> - <%s>:<%s> Se eliminó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, nro_bloque, nro_block_f);
+        log_info(logger, "##<%i> - <%s>:<%s> Se agregó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, nro_bloque, nro_bloque_f_nuevo);
+
+        //log_info(logger, "##<%d> - Bloque Lógico <%i> se reasigna de <%i> a <%i>",query_id, nro_bloque, nro_block_f, nro_bloque_f_nuevo);
+        log_info(logger, "##<%d> - Bloque Lógico Escrito <%s>:<$s%s> - Número de Bloque: <%i>",query_id, file, tag, nro_bloque);
     }
     free(aux);
     free(bloque_logico);

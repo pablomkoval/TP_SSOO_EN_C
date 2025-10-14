@@ -150,6 +150,56 @@ void agregar_bloque_metadata(char *path, int bloque, int pos)
     free(path_config);
 }
 
+void quitar_ultimo_bloque_metadata(char *path)
+{
+    char *path_config = path_config_meta(path);
+    t_config *meta = config_create(path_config);
+    char **blocks = config_get_array_value(meta, "BLOCKS");
+
+    int cantidad = 0;
+    while (blocks && blocks[cantidad])
+        cantidad++;
+
+    if (cantidad == 0)
+    {
+        log_warning(logger, "No hay bloques para eliminar en %s", path);
+        config_destroy(meta);
+        free(path_config);
+        string_array_destroy(blocks);
+        return;
+    }
+
+    char **nuevos = malloc(sizeof(char *) * cantidad);
+    for (int i = 0; i < cantidad - 1; i++)
+        nuevos[i] = string_duplicate(blocks[i]);
+    nuevos[cantidad - 1] = NULL;
+
+    char *blocks_str = string_new();
+    string_append(&blocks_str, "[");
+
+    for (int i = 0; i < cantidad - 1; i++)
+    {
+        string_append(&blocks_str, nuevos[i]);
+        if (i < cantidad - 2)
+            string_append(&blocks_str, ",");
+    }
+    string_append(&blocks_str, "]");
+
+
+    config_set_value(meta, "BLOCKS", blocks_str);
+    config_save(meta);
+
+    for (int i = 0; i < cantidad - 1; i++)
+        free(nuevos[i]);
+    free(nuevos);
+    string_array_destroy(blocks);
+    free(blocks_str);
+    config_destroy(meta);
+    free(path_config);
+
+    log_info(logger, "Se eliminó el último bloque del archivo %s", path);
+}
+
 int cant_bloques_logicos(char *path)   //si aparece hay que lockear metadata
 {
     char *path_config = path_config_meta(path);
@@ -189,7 +239,7 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
     for (int i = 0; i < cant; i++)
     {
         char *bloque_logico = obtener_bloque_logico(file_tag, i);
-        char *md5 = obtener_hash_block(bloque_logico);
+        char *md5 = obtener_hash_block(bloque_logico);                             // hay que ver que onda con la sincro acá
         char *bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
         int nro_bloque = obtener_bloque_por_hash(md5);
         char *bloque_fisico_nuevo = bloque_fisico_por_nro(nro_bloque);
@@ -202,7 +252,11 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
             cambiar_bloque_metadata(file_tag, nro_block_f, i);
             unlock_metadata(file_tag);
 
-            // log_info(logger, "##<%s> - Bloque Lógico <%i> se reasigna de <%i> a <%i>", query_id, i, nro_bloque, nro_bloque_f);
+            log_info(logger, "##<%i> - <%s>:<%s> Se eliminó el hard link del bloque lógico <%dO> al bloque físico <%d>", query_id, file, tag, i, nro_bloque);
+            log_info(logger, "##<%i> - <%s>:<%s> Se agregó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, i, nro_block_f);
+            
+
+            log_info(logger, "##<%d> - Bloque Lógico <%i> se reasigna de <%i> a <%i>", query_id, i, nro_bloque, nro_block_f);
 
             if (obtener_referencias_bloque(nro_bloque) <= 1)
             {
