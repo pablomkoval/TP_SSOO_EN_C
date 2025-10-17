@@ -17,7 +17,7 @@ typedef enum {
 } id_query_t;
 
 typedef struct {
-    id_query_t identificador;
+    int identificador;
     char* file_tag;
     char* param1;
     char* param2;
