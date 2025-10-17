@@ -76,8 +76,46 @@ int copiar_tag(int query_id, char *file_origen, char *tag_origen, char *file_des
     return 1;
 }
 
-int eliminar_tag(char *file, char* tag)
+int eliminar_tag(int query_id, char *file, char* tag)
 {
+    char* file_tag = concatenar_path(file, tag);
+
+    if(!file_tag_existe(file_tag)) 
+    {
+        free(file_tag);
+        return -2; 
+    }
+
+    char *path_config = path_config_meta(file_tag);
+    t_config *meta = config_create(path_config);
+
+    lock_metadata(file_tag);
+    char **blocks = config_get_array_value(meta, "BLOCKS");
+    unlock_metadata(file_tag);
+
+    int cantidad = 0;
+
+    while (blocks && blocks[cantidad]) cantidad++;
+
+    for(int i = 0; i < cantidad; i++)
+    {
+        char* bloque_logico = obtener_bloque_logico(file_tag, i);
+        eliminar_bloque_logico(query_id, file_tag, i);
+        free(bloque_logico);
+    }
+    
+
+    char* comando = string_from_format("rm -rf '%s/files/%s'", punto_montaje, file_tag);
+
+    system(comando);
+    
+    for (int i = 0; blocks[i] != NULL; i++) free(blocks[i]);
+
+    free(blocks);
+    config_destroy(meta);
+    free(comando);
+    free(file_tag);
+
     return 1;
 }
 

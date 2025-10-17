@@ -1,51 +1,52 @@
 #include <conexiones_workers.h>
 
-
+t_dictionary* worker_id_por_socket = NULL;
 
 void* manejar_conexion_worker(void* arg) {
-    int socket_worker = *((int*)arg);
+    int* socket_worker = arg;
     free(arg);
 
     while(1) {
-        int codigo_operacion = recibir_opcode(socket_worker);
+        int codigo_operacion = recibir_opcode(*socket_worker);
         if (codigo_operacion < 0) {
-            log_warning(logger, "Worker desconectado");
+
+            manejar_desconexion(socket_worker);
             break;
         }
 
         switch(codigo_operacion) {
             case CREATE:
 
-                manejar_create(socket_worker);
+                manejar_create(*socket_worker);
                 break;
 
             case TRUNCATE:
 
-                manejar_truncate(socket_worker);
+                manejar_truncate(*socket_worker);
                 break; 
 
             case TAG:
 
-                manejar_tag(socket_worker);
+                manejar_tag(*socket_worker);
                 break;
 
             case COMMIT:
 
-                manejar_commit(socket_worker);
+                manejar_commit(*socket_worker);
                 break;
 
             case WRITE:
 
-                manejar_write(socket_worker);
+                manejar_write(*socket_worker);
                 break;
 
             case READ:
 
-                manejar_read(socket_worker);
+                manejar_read(*socket_worker);
                 break;
 
             case DELETE:
-                manejar_delete(socket_worker);
+                manejar_delete(*socket_worker);
                 break;
 
             default:
@@ -53,7 +54,7 @@ void* manejar_conexion_worker(void* arg) {
                 break;
         }
      }
-     close(socket_worker);
+     close(*socket_worker);
      return NULL;
 }
 
@@ -61,36 +62,46 @@ void* manejar_conexion_worker(void* arg) {
 
 void* manejar_conexiones_storage(void* socket_ptr)
 {
-    int socket_cliente = *((int*)socket_ptr);
+    int* socket_cliente = socket_ptr;
     free(socket_ptr);
-    if (recibir_opcode(socket_cliente) == HANDSHAKE) {
+    if (recibir_opcode(*socket_cliente) == HANDSHAKE) {
 
-        t_list* recibido = recibir_paquete(socket_cliente);
-        int worker_id = *((int*)list_get(recibido, 0));
+        t_list* recibido = recibir_paquete(*socket_cliente);
+        int* worker_id = list_get(recibido, 0);
+        char* socket_key = string_itoa(*socket_cliente);
+        
+        pthread_mutex_lock(&mutex_worker_id);
+        dictionary_put(worker_id_por_socket, socket_key, worker_id);
+        int cantidad_workers = dictionary_size (worker_id_por_socket);
+        pthread_mutex_unlock(&mutex_worker_id);
+
+        free(socket_key);
+
+        log_info(logger, "##Se conecta el Worker <%i> - Cantidad de Workers: <%d>", *worker_id, cantidad_workers);
+
         //ACA MANU TENES WORKER_ID Y SOCKET_CLIENTE, SOLO TENES QUE HACER UN DICCIONARIO
 
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, OK);
         agregar_a_paquete(paquete, &block_size, sizeof(int));
-        enviar_paquete(paquete, socket_cliente, logger);
+        enviar_paquete(paquete, *socket_cliente, logger);
         borrar_paquete(paquete);
 
         log_trace(logger, "Recibi el handshake de un WORKER");
 
         int* socket_worker = malloc(sizeof(int));
-        *socket_worker = socket_cliente;
         log_trace(logger, "socket worker: %d", *socket_worker);
         
         pthread_t hilo_worker;
-        pthread_create(&hilo_worker, NULL, (void*)manejar_conexion_worker, socket_worker);
+        pthread_create(&hilo_worker, NULL, (void*)manejar_conexion_worker, socket_cliente);
         pthread_detach(hilo_worker);
 
         list_destroy_and_destroy_elements(recibido, free);
+
         return NULL;
     }
     return NULL;
 }
-
 void* manejar_servidor(void* socket_ptr) 
 {
     //por cada accept esta funcion tira un hilo
@@ -241,12 +252,28 @@ void manejar_delete(int socket_worker)
     char* file = list_get(datos, 1);
     char* tag = list_get(datos, 2);
 
-    int resultado = eliminar_tag(file, tag);
+    int resultado = eliminar_tag(*query_id, file, tag);
 
     if(resultado == 1)
     {
         log_info(logger, "##<%i> - Tag Eliminado <%s>:<%s>", *query_id, file, tag);
     }
+}
+
+void manejar_desconexion(int* socket_worker)
+{
+
+        char* socket_key = string_itoa(*socket_worker);
+
+        pthread_mutex_lock(&mutex_worker_id);
+        int* worker_id = dictionary_remove(worker_id_por_socket, socket_key);
+        int cantidad_workers = dictionary_size (worker_id_por_socket);
+        pthread_mutex_unlock(&mutex_worker_id);
+
+        free(socket_key);
+
+        log_info(logger, "##Se desconecta el Worker <%i> - Cantidad de Workers: <%d>", *worker_id, cantidad_workers);
+
 }
 
 

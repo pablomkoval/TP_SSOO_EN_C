@@ -241,9 +241,6 @@ int truncar_archivo(int query_id, int nuevo_tamanio, char *file, char *tag)
     int tamanio_previo = cambiar_tamanio_metadata(file_tag, nuevo_tamanio_str);
     unlock_metadata(file_tag);
 
-    int bloque_maximo = tamanio_previo / block_size;
-
-
     int bloques_previos = (tamanio_previo + block_size - 1) / block_size;
     int bloques_nuevos  = (nuevo_tamanio + block_size - 1) / block_size;
 
@@ -281,15 +278,23 @@ int escribir_bloque(int query_id, char *file, char* tag, int offset, char *conte
     char *path = concatenar_path(file, tag);
     int tamanio = strlen(contenido);
 
-    if (!file_tag_existe(path))
+    if (!file_tag_existe(path)){
+        free(path);
         return -2;
+    }
 
     lock_metadata(path);
 
-    if (escritura_no_permitida(path))
+    if (escritura_no_permitida(path)){
+        free(path);
         return -4;
-    if (operacion_fuera_de_rango(offset, tamanio, path))
+    }
+        
+    if (operacion_fuera_de_rango(offset, tamanio, path)){
+        free(path);
         return -5;
+    }
+        
 
     unlock_metadata(path);
 
@@ -343,7 +348,6 @@ int escribir_bloque(int query_id, char *file, char* tag, int offset, char *conte
         log_info(logger, "##<%i> - Bloque Físico Reservado - Número de Bloque: <%i>", query_id, nro_bloque_f_nuevo);
         log_info(logger, "##<%i> - <%s>:<%s> Se eliminó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, nro_bloque, nro_block_f);
         log_info(logger, "##<%i> - <%s>:<%s> Se agregó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, nro_bloque, nro_bloque_f_nuevo);
-
         //log_info(logger, "##<%d> - Bloque Lógico <%i> se reasigna de <%i> a <%i>",query_id, nro_bloque, nro_block_f, nro_bloque_f_nuevo);
         log_info(logger, "##<%d> - Bloque Lógico Escrito <%s>:<$s%s> - Número de Bloque: <%i>",query_id, file, tag, nro_bloque);
     }

@@ -6,6 +6,7 @@
 
 extern pthread_mutex_t mutex_bitmap;
 extern pthread_mutex_t mutex_hash_index;
+extern pthread_mutex_t mutex_worker_id;
 
 extern t_dictionary* mutex_por_metadata;
 extern t_dictionary* mutex_por_bloque_fisico;

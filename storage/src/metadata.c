@@ -141,8 +141,8 @@ void agregar_bloque_metadata(char *path, int bloque, int pos)
         free(nuevos[i]);
     free(nuevos);
 
-    for (int i = 0; blocks[i] != NULL; i++)
-        free(blocks[i]);
+    for (int i = 0; blocks[i] != NULL; i++) free(blocks[i]);
+    
     free(blocks);
     free(bloque_str);
     free(blocks_str);

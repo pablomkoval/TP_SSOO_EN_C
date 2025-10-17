@@ -6,6 +6,7 @@ t_config *config_superblock;
 
 int main(int argc, char *argv[])
 {
+    worker_id_por_socket = dictionary_create();
     inicializar_mutexes();
     config = iniciar_config();
     logger = iniciar_logger();
