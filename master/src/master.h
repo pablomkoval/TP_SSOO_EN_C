@@ -10,8 +10,7 @@ typedef enum{
 #include<utils/utils.h>
 #include<master_config.h>
 #include<conexiones_master.h>
-
-
+#include<qcb.h>
 
 extern t_dictionary* diccionario_workers;   // key: id_worker, valor: socket_worker
 extern t_dictionary* diccionario_querys;    

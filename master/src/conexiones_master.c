@@ -142,8 +142,6 @@ void *funcion_main_escucha(void *socket_arg){
                 pthread_create(&hilo_cliente, NULL, manejar_servidor_worker, (void *)args);
                 pthread_detach(hilo_cliente);
 
-                // agregar el socket a una lista de workers
-
                 free(worker_id_str);
                 break;
 
@@ -151,7 +149,7 @@ void *funcion_main_escucha(void *socket_arg){
                 log_trace(logger, "Recibi handshake de un query control");
                 int *socket_query_ptr = malloc(sizeof(int));
                 *socket_query_ptr = socket_cliente;
-                // agregar el socket a una lista de qc's
+
                 pthread_create(&hilo_cliente, NULL, manejar_servidor_querycontrol, (void *)socket_query_ptr);
                 pthread_detach(hilo_cliente);
                 
