@@ -14,7 +14,12 @@ void crear_metadata_config(char *path)
     config_set_value(metadata, "BLOCKS", "[]");
     config_set_value(metadata, "ESTADO", "WORK_IN_PROGRESS");
 
+    pthread_mutex_t* mutex = malloc(sizeof(pthread_mutex_t));
+    pthread_mutex_init(mutex, NULL);
+    dictionary_put(mutex_por_metadata, string_duplicate(config), mutex);
+
     config_save(metadata);
+    config_destroy(metadata);
 
     free(config);
 }
@@ -22,7 +27,7 @@ void crear_metadata_config(char *path)
 void cambiar_estado_metadata(char *path, char *nuevo_estado)
 {
     char *path_config = path_config_meta(path);
-    t_config *meta = config_create(path_config);
+    t_config *meta = config_create(path_config);                      
     config_set_value(meta, "ESTADO", nuevo_estado);
     config_save(meta);
     config_destroy(meta);
@@ -45,9 +50,10 @@ char *estado_metadata(char *path)
 {
     char *path_config = path_config_meta(path);
     t_config *meta = config_create(path_config);
-    char *estado = config_get_string_value(meta, "ESTADO");
+    char *estado_original = config_get_string_value(meta, "ESTADO");
+    char *estado = string_duplicate(estado_original);
+    
     config_destroy(meta);
-
     free(path_config);
 
     return estado;
@@ -66,6 +72,10 @@ void cambiar_bloque_metadata(char *path, int bloque, int pos)
     while (blocks && blocks[contador])
         contador++;
 
+    if (blocks && blocks[pos] != NULL) {
+        free(blocks[pos]); 
+    }
+
     blocks[pos] = bloque_str;
 
     char *blocks_str = string_new();
@@ -83,6 +93,10 @@ void cambiar_bloque_metadata(char *path, int bloque, int pos)
     config_set_value(meta, "BLOCKS", blocks_str);
     config_save(meta);
 
+    for (int i = 0; blocks[i] != NULL; i++)
+        free(blocks[i]);
+
+    free(blocks);
     free(blocks_str);
     config_destroy(meta);
     free(path_config);
@@ -127,12 +141,66 @@ void agregar_bloque_metadata(char *path, int bloque, int pos)
         free(nuevos[i]);
     free(nuevos);
 
+    for (int i = 0; blocks[i] != NULL; i++)
+        free(blocks[i]);
+    free(blocks);
+    free(bloque_str);
     free(blocks_str);
     config_destroy(meta);
     free(path_config);
 }
 
-int cant_bloques_logicos(char *path)
+void quitar_ultimo_bloque_metadata(char *path)
+{
+    char *path_config = path_config_meta(path);
+    t_config *meta = config_create(path_config);
+    char **blocks = config_get_array_value(meta, "BLOCKS");
+
+    int cantidad = 0;
+    while (blocks && blocks[cantidad])
+        cantidad++;
+
+    if (cantidad == 0)
+    {
+        log_warning(logger, "No hay bloques para eliminar en %s", path);
+        config_destroy(meta);
+        free(path_config);
+        string_array_destroy(blocks);
+        return;
+    }
+
+    char **nuevos = malloc(sizeof(char *) * cantidad);
+    for (int i = 0; i < cantidad - 1; i++)
+        nuevos[i] = string_duplicate(blocks[i]);
+    nuevos[cantidad - 1] = NULL;
+
+    char *blocks_str = string_new();
+    string_append(&blocks_str, "[");
+
+    for (int i = 0; i < cantidad - 1; i++)
+    {
+        string_append(&blocks_str, nuevos[i]);
+        if (i < cantidad - 2)
+            string_append(&blocks_str, ",");
+    }
+    string_append(&blocks_str, "]");
+
+
+    config_set_value(meta, "BLOCKS", blocks_str);
+    config_save(meta);
+
+    for (int i = 0; i < cantidad - 1; i++)
+        free(nuevos[i]);
+    free(nuevos);
+    string_array_destroy(blocks);
+    free(blocks_str);
+    config_destroy(meta);
+    free(path_config);
+
+    log_info(logger, "Se eliminó el último bloque del archivo %s", path);
+}
+
+int cant_bloques_logicos(char *path)   //si aparece hay que lockear metadata
 {
     char *path_config = path_config_meta(path);
     t_config *meta = config_create(path_config);
@@ -150,26 +218,28 @@ int cant_bloques_logicos(char *path)
     free(path_config);
 }
 
-int commmit_file(char *file, char *tag)
+int commmit_file(int query_id, char *file, char *tag)  //sincronizada
 {
     char *file_tag = concatenar_path(file, tag);
 
     if (!file_tag_existe(file_tag))
         return -2;
+    
+    lock_metadata(file_tag);
 
-    if (strcmp(estado_metadata(file_tag), "COMMITED") == 1)
+    if (strcmp(estado_metadata(file_tag), "COMMITED") == 0)
     {
         return 1;
     }
-
     cambiar_estado_metadata(file_tag, "COMMITED");
-
     int cant = cant_bloques_logicos(file_tag);
+
+    unlock_metadata(file_tag);
 
     for (int i = 0; i < cant; i++)
     {
         char *bloque_logico = obtener_bloque_logico(file_tag, i);
-        char *md5 = obtener_hash_block(bloque_logico);
+        char *md5 = obtener_hash_block(bloque_logico);                             // hay que ver que onda con la sincro acá
         char *bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
         int nro_bloque = obtener_bloque_por_hash(md5);
         char *bloque_fisico_nuevo = bloque_fisico_por_nro(nro_bloque);
@@ -177,20 +247,29 @@ int commmit_file(char *file, char *tag)
 
         if (nro_bloque != -1) // obtener bloque por hash devuelve -1 si no hay ninguno :p
         {
+            lock_metadata(file_tag);
             cambiar_hard_link(bloque_logico, bloque_fisico_nuevo);
-
             cambiar_bloque_metadata(file_tag, nro_block_f, i);
+            unlock_metadata(file_tag);
 
-            // log_info(logger, "##<%s> - Bloque Lógico <%i> se reasigna de <%i> a <%i>", query_id, i, nro_bloque, nro_bloque_f);
+            log_info(logger, "##<%i> - <%s>:<%s> Se eliminó el hard link del bloque lógico <%dO> al bloque físico <%d>", query_id, file, tag, i, nro_bloque);
+            log_info(logger, "##<%i> - <%s>:<%s> Se agregó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, i, nro_block_f);
+            
+
+            log_info(logger, "##<%d> - Bloque Lógico <%i> se reasigna de <%i> a <%i>", query_id, i, nro_bloque, nro_block_f);
 
             if (obtener_referencias_bloque(nro_bloque) <= 1)
             {
+                pthread_mutex_lock(&mutex_bitmap);
                 bitarray_clean_bit(bitmap, nro_bloque);
+                pthread_mutex_unlock(&mutex_bitmap);
             }
         }
         else
         {
+            pthread_mutex_lock(&mutex_hash_index);
             asociar_hash_block(bloque_fisico);
+            pthread_mutex_unlock(&mutex_hash_index);
         }
     }
 
@@ -201,10 +280,10 @@ int commmit_file(char *file, char *tag)
 
 bool escritura_no_permitida(char *file_tag)
 {
-    if (strcmp(estado_metadata(file_tag), "COMMITED") == 1)
-        ;
-
-    return 1;
+    char *estado = estado_metadata(file_tag);
+    bool bloqueado = (strcmp(estado, "COMMITED") == 0);
+    free(estado);
+    return bloqueado;
 }
 
 char *path_config_meta(char *file_tag)

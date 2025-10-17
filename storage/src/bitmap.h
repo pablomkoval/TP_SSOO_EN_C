@@ -7,5 +7,7 @@
 extern t_bitarray* bitmap;
 
 void* inicializar_bitmap();
+void asignar_bloque(int nro);
+int buscar_bloque_libre();
 
 #endif

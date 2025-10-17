@@ -42,11 +42,10 @@ void crear_tag(char *path_tag)
 
 char *concatenar_path(char *path, char *suma)
 {
-    char *direccion_archivo = string_from_format("%s/%s", path, suma);
-    return direccion_archivo;
+    return string_from_format("%s/%s", path, suma);
 }
 
-int copiar_tag(char *file_origen, char *tag_origen, char *file_destino, char *tag_destino)
+int copiar_tag(int query_id, char *file_origen, char *tag_origen, char *file_destino, char *tag_destino)
 {
 
     char *path_origen = string_from_format("%s/files/%s/%s", punto_montaje, file_origen, tag_origen);
@@ -65,14 +64,21 @@ int copiar_tag(char *file_origen, char *tag_origen, char *file_destino, char *ta
     system(comando);
 
     free(comando);
-
+    
+    lock_metadata(file_tag_destino);
     cambiar_estado_metadata(file_tag_destino, "WORK_IN_PROGRESS");
+    unlock_metadata(file_tag_destino);
+
+    free(file_tag_destino);
+    free(path_origen);
+    free(path_destino);
 
     return 1;
 }
 
-int eliminar_tag(char *path)
+int eliminar_tag(char *file, char* tag)
 {
+    return 1;
 }
 
 // CASOS ERROR
@@ -83,8 +89,13 @@ bool file_tag_existe(char *file_tag)
 
     if (access(path, F_OK) == 0)
     {
+        free(path);
         return 1;
     }
     else
+    {
+        free(path);
         return 0;
+    }
+        
 }
