@@ -5,7 +5,8 @@
 #include <worker.h>
 #include <memoria_interna.h>
 
-void ejecutar_create(char* file_tag, int qid);
-void ejecutar_write(char* file_tag, int direccion_base, char* contenido);
-void ejecutar_read(char* file_tag, int direccion_base, int tamanio);
+void ejecutar_create(char* file, char* tag, int qid);
+void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido, int qid);
+void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid);
+
 #endif

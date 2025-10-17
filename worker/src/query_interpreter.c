@@ -9,7 +9,7 @@ void* ciclo_query_interpreter(){
         }
         t_list* recibido = recibir_paquete(socket_master);
         
-        int qid = *((int*)list_get(recibido, 0))
+        int qid = *((int*)list_get(recibido, 0));
         void* nombre_elem = list_get(recibido, 1);
         void* pc = *((int*)list_get(recibido, 2));
         char* nombre_archivo = strdup((char*)nombre_elem);
@@ -127,7 +127,7 @@ void ejecutar_query(query_t* query, int qid){
 
         case CREATE_Q:
             log_info(logger, "se quiso ejecutar un create");
-            ejecutar_create(file, tag, qid)
+            ejecutar_create(file, tag, qid);
             break;
         
         case TRUNCATE_Q:
@@ -136,7 +136,7 @@ void ejecutar_query(query_t* query, int qid){
         
         case WRITE_Q:
             log_info(logger, "se quiso ejecutar un WRITE");
-            ejecutar_write(query->file_tag, query->param1, query->param2);
+            ejecutar_write(query->file_tag, query->param1, query->param2, qid);
             break;
 
         case READ_Q:

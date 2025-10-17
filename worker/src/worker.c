@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     //pthread_detach(thread_query_interpreter);
 
     query_t* query_a_ejecutar = leer_query("query1", 0);
-    ejecutar_query(query_a_ejecutar);
+    ejecutar_query(query_a_ejecutar, 0);
 
     pause();
 

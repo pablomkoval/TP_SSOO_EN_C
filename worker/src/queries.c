@@ -16,7 +16,7 @@ void ejecutar_trucate(char* file, char* tag, int tamanio, int qid){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, TRUNCATE);
     
-    agregar_a_paquete(paquete, &qid, sizeof(int))
+    agregar_a_paquete(paquete, &qid, sizeof(int));
     agregar_a_paquete(paquete, file, strlen(file));
     agregar_a_paquete(paquete, tag, strlen(tag));
     agregar_a_paquete(paquete, &tamanio, sizeof(int));
@@ -36,14 +36,14 @@ void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido, i
         int pagina_logica = obtener_pagina_logica(direccion_actual);
         int offset = obtener_offset_pagina(direccion_actual);
 
-        t_pagina* pag = obtener_pagina(file_tag, pagina_logica, qid);
+        pagina_t* pag = obtener_pagina(file_tag, pagina_logica, qid);
 
         int faltante_pagina = tam_pagina - offset;
         int cant_escritura;
         if(faltante_pagina < bytes_restantes){
             cant_escritura = faltante_pagina;
         }else{
-            cant_lectura = bytes_restantes;
+            cant_escritura = bytes_restantes;
         }
 
         void* destino = memoria_interna + pag->frame * tam_pagina + offset;
@@ -62,7 +62,7 @@ void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido, i
 }
 
 
-void ejecutar_read(char* file_tag, int direccion_base, int tamanio){
+void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
     int bytes_restantes = tamanio;
     char* buffer = malloc(tamanio);
     int direccion_actual = direccion_base;
@@ -72,7 +72,7 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio){
         int pagina_logica = obtener_pagina_logica(direccion_actual);
         int offset = obtener_offset_pagina(direccion_actual);
 
-        t_pagina* pag = obtener_pagina(file_tag, pagina_logica);
+        pagina_t* pag = obtener_pagina(file_tag, pagina_logica, qid);
 
         int faltante_pagina = tam_pagina - offset;
         int cant_lectura;

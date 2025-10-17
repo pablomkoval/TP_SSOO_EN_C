@@ -69,6 +69,11 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         if(frame == -1){
             frame = buscar_victima_reemplazo();
         }
+
+        char** separado = separar_file_tag(file_tag);
+        char* file = separado[0];
+        char* tag = separado[1];
+        string_array_destroy(separado);
         cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid);
         pag->bit_presencia = true;
         pag->frame = frame;
@@ -139,5 +144,5 @@ int obtener_offset_pagina(int direccion_logica) {
 }
 
 void liberar_frame(int frame){
-    bitmap-clear(bitmap_frames, frame);
+    bitmap_clear(bitmap_frames, frame);
 }
