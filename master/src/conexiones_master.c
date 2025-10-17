@@ -60,10 +60,16 @@ void *manejar_servidor_worker(void *arg){
                 agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
                 enviar_paquete(paquete, qcb->socket, logger);
                 borrar_paquete(paquete);
-                
+
                 int* worker_id_ptr = malloc(sizeof(int));
                 *worker_id_ptr = worker_id;
+
+                pthread_mutex_lock(&mutex_workers_libres);
                 list_add(workers_libres, worker_id_ptr);
+                pthread_mutex_unlock(&mutex_workers_libres);
+
+                sem_post(&sem_workers_libres);
+
                 break;
             default:
                 log_info(logger, "Error al recibir opcode, %d", op_code);
@@ -98,9 +104,14 @@ void *manejar_servidor_querycontrol(void *arg){
 
                 t_qcb* qcb = crear_qcb(path_query, socket_cliente);
                 char* qid_str = string_itoa(qcb->qid);
+
+                pthread_mutex_lock(&mutex_diccionario);
                 dictionary_put(diccionario_querys, qid_str, qcb);
-                //ponerle mutex
+                pthread_mutex_unlock(&mutex_diccionario);
+
+                pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, qcb);
+                pthread_mutex_unlock(&mutex_ready);
 
                 sem_post(&sem_queries_ready);
 
@@ -142,12 +153,17 @@ void *funcion_main_escucha(void *socket_arg){
                 char* worker_id_str = string_itoa(worker_id);
                 int *socket_worker_ptr = malloc(sizeof(int));
                 *socket_worker_ptr = socket_cliente;
-
-                dictionary_put(diccionario_workers, worker_id_str, (void *)socket_worker_ptr);
                 
+                pthread_mutex_lock(&mutex_diccionario);
+                dictionary_put(diccionario_workers, worker_id_str, (void *)socket_worker_ptr);
+                pthread_mutex_unlock(&mutex_diccionario);
+
                 int* worker_id_ptr = malloc(sizeof(int));
                 *worker_id_ptr = worker_id;
+
+                pthread_mutex_lock(&mutex_workers_libres);
                 list_add(workers_libres, worker_id_ptr);
+                pthread_mutex_unlock(&mutex_workers_libres);
 
                 sem_post(&sem_workers_libres);
 
