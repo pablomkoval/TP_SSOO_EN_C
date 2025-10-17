@@ -76,19 +76,15 @@ void *manejar_servidor_worker(void *arg){
 void *manejar_servidor_querycontrol(void *arg){
     int socket_cliente = *(int *)arg;
     free(arg);
+    t_qcb* qcb;
 
     while(1){
         int op_code = recibir_opcode(socket_cliente);
 
-        if (op_code == -1){
-            log_info(logger, "Se cerro la conexion de un query control");
-            manejar_desconexion_query_control(socket_cliente);
-            
-            close(socket_cliente);
-            break;
-        }
-
         switch (op_code){
+            case -1:
+                manejar_desconexion_query_control(socket_cliente, qcb->qid);
+                break;
             case PAQUETE:
                 log_info(logger, "Recibi paquete de query");
 
@@ -96,7 +92,7 @@ void *manejar_servidor_querycontrol(void *arg){
                 char* path_query = list_get(elementos, 0);
                 int prioridad_query = *(int*)list_get(elementos,1);
 
-                t_qcb* qcb = crear_qcb(path_query, socket_cliente);
+                qcb = crear_qcb(path_query, socket_cliente);
                 char* qid_str = string_itoa(qcb->qid);
                 dictionary_put(diccionario_querys, qid_str, qcb);
                 //ponerle mutex
@@ -174,7 +170,6 @@ void *funcion_main_escucha(void *socket_arg){
     }
 }
 
-void manejar_desconexion_query_control(int socket_cliente)
-{
+void manejar_desconexion_query_control(int socket_cliente, int qid){
     
 }

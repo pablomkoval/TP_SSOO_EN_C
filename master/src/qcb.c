@@ -16,6 +16,7 @@ t_qcb* crear_qcb(char* query_entrante, int socket){
     } else{
         qcb->tiempo_aging = NULL;
     }
+    return qcb;
 }
 
 void cambiar_estado(t_qcb* qcb, int nuevo_estado) {
