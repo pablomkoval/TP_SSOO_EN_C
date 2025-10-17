@@ -11,10 +11,12 @@ typedef struct{
     char* path;
     int id_worker_asociado;
     estados_query estado;
+    t_temporal* tiempo_aging;
 } t_qcb;
 
 extern int qid_global;
 
 t_qcb* crear_qcb (char* query_entrante, int socket);
+void cambiar_estado(t_qcb* qcb, int nuevo_estado);
 
 #endif

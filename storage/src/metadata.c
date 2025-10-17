@@ -16,7 +16,7 @@ void crear_metadata_config(char *path)
 
     pthread_mutex_t* mutex = malloc(sizeof(pthread_mutex_t));
     pthread_mutex_init(mutex, NULL);
-    dictionary_put(mutex_por_metadata, string_duplicate(config), mutex);
+    dictionary_put(mutex_por_metadata, config, mutex);
 
     config_save(metadata);
     config_destroy(metadata);
@@ -141,8 +141,8 @@ void agregar_bloque_metadata(char *path, int bloque, int pos)
         free(nuevos[i]);
     free(nuevos);
 
-    for (int i = 0; blocks[i] != NULL; i++)
-        free(blocks[i]);
+    for (int i = 0; blocks[i] != NULL; i++) free(blocks[i]);
+    
     free(blocks);
     free(bloque_str);
     free(blocks_str);

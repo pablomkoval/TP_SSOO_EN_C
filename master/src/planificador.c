@@ -25,13 +25,15 @@ int obtener_worker_libre(){
 
 void* planificador(){
     while(1){
-        //poner sus respectivos semaforos
-        t_qcb* a_ejecutar ;
+        t_qcb* a_ejecutar;
+
         if(strcmp(algoritmo_planificacion, "FIFO") == 1){
             a_ejecutar = queue_pop(cola_ready);
+            cambiar_estado(a_ejecutar, EXEC);
         }
         
         int socket_worker = obtener_worker_libre();
         enviar_qcb_a_worker(a_ejecutar, socket_worker);
+        free(a_ejecutar);
     }
 }

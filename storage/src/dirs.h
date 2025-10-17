@@ -9,6 +9,6 @@ void crear_directorio(const char* path);
 int crear_file(char* file, char* tag);
 int copiar_tag(int query_id, char* origen, char* destino, char* a, char* b);
 bool file_tag_existe(char* path);
-int eliminar_tag(char* file, char* tag);
+int eliminar_tag(int query_id, char* file, char* tag);
 
 #endif

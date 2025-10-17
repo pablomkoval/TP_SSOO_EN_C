@@ -2,6 +2,7 @@
 
 pthread_mutex_t mutex_bitmap;
 pthread_mutex_t mutex_hash_index;
+pthread_mutex_t mutex_worker_id;
 
 t_dictionary* mutex_por_metadata = NULL;
 t_dictionary* mutex_por_bloque_fisico = NULL;
@@ -9,6 +10,7 @@ t_dictionary* mutex_por_bloque_fisico = NULL;
 void inicializar_mutexes(void) {
     pthread_mutex_init(&mutex_bitmap, NULL);
     pthread_mutex_init(&mutex_hash_index, NULL);
+    pthread_mutex_init(&mutex_worker_id, NULL);
     mutex_por_metadata = dictionary_create();
     mutex_por_bloque_fisico = dictionary_create();
 }

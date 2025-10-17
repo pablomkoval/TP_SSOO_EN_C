@@ -1,11 +1,7 @@
 #include <master.h>
 
-//hacer una funcion que arme una query, como la pcb de antes
-// y de ahi hacer lo de cambiar estado y todo ese chiche ¿¿¿¿
-// preguntar!!
-
-
 pthread_t hilo_main_escucha;
+pthread_t hilo_planificador;
 
 t_dictionary* diccionario_querys;    // key: qid, valor: qcb
 t_dictionary* diccionario_workers;   // key: id_worker, valor: socket_worker
@@ -45,12 +41,11 @@ int main(int argc, char* argv[]){
     pthread_create(&hilo_main_escucha, NULL, funcion_main_escucha, socket_ptr);
     pthread_detach(hilo_main_escucha);
 
+    // inicializar_planificador();
+    // pthread_create(&hilo_planificador, NULL, planificador, NULL);
+    // pthread_detach(hilo_planificador);
+
     pause();
 
     return 0;
 }
-
-//void cambiar_estado(query,nuevo estado) {
-   // pcb->estado_actual = nuevo_estado;
-   // pcb->metricas_estado[nuevo_estado]++;
-//}
