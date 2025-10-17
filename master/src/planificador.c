@@ -43,21 +43,6 @@ void* planificador(){
         
         pthread_mutex_lock(&mutex_ready);
 
-<<<<<<< HEAD
-        t_qcb* a_ejecutar;
-        if(strcmp(algoritmo_planificacion, "FIFO") == 0){
-            a_ejecutar = queue_pop(cola_ready);
-        }   else{
-            //planificar por prioridadess
-            a_ejecutar = queue_pop(cola_ready); //por mientras esto para q no explote
-        }
-        pthread_mutex_unlock(&mutex_ready);
-
-        cambiar_estado(a_ejecutar, EXEC);
-
-        int socket_worker = obtener_worker_libre();
-        enviar_qcb_a_worker(a_ejecutar, socket_worker);
-=======
         t_qcb* query_a_ejecutar = NULL;
         int worker_seleccionado_id;
 
@@ -71,7 +56,6 @@ void* planificador(){
         
         
     enviar_query_a_worker(query_a_ejecutar, worker_seleccionado_id);
->>>>>>> bf17a6e (laburo de planificador y  headers que rompian qcb)
     }
 }
 
