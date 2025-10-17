@@ -26,7 +26,7 @@ typedef struct {
 
 query_t* parsear_query(char* query_raw);
 query_t* leer_query();
-void ejecutar_query(query_t* query);
+void ejecutar_query(query_t* query, int qid);
 void* ciclo_query_interpreter();
 
 #endif

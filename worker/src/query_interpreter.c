@@ -7,21 +7,34 @@ void* ciclo_query_interpreter(){
             log_error(logger, "blabla");
             return NULL;
         }
-        t_list* recibido = recibir_paquete(socket_storage);
-        void* nombre_elem = list_get(recibido, 0);
-        void* pc_elem = list_get(recibido, 1);
+        t_list* recibido = recibir_paquete(socket_master);
+        
+        int qid = *((int*)list_get(recibido, 0))
+        void* nombre_elem = list_get(recibido, 1);
+        void* pc = *((int*)list_get(recibido, 2));
         char* nombre_archivo = strdup((char*)nombre_elem);
-        int pc = *((int*)pc_elem);
 
-        query_t* query_a_ejecutar = leer_query(nombre_archivo, pc);
-        ejecutar_query(query_a_ejecutar);
-        //chequear interrupcion 
-        //aguardar respuesta siempre, todas las instrucciones son bloqueantes
+        ciclo_ejecucion(nombre_archivo, pc, qid);
         list_destroy_and_destroy_elements(recibido, free);
     }
     return NULL;
 }
 
+void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
+    while(1){
+        query_t* query_a_ejecutar = leer_query(nombre_archivo, pc);
+        ejecutar_query(query_a_ejecutar, qid);
+        //chequear interrupcion 
+
+
+        //aguardar respuesta siempre, todas las instrucciones son bloqueantes
+        int respuesta = recibir_opcode(socket_storage);
+        manejar_respuesta(socket_storage);
+
+        //añadir retardo antes de volver a empezar?
+        pc++;
+    }
+}
 query_t* leer_query(char* nombre_archivo, int pc){
     
     char* path_completo = string_from_format("%s%s", path_queries, nombre_archivo);
@@ -75,8 +88,7 @@ id_query_t parsear_query_id(char* identificador) {
 query_t* parsear_query(char* query_raw){
 
     query_t* query = malloc(sizeof(query_t));
-    query->file = NULL;
-    query->tag = NULL;
+    query->file_tag = NULL;
     query->param1 = NULL;
     query->param2 = NULL;
 
@@ -87,30 +99,6 @@ query_t* parsear_query(char* query_raw){
     
     query->identificador = parsear_query_id(separado[0]);
 
-    // if (cant_param > 1){
-    //     //aca iria algo para separar el :
-    //     query->file_tag = strdup(separado[1]);
-    // }
-    // if (cant_param > 2){
-    //     if(query->identificador == TAG){
-    //         char* file_tag_destino = strdup(separado[2]);
-    //         query->param1 = file_tag_destino;
-    //     }else{
-    //         int* param1 = malloc(sizeof(int));
-    //         *param1 = atoi(separado[2]);
-    //         query->param1 = strdup(separado[2]);
-    //     }
-    // }
-    // if (cant_param > 3){
-    //     if(query->identificador == READ){
-    //         int* tam = malloc(sizeof(int));
-    //         *tam = atoi(separado[3]);
-    //         query->param2 = tam;
-    //     }else{
-    //         query->param2 = strdup(separado[3]);
-    //     }
-    // }
-    
     if(cant_param > 1){
         query->file_tag = separado[1];
     }
@@ -126,7 +114,7 @@ query_t* parsear_query(char* query_raw){
 }
 
 
-void ejecutar_query(query_t* query){
+void ejecutar_query(query_t* query, int qid){
     char** partes = separar_file_tag(query->file_tag);
     char* file = strdup(partes[0]);
     char* tag = strdup(partes[1]);
@@ -139,6 +127,7 @@ void ejecutar_query(query_t* query){
 
         case CREATE_Q:
             log_info(logger, "se quiso ejecutar un create");
+            ejecutar_create(file, tag, qid)
             break;
         
         case TRUNCATE_Q:
@@ -183,4 +172,8 @@ void ejecutar_query(query_t* query){
 char** separar_file_tag(char* file_tag){
     char** partes = string_split(file_tag, ":");
     return partes;
+}
+
+void manejar_respuesta(int respuesta){
+
 }

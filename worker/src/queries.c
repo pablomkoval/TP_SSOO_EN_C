@@ -1,21 +1,23 @@
 #include <queries.h>
 
-void ejecutar_create(char* file_tag){
+void ejecutar_create(char* file, char* tag, int qid){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, CREATE);
 
-    agregar_a_paquete(paquete, nombre_file, strlen(nombre_file));
+    agregar_a_paquete(paquete, &qid, sizeof(int));
+    agregar_a_paquete(paquete, file, strlen(file));
     agregar_a_paquete(paquete, tag, strlen(tag));
 
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
 }
 
-void ejecutar_trucate(char* nombre_file, char* tag, int tamanio){
+void ejecutar_trucate(char* file, char* tag, int tamanio, int qid){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, TRUNCATE);
     
-    agregar_a_paquete(paquete, nombre_file, strlen(nombre_file));
+    agregar_a_paquete(paquete, &qid, sizeof(int))
+    agregar_a_paquete(paquete, file, strlen(file));
     agregar_a_paquete(paquete, tag, strlen(tag));
     agregar_a_paquete(paquete, &tamanio, sizeof(int));
 
@@ -23,7 +25,7 @@ void ejecutar_trucate(char* nombre_file, char* tag, int tamanio){
     borrar_paquete(paquete);
 }
 
-void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido){
+void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido, int qid){
     int direccion_base = atoi(direccion_base_str);
     int bytes_restantes = strlen(contenido);
     //char* buffer = malloc(bytes_restantes);
@@ -34,7 +36,7 @@ void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido){
         int pagina_logica = obtener_pagina_logica(direccion_actual);
         int offset = obtener_offset_pagina(direccion_actual);
 
-        t_pagina* pag = obtener_pagina(file_tag, pagina_logica);
+        t_pagina* pag = obtener_pagina(file_tag, pagina_logica, qid);
 
         int faltante_pagina = tam_pagina - offset;
         int cant_escritura;
@@ -105,22 +107,35 @@ void ejecutar_tag(char* file_origen, char* tag_origen, char* file_destino, char*
     borrar_paquete(paquete);
 }
 
-void ejecutar_commit(char* nombre_file, char* tag){
+void ejecutar_commit(char* file, char* tag, char* file_tag){
 
-    ejecutar_flush(nombre_file, tag);
+    ejecutar_flush(file_tag);
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, COMMIT);
     
-    agregar_a_paquete(paquete, nombre_file, strlen(nombre_file));
+    agregar_a_paquete(paquete, file, strlen(file));
     agregar_a_paquete(paquete, tag, strlen(tag));
 
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
 }
 
-void ejecutar_flush(char* nombre_file, char* tag){
+void ejecutar_flush(char* file, char* tag, char* file_tag, int qid){
+    tabla_paginas_t* tabla = obtener_tabla(file_tag);
     //falta agregarlo antes de realizar el desalojo del query del worker
+    for(int i=0; i < list_size(tabla->paginas); i++){
+        pagina_t* pag = list_get(tabla->paginas, i);
+
+        if(pag->bit_presencia == 1){
+            if(pag->bit_modificado == 1){
+                hacer_flush_de_pagina(file, tag, pag->nro_pagina, pag->frame, qid);
+                pag->bit_modificado = 0;
+            }
+            pag->bit_presencia = 0;
+            pag->frame = -1;
+        }
+    }
 
     //bajar file:tag de memoria interna a storage
 }

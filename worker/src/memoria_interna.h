@@ -21,4 +21,6 @@ typedef struct
 extern t_dictionary* tablas_de_paginas;
 extern void* memoria_interna;
 
+pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid);
+
 #endif

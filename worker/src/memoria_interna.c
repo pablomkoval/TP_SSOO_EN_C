@@ -46,7 +46,7 @@ pagina_t* buscar_pagina(tabla_paginas_t* tabla, int nro_pagina) {
 }
 
 
-pagina_t* obtener_pagina(char* file_tag, int nro_pagina){
+pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
     tabla_paginas_t* tabla = obtener_tabla(file_tag);
     pagina_t* pag = buscar_pagina(tabla, nro_pagina);
 
@@ -69,7 +69,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina){
         if(frame == -1){
             frame = buscar_victima_reemplazo();
         }
-        cargar_pagina_de_storage(file_tag, nro_pagina, frame);
+        cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid);
         pag->bit_presencia = true;
         pag->frame = frame;
         pag->bit_modificado = false;
@@ -93,13 +93,40 @@ int buscar_victima_reemplazo(){
     return 0;
 }
 
-void cargar_pagina_de_storage(char* file_tag, int nro_pagina, int frame){
-    //placeholder para que despues reciba de memoria informacion real
-    int contenido = 0;
-    memset(memoria_interna + frame * tam_pagina, contenido, tam_pagina);
+void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pagina, int frame, int qid){
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, READ);
+    agregar_a_paquete(paquete, &qid, sizeof(int));
+    agregar_a_paquete(paquete, file, strlen(file) + 1);
+    agregar_a_paquete(paquete, tag, strlen(tag) + 1);
+    agregar_a_paquete(paquete, &nro_pagina, sizeof(int));
+    enviar_paquete(paquete, socket_storage, logger);
+    borrar_paquete(paquete);
+
+    if(recibir_opcode(socket_storage) != READ) return;
+
+    t_list* recibido = recibir_paquete(socket_storage);
+    char* contenido = list_get(recibido, 0);
+
+    memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
+    memcpy(memoria_interna + frame * tam_pagina, contenido, tam_pagina);
+
+    list_destroy_and_destroy_elements(recibido, free);
 }
 
-void hacer_flush_de_pagina(){
+void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int qid){
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, WRITE);
+    agregar_a_paquete(paquete, &qid, sizeof(int));
+    agregar_a_paquete(paquete, file, strlen(file) + 1);
+    agregar_a_paquete(paquete, tag, strlen(tag) + 1);
+    agregar_a_paquete(paquete, &nro_pagina, sizeof(int));
+
+    void* contenido = memoria_interna + frame * tam_pagina;
+    agregar_a_paquete(paquete, contenido, tam_pagina);
+
+    enviar_paquete(paquete, socket_storage,logger);
+    borrar_paquete(paquete);
     return;
 }
 
@@ -109,4 +136,8 @@ int obtener_pagina_logica(int direccion_logica){
 
 int obtener_offset_pagina(int direccion_logica) {
     return direccion_logica % tam_pagina;
+}
+
+void liberar_frame(int frame){
+    bitmap-clear(bitmap_frames, frame);
 }

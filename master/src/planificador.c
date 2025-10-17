@@ -10,8 +10,9 @@ void inicializar_planificador(){
 void enviar_qcb_a_worker(t_qcb* qcb, int socket_worker){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, SOLICITUD_NUEVA_QUERY);
+    agregar_a_paquete(paquete, &qcb->qid, sizeof(int));
     agregar_a_paquete(paquete, qcb->path, strlen(qcb->path) + 1);
-    agregar_a_paquete(paquete, qcb->pc, strlen(qcb->pc) + 1);
+    agregar_a_paquete(paquete, &qcb->pc, sizeof(int));
     enviar_paquete(paquete, socket_worker, logger);
     borrar_paquete(paquete);
 }
