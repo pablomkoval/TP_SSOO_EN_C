@@ -137,6 +137,8 @@ void* lanzar_servidor(int socket_servidor)
 
 void manejar_create(int socket_worker)
 {
+    sleep(retardo_operacion);
+
     t_list* datos = recibir_paquete(socket_worker);
 
     int* query_id = list_get(datos, 0);
@@ -156,6 +158,7 @@ void manejar_create(int socket_worker)
 
 void manejar_truncate(int socket_worker)
 {
+    sleep(retardo_operacion);
     t_list* datos = recibir_paquete(socket_worker);
 
     int* query_id = list_get(datos, 0);
@@ -174,6 +177,7 @@ void manejar_truncate(int socket_worker)
 
 void manejar_commit(int socket_worker)
 {
+    sleep(retardo_operacion);
     t_list* datos = recibir_paquete(socket_worker);
 
     int* query_id = list_get(datos, 0);
@@ -190,6 +194,7 @@ void manejar_commit(int socket_worker)
 
 void manejar_tag(int socket_worker)
 {
+    sleep(retardo_operacion);
     t_list* datos = recibir_paquete(socket_worker);
 
     int* query_id = list_get(datos, 0);
@@ -209,6 +214,7 @@ void manejar_tag(int socket_worker)
 
 void manejar_write(int socket_worker)
 {
+    sleep(retardo_operacion);
     t_list* datos = recibir_paquete(socket_worker);
 
     int* query_id = list_get(datos, 0);
@@ -218,6 +224,7 @@ void manejar_write(int socket_worker)
     char* contenido = list_get(datos, 4);
     
     int resultado = escribir_bloque(*query_id, file, tag, *offset, contenido);
+    sleep(retardo_acceso_bloque);
 
     if(resultado == 1)
     {
@@ -227,6 +234,7 @@ void manejar_write(int socket_worker)
 
 void manejar_read(int socket_worker)
 {
+    sleep(retardo_operacion);
     t_list* datos = recibir_paquete(socket_worker);
 
     int* query_id = list_get(datos, 0);
@@ -237,6 +245,7 @@ void manejar_read(int socket_worker)
     char* data;
 
     int resultado = leer_bloque(*query_id, file, tag, *bloque, &data);
+    sleep(retardo_acceso_bloque);
 
     if(resultado == 1)
     {
@@ -246,6 +255,7 @@ void manejar_read(int socket_worker)
 
 void manejar_delete(int socket_worker)
 {
+    sleep(retardo_operacion);
     t_list* datos = recibir_paquete(socket_worker);
 
     int* query_id = list_get(datos, 0);
@@ -262,7 +272,6 @@ void manejar_delete(int socket_worker)
 
 void manejar_desconexion(int* socket_worker)
 {
-
         char* socket_key = string_itoa(*socket_worker);
 
         pthread_mutex_lock(&mutex_worker_id);
