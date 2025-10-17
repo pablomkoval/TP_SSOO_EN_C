@@ -18,6 +18,7 @@ int tam_pagina;
 
 int socket_storage;
 int socket_master;
+int worker_id;
 
 pthread_t thread_query_interpreter;
 
@@ -27,13 +28,13 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
     char* nombre_archivo = argv[1];
-    int worker_id = atoi(argv[2]);
+    worker_id = atoi(argv[2]);
     config_worker = iniciar_config(nombre_archivo);
     logger = iniciar_logger(worker_id);
 
     log_debug(logger, "se iniciaron logger y config");
 
-    socket_storage = conectar_storage();
+    socket_storage = conectar_storage(worker_id);
     socket_master = conectar_master(worker_id);
 
     log_debug(logger, "se iniciaron conexiones");

@@ -5,6 +5,6 @@
 #include <worker.h>
 
 int conectar_master(int worker_id);
-int conectar_storage();
+int conectar_storage(int worker_id);
 
 #endif

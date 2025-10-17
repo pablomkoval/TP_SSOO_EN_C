@@ -12,6 +12,7 @@ extern int retardo_memoria;
 extern char* algoritmo_reemplazo;
 extern char* path_queries;
 extern int tam_pagina;
+extern int worker_id;
 
 
 extern int socket_storage;

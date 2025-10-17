@@ -22,11 +22,14 @@ void handshake_master(int socket, int worker_id){
     return;
 }
 
-void handshake_storage(int socket){
-    enviar_handshake(socket, HANDSHAKE);
+void handshake_storage(int socket, int worker_id){
+    //enviar_handshake(socket, HANDSHAKE);
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, HANDSHAKE);
+    agregar_a_paquete(paquete, &worker_id, sizeof(int));
+    enviar_paquete(paquete, socket, logger);
+    borrar_paquete(paquete);
     log_info(logger, "Envié el handshake a Storage");
-
-
     
     int respuesta = recibir_opcode(socket);
     if(0 >= respuesta){
@@ -38,6 +41,7 @@ void handshake_storage(int socket){
         t_list* recibido = recibir_paquete(socket);
         int tam_bloque = *((int*)list_get(recibido, 0));
         tam_pagina = tam_bloque;
+        //send(socket, &worker_id, sizeof(int), 0);
         return;
     }else {
         log_error(logger, "Fallo en el handshake con Storage, recibí %d", respuesta);
@@ -72,7 +76,7 @@ int conectar_master(int worker_id){
 }
 
 //devuelve el socket del servidor storage
-int conectar_storage(){
+int conectar_storage(int worker_id){
     struct addrinfo hints;
     struct addrinfo *server_info;
 
@@ -90,7 +94,7 @@ int conectar_storage(){
     freeaddrinfo(server_info);
 
     //realizo un handhsake con storage
-    handshake_storage(socket_servidor);
+    handshake_storage(socket_servidor, worker_id);
 
     return socket_servidor;
 }

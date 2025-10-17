@@ -106,6 +106,11 @@ void* manejar_conexiones_memoria(void* socket_ptr) {
     int socket_cliente = *((int*)socket_ptr);
     free(socket_ptr);
     if (recibir_opcode(socket_cliente) == HANDSHAKE) {
+
+        t_list* recibido = recibir_paquete(socket_cliente);
+        int worker_id = *((int*)list_get(recibido, 0));
+        //ACA MANU TENES WORKER_ID Y SOCKET_CLIENTE, SOLO TENES QUE HACER UN DICCIONARIO
+
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, OK);
         agregar_a_paquete(paquete, block_size, sizeof(int));
@@ -121,6 +126,8 @@ void* manejar_conexiones_memoria(void* socket_ptr) {
         pthread_t hilo_worker;
         pthread_create(&hilo_worker, NULL, (void*)manejar_conexion_worker, socket_worker);
         pthread_detach(hilo_worker);
+
+        list_destroy_and_destroy_elements(recibido, free);
         return NULL;
     }
     return NULL;
