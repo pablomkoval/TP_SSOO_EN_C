@@ -170,10 +170,6 @@ void hacer_end_worker(char* worker_id_str, int worker_id){
     sem_post(&sem_workers_libres);
 }
 
-void manejar_desconexion_query_control(int socket_cliente, int qid){
-    
-}
-
 void hacer_qcb_nueva(int socket_cliente){
     log_info(logger, "Recibi paquete de query");
 
@@ -199,4 +195,14 @@ void hacer_qcb_nueva(int socket_cliente){
     log_info(logger, "Query recibida con id: %d, path: %s, prioridad: %d", id_query, path_query, prioridad_query);
 
     list_destroy_and_destroy_elements(elementos, free);
+}
+
+
+void manejar_desconexion_query_control(int socket_cliente, int qid){
+    
+}
+
+
+void encolar_qcb(t_list* cola_ready, t_qcb* qcb){ // if segun algoritmo de planificacion
+
 }

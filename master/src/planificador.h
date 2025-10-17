@@ -5,8 +5,13 @@
 #include <qcb.h>
 
 void* planificador();
+void inicializar_planificador();
+void enviar_qcb_a_worker(t_qcb* qcb, int socket_worker);
+int obtener_worker_libre();
+void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id);
+void obtener_query_worker_fifo(t_qcb* query_a_ejecutar, int *worker_libre_id);
 
-extern t_queue* cola_ready;
+extern t_list* cola_ready;
 extern t_list* workers_libres;
 
 extern sem_t sem_queries_ready;
