@@ -17,7 +17,7 @@ void inicializar_memoria_interna (){
 
     
     char* bitarray = calloc(tam_bitmap, sizeof(char));
-    bitmap_frames = bitarray_create(bitarray, tam_bitmap);
+    bitmap_frames = bitarray_create_with_mode(bitarray, tam_bitmap, LSB_FIRST);
 }
 
 tabla_paginas_t* crear_tabla(char* file_tag){
@@ -144,5 +144,5 @@ int obtener_offset_pagina(int direccion_logica) {
 }
 
 void liberar_frame(int frame){
-    bitmap_clear(bitmap_frames, frame);
+    bitarray_clean_bit(bitmap_frames, frame);
 }

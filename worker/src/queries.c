@@ -107,20 +107,6 @@ void ejecutar_tag(char* file_origen, char* tag_origen, char* file_destino, char*
     borrar_paquete(paquete);
 }
 
-void ejecutar_commit(char* file, char* tag, char* file_tag){
-
-    ejecutar_flush(file_tag);
-
-    t_paquete* paquete = crear_paquete();
-    cambiar_opcode_paquete(paquete, COMMIT);
-    
-    agregar_a_paquete(paquete, file, strlen(file));
-    agregar_a_paquete(paquete, tag, strlen(tag));
-
-    enviar_paquete(paquete, socket_storage, logger);
-    borrar_paquete(paquete);
-}
-
 void ejecutar_flush(char* file, char* tag, char* file_tag, int qid){
     tabla_paginas_t* tabla = obtener_tabla(file_tag);
     //falta agregarlo antes de realizar el desalojo del query del worker
@@ -138,6 +124,20 @@ void ejecutar_flush(char* file, char* tag, char* file_tag, int qid){
     }
 
     //bajar file:tag de memoria interna a storage
+}
+
+void ejecutar_commit(char* file, char* tag, char* file_tag, int qid){
+
+    ejecutar_flush(file, tag, file_tag, qid);
+
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, COMMIT);
+    
+    agregar_a_paquete(paquete, file, strlen(file));
+    agregar_a_paquete(paquete, tag, strlen(tag));
+
+    enviar_paquete(paquete, socket_storage, logger);
+    borrar_paquete(paquete);
 }
 
 void ejecutar_delete(char* nombre_file, char* tag){

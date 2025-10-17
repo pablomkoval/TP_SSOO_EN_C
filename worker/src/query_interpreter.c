@@ -11,7 +11,7 @@ void* ciclo_query_interpreter(){
         
         int qid = *((int*)list_get(recibido, 0));
         void* nombre_elem = list_get(recibido, 1);
-        void* pc = *((int*)list_get(recibido, 2));
+        int pc = *((int*)list_get(recibido, 2));
         char* nombre_archivo = strdup((char*)nombre_elem);
 
         ciclo_ejecucion(nombre_archivo, pc, qid);
@@ -29,7 +29,7 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
 
         //aguardar respuesta siempre, todas las instrucciones son bloqueantes
         int respuesta = recibir_opcode(socket_storage);
-        manejar_respuesta(socket_storage);
+        manejar_respuesta(respuesta);
 
         //añadir retardo antes de volver a empezar?
         pc++;

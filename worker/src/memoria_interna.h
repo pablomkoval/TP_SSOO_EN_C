@@ -21,6 +21,14 @@ typedef struct
 extern t_dictionary* tablas_de_paginas;
 extern void* memoria_interna;
 
+tabla_paginas_t* obtener_tabla(char* file_tag);
+int buscar_frame_libre();
+int buscar_victima_reemplazo();
+void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pagina, int frame, int qid);
 pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid);
+void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int qid);
+
+int obtener_pagina_logica(int direccion_logica);
+int obtener_offset_pagina(int direccion_logica);
 
 #endif
