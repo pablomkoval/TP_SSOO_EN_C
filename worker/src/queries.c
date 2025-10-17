@@ -28,7 +28,6 @@ void ejecutar_trucate(char* file, char* tag, int tamanio, int qid){
 void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido, int qid){
     int direccion_base = atoi(direccion_base_str);
     int bytes_restantes = strlen(contenido);
-    //char* buffer = malloc(bytes_restantes);
     int direccion_actual = direccion_base;
     int bytes_escritos = 0;
 
@@ -94,10 +93,11 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
     return;
 }
 
-void ejecutar_tag(char* file_origen, char* tag_origen, char* file_destino, char* tag_destino){
+void ejecutar_tag(char* file_origen, char* tag_origen, char* file_destino, char* tag_destino, int qid){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, TAG);
 
+    agregar_a_paquete(paquete, &qid, sizeof(int));
     agregar_a_paquete(paquete, file_origen, strlen(file_origen));
     agregar_a_paquete(paquete, tag_origen, strlen(tag_origen));
     agregar_a_paquete(paquete, file_destino, strlen(file_destino));
@@ -110,20 +110,17 @@ void ejecutar_tag(char* file_origen, char* tag_origen, char* file_destino, char*
 void ejecutar_flush(char* file, char* tag, char* file_tag, int qid){
     tabla_paginas_t* tabla = obtener_tabla(file_tag);
     //falta agregarlo antes de realizar el desalojo del query del worker
+
+    if(!tabla) return;
+
     for(int i=0; i < list_size(tabla->paginas); i++){
         pagina_t* pag = list_get(tabla->paginas, i);
 
-        if(pag->bit_presencia == 1){
-            if(pag->bit_modificado == 1){
-                hacer_flush_de_pagina(file, tag, pag->nro_pagina, pag->frame, qid);
-                pag->bit_modificado = 0;
-            }
-            pag->bit_presencia = 0;
-            pag->frame = -1;
+        if(pag->bit_presencia && pag->bit_modificado){
+            hacer_flush_de_pagina(file, tag, pag->nro_pagina, pag->frame, qid);
+            pag->bit_modificado = false;
         }
     }
-
-    //bajar file:tag de memoria interna a storage
 }
 
 void ejecutar_commit(char* file, char* tag, char* file_tag, int qid){
@@ -133,6 +130,7 @@ void ejecutar_commit(char* file, char* tag, char* file_tag, int qid){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, COMMIT);
     
+    agregar_a_paquete(paquete, &qid, sizeof(int));
     agregar_a_paquete(paquete, file, strlen(file));
     agregar_a_paquete(paquete, tag, strlen(tag));
 
@@ -140,10 +138,11 @@ void ejecutar_commit(char* file, char* tag, char* file_tag, int qid){
     borrar_paquete(paquete);
 }
 
-void ejecutar_delete(char* nombre_file, char* tag){
+void ejecutar_delete(char* nombre_file, char* tag, int qid){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, DELETE);
 
+    agregar_a_paquete(paquete, &qid, sizeof(int));
     agregar_a_paquete(paquete, nombre_file, strlen(nombre_file));
     agregar_a_paquete(paquete, tag, strlen(tag));
 
