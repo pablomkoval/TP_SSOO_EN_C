@@ -100,7 +100,7 @@ int eliminar_tag(int query_id, char *file, char* tag)
     for(int i = 0; i < cantidad; i++)
     {
         char* bloque_logico = obtener_bloque_logico(file_tag, i);
-        eliminar_bloque_logico(query_id, file_tag, i);
+        eliminar_bloque_logico(query_id, file, tag, i);
         free(bloque_logico);
     }
     

@@ -25,6 +25,6 @@ char* bloque_fisico_por_nro(int nro);
 int escribir_bloque(int query_id, char* file, char* tag, int offset, char* contenido);
 bool operacion_fuera_de_rango(int offset, int contenido, char* path);
 int leer_bloque(int query_id, char* file, char* tag, int tamanio, char** buffer);
-void eliminar_bloque_logico(int query_id, char* file_tag, int i);
+void eliminar_bloque_logico(int query_id, char *file, char* tag, int nro);
 
 #endif
