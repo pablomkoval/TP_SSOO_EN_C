@@ -48,6 +48,7 @@ void *manejar_servidor_worker(void *arg){
                 list_destroy_and_destroy_elements(recibido, free);
 
                 break;
+
             case END:
                 //ponerle mutex
                 qcb = dictionary_remove(diccionario_exec, worker_id_str);
@@ -59,6 +60,10 @@ void *manejar_servidor_worker(void *arg){
                 agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
                 enviar_paquete(paquete, qcb->socket, logger);
                 borrar_paquete(paquete);
+                
+                int* worker_id_ptr = malloc(sizeof(int));
+                *worker_id_ptr = worker_id;
+                list_add(workers_libres, worker_id_ptr);
                 break;
             default:
                 log_info(logger, "Error al recibir opcode, %d", op_code);
@@ -94,6 +99,9 @@ void *manejar_servidor_querycontrol(void *arg){
                 dictionary_put(diccionario_querys, qid_str, qcb);
                 //ponerle mutex
                 queue_push(cola_ready, qcb);
+
+                sem_post(&sem_queries_ready);
+
                 free(qid_str);
 
                 log_info(logger, "Query recibida con id: %d, path: %s, prioridad: %d", id_query, path_query, prioridad_query);
@@ -138,6 +146,8 @@ void *funcion_main_escucha(void *socket_arg){
                 int* worker_id_ptr = malloc(sizeof(int));
                 *worker_id_ptr = worker_id;
                 list_add(workers_libres, worker_id_ptr);
+
+                sem_post(&sem_workers_libres);
 
                 pthread_create(&hilo_cliente, NULL, manejar_servidor_worker, (void *)args);
                 pthread_detach(hilo_cliente);

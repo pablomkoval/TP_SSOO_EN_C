@@ -3,8 +3,15 @@
 t_queue* cola_ready;
 t_list* workers_libres;
 
+sem_t sem_queries_ready;
+sem_t sem_workers_libres;
+
 void inicializar_planificador(){
     cola_ready = queue_create();
+    workers_libres = list_create();
+
+    sem_init(&sem_queries_ready, 0, 0);
+    sem_init(&sem_workers_libres, 0, 0);
 }
 
 void enviar_qcb_a_worker(t_qcb* qcb, int socket_worker){
@@ -25,15 +32,20 @@ int obtener_worker_libre(){
 
 void* planificador(){
     while(1){
+        log_info(logger,"Planificador esperando query....");
+        sem_wait(&sem_queries_ready);
+        sem_wait(&sem_workers_libres);
+
         t_qcb* a_ejecutar;
 
-        if(strcmp(algoritmo_planificacion, "FIFO") == 1){
+        if(strcmp(algoritmo_planificacion, "FIFO") == 0){
             a_ejecutar = queue_pop(cola_ready);
             cambiar_estado(a_ejecutar, EXEC);
+        }   else{
+            //planificar por prioridadess
         }
         
         int socket_worker = obtener_worker_libre();
         enviar_qcb_a_worker(a_ejecutar, socket_worker);
-        free(a_ejecutar);
     }
 }

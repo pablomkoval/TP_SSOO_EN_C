@@ -9,4 +9,7 @@ void* planificador();
 extern t_queue* cola_ready;
 extern t_list* workers_libres;
 
+extern sem_t sem_queries_ready;
+extern sem_t sem_workers_libres;
+
 #endif

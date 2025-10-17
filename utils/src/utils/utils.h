@@ -12,6 +12,7 @@
 #include<commons/temporal.h>
 #include<readline/readline.h>
 #include<commons/bitarray.h>
+#include<semaphore.h>
 #include<signal.h>
 #include<unistd.h>
 #include<sys/socket.h>
