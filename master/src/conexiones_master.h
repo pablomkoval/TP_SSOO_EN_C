@@ -15,5 +15,6 @@ typedef struct{
 void* funcion_main_escucha (void* args);
 void* manejar_servidor_worker(void* arg);
 void* manejar_servidor_querycontrol(void* arg);
+void manejar_desconexion_query_control(int socket_cliente);
 
 #endif

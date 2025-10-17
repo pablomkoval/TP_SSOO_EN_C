@@ -142,7 +142,7 @@ void agregar_bloque_metadata(char *path, int bloque, int pos)
     free(nuevos);
 
     for (int i = 0; blocks[i] != NULL; i++) free(blocks[i]);
-    
+
     free(blocks);
     free(bloque_str);
     free(blocks_str);
@@ -197,7 +197,6 @@ void quitar_ultimo_bloque_metadata(char *path)
     config_destroy(meta);
     free(path_config);
 
-    log_info(logger, "Se eliminó el último bloque del archivo %s", path);
 }
 
 int cant_bloques_logicos(char *path)   //si aparece hay que lockear metadata

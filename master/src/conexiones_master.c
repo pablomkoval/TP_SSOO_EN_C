@@ -77,6 +77,8 @@ void *manejar_servidor_querycontrol(void *arg){
 
         if (op_code == -1){
             log_info(logger, "Se cerro la conexion de un query control");
+            manejar_desconexion_query_control(socket_cliente);
+            
             close(socket_cliente);
             break;
         }
@@ -160,4 +162,9 @@ void *funcion_main_escucha(void *socket_arg){
                 break;
         }
     }
+}
+
+void manejar_desconexion_query_control(int socket_cliente)
+{
+    
 }
