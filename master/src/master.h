@@ -10,16 +10,15 @@
 
 extern t_dictionary* diccionario_workers;   // key: id_worker, valor: socket_worker
 extern t_dictionary* diccionario_querys;    // key: qid, valor: qcb
-extern t_dictionary* diccionario_exec;      //key: id_worker, valor: (qcb)query a procesar
+extern t_dictionary* diccionario_exec;      // key: id_worker, valor: (qcb)query a procesar
 extern pthread_mutex_t mutex_diccionario_workers;
 extern pthread_mutex_t mutex_diccionario_querys;
 extern pthread_mutex_t mutex_diccionario_exec;
-
 
 extern t_log* logger;
 
 extern int id_query;
 
-void cambiar_estado();
+void inicializar_diccionarios_y_semaforos();
 
 #endif

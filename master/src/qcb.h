@@ -1,7 +1,6 @@
 #ifndef QCB_H_
 #define QCB_H_
 
-//#include <master.h>
 #include<utils/utils.h>
 #include <master_config.h>
 

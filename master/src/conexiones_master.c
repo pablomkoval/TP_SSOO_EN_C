@@ -20,7 +20,7 @@ void *manejar_servidor_worker(void *arg){
                 break;
 
             case END:
-                hacer_end_worker(socket_worker, worker_id_str);
+                hacer_end_worker(worker_id_str, worker_id);
                 break;
 
             default:
@@ -81,9 +81,9 @@ void *funcion_main_escucha(void *socket_arg){
                 int *socket_worker_ptr = malloc(sizeof(int));
                 *socket_worker_ptr = socket_cliente;
                 
-                pthread_mutex_lock(&mutex_diccionario);
+                pthread_mutex_lock(&mutex_diccionario_workers);
                 dictionary_put(diccionario_workers, worker_id_str, (void *)socket_worker_ptr);
-                pthread_mutex_unlock(&mutex_diccionario);
+                pthread_mutex_unlock(&mutex_diccionario_workers);
 
                 int* worker_id_ptr = malloc(sizeof(int));
                 *worker_id_ptr = worker_id;
@@ -119,21 +119,23 @@ void *funcion_main_escucha(void *socket_arg){
 
 void hacer_desconexion_worker(int worker_id){
     log_info(logger, "Se cerro la conexion de un worker");
-    //mutex
+    
+    pthread_mutex_lock(&mutex_diccionario_workers);
     dictionary_remove(diccionario_workers, string_itoa(worker_id));
-    //mutex
+    pthread_mutex_unlock(&mutex_diccionario_workers);
 }
 
 void hacer_read_worker(int socket_worker, char* worker_id_str){
     t_list* recibido = recibir_paquete(socket_worker);
     char* mensaje_worker = list_get(recibido, 0);
 
-    //ponerle mutex
+    pthread_mutex_lock(&mutex_diccionario_exec);
     t_qcb* qcb = dictionary_get(diccionario_exec, worker_id_str);
-                
+    pthread_mutex_unlock(&mutex_diccionario_exec);   
+
     log_info(logger,"Recibi mensaje de worker: %s, id: %s", mensaje_worker, worker_id_str);
 
-    if(qcb->socket != NULL) {
+    if(qcb->socket > 0){
         log_info(logger, "Reenviando mensaje a Query Control con socket: %d", qcb->socket);
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, READ);
@@ -148,9 +150,11 @@ void hacer_read_worker(int socket_worker, char* worker_id_str){
 }
 
 void hacer_end_worker(char* worker_id_str, int worker_id){
-    //ponerle mutex
+    
+    pthread_mutex_lock(&mutex_diccionario_exec);
     t_qcb* qcb = dictionary_remove(diccionario_exec, worker_id_str);
-
+    pthread_mutex_unlock(&mutex_diccionario_exec);
+    
     log_info(logger, "## Se terminó la Query %d en el Worker %d", qcb->qid, worker_id);
 
     t_paquete* paquete = crear_paquete();
@@ -177,12 +181,12 @@ void hacer_qcb_nueva(int socket_cliente){
     char* path_query = list_get(elementos, 0);
     int prioridad_query = *(int*)list_get(elementos,1);
 
-    t_qcb* qcb = crear_qcb(path_query, socket_cliente);
+    t_qcb* qcb = crear_qcb(path_query, prioridad_query, socket_cliente);
     char* qid_str = string_itoa(qcb->qid);
 
-    pthread_mutex_lock(&mutex_diccionario);
+    pthread_mutex_lock(&mutex_diccionario_querys);
     dictionary_put(diccionario_querys, qid_str, qcb);
-    pthread_mutex_unlock(&mutex_diccionario);
+    pthread_mutex_unlock(&mutex_diccionario_querys);
 
     pthread_mutex_lock(&mutex_ready);
     queue_push(cola_ready, qcb);
