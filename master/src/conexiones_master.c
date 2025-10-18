@@ -27,6 +27,8 @@ void *manejar_servidor_worker(void *arg){
                 log_info(logger, "Error al recibir opcode, %d", op_code);
                 break;
         }
+
+        free(worker_id_str);
     }
     return NULL;
 }
@@ -46,7 +48,7 @@ void *manejar_servidor_querycontrol(void *arg){
                 break;
                 
             case PAQUETE:
-                hacer_qcb_nueva(socket_cliente);
+                qcb = hacer_qcb_nueva(socket_cliente);
                 break;
 
             default:
@@ -154,7 +156,7 @@ void hacer_end_worker(char* worker_id_str, int worker_id){
     pthread_mutex_lock(&mutex_diccionario_exec);
     t_qcb* qcb = dictionary_remove(diccionario_exec, worker_id_str);
     pthread_mutex_unlock(&mutex_diccionario_exec);
-    
+
     log_info(logger, "## Se terminó la Query %d en el Worker %d", qcb->qid, worker_id);
 
     t_paquete* paquete = crear_paquete();
@@ -174,7 +176,7 @@ void hacer_end_worker(char* worker_id_str, int worker_id){
     sem_post(&sem_workers_libres);
 }
 
-void hacer_qcb_nueva(int socket_cliente){
+t_qcb* hacer_qcb_nueva(int socket_cliente){
     log_info(logger, "Recibi paquete de query");
 
     t_list* elementos = recibir_paquete(socket_cliente);
@@ -189,7 +191,7 @@ void hacer_qcb_nueva(int socket_cliente){
     pthread_mutex_unlock(&mutex_diccionario_querys);
 
     pthread_mutex_lock(&mutex_ready);
-    queue_push(cola_ready, qcb);
+    list_add(cola_ready, qcb);
     pthread_mutex_unlock(&mutex_ready);
 
     sem_post(&sem_queries_ready);
@@ -199,14 +201,20 @@ void hacer_qcb_nueva(int socket_cliente){
     log_info(logger, "Query recibida con id: %d, path: %s, prioridad: %d", id_query, path_query, prioridad_query);
 
     list_destroy_and_destroy_elements(elementos, free);
+
+    return qcb;
 }
 
 
 void manejar_desconexion_query_control(int socket_cliente, int qid){
+    log_info(logger, "Query control de qid %d, socket %d se desconecto. Iniciando desconexion.", qid, socket_cliente);
+
     
 }
 
 
 void encolar_qcb(t_list* cola_ready, t_qcb* qcb){ // if segun algoritmo de planificacion
-
-}
+//     if(strcmp(algoritmo_planificacion, "FIFO")){
+//         t_list_add
+//     }
+} //me void a cenar

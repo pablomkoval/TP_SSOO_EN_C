@@ -20,7 +20,7 @@ void hacer_desconexion_worker(int worker_id);
 void hacer_read_worker(int socket_worker, char* worker_id_str);
 void hacer_end_worker(char* worker_id_str, int worker_id);
 
-void hacer_qcb_nueva(int socket_cliente);
+t_qcb* hacer_qcb_nueva(int socket_cliente);
 void encolar_qcb(t_list* cola_ready, t_qcb* qcb);
 
 #endif

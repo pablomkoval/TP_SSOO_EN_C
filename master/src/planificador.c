@@ -30,8 +30,12 @@ void enviar_qcb_a_worker(t_qcb* qcb, int socket_worker){
 }
 
 int obtener_worker_libre(){
+    pthread_mutex_lock(&mutex_workers_libres);
     int* worker_id_ptr = list_remove(workers_libres, 0);
+    pthread_mutex_lock(&mutex_workers_libres);
+
     int worker_id = *worker_id_ptr;
+    free(worker_id_ptr);
     return worker_id;
 }
 
@@ -43,15 +47,14 @@ void* planificador(){
         
         pthread_mutex_lock(&mutex_ready);
 
-        t_qcb* query_a_ejecutar = NULL;
+
+        t_qcb* query_a_ejecutar = NULL
         int worker_seleccionado_id;
 
         if(strcmp(algoritmo_planificacion, "FIFO") == 0){
             obtener_query_worker_fifo(query_a_ejecutar, &worker_seleccionado_id);
-
-
         }   else{
-            //planificar por prioridadess (obtener_query_worker_priori(query_a_ejecutar, &worker_seleccionado_id))
+            //planificar por prioridadess obtener_query_worker_priori(query_a_ejecutar, &worker_seleccionado_id)
         }
         
         
