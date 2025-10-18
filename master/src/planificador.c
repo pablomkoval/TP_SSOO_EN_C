@@ -48,7 +48,7 @@ void* planificador(){
         pthread_mutex_lock(&mutex_ready);
 
 
-        t_qcb* query_a_ejecutar = NULL
+        t_qcb* query_a_ejecutar = NULL;
         int worker_seleccionado_id;
 
         if(strcmp(algoritmo_planificacion, "FIFO") == 0){
