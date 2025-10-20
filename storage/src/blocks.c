@@ -128,7 +128,7 @@ char *leer_archivo(char *path) //sincro cuando se usa
 
 int escribir_archivo(char *path, char *contenido, int offset) //sincro cuando se usa
 {
-    FILE *f = fopen(path, "w");
+    FILE *f = fopen(path, "r+");
 
     fseek(f, offset, SEEK_SET);
 
@@ -196,6 +196,7 @@ void eliminar_bloque_logico(int query_id, char *file, char* tag, int nro)   //ya
 
     log_info(logger, "##<%i> - <%s>:<%s> Se eliminó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, nro, nro_bloque);
 
+    free(file_tag);
     free(logical_blocks_path);
     free(aux);
     free(bloque_logico);
@@ -382,6 +383,12 @@ int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buff
     unlock_bloque_fisico(bloque_fisico);
 
     *buffer = contenido;
+
+    free(file_tag);
+    free(aux);
+    free(bloque_lohico);
+    free(bloque_fisico);
+    free(contenido);
 
     return 1;
 }
