@@ -21,7 +21,7 @@ t_qcb* crear_qcb(char* query_entrante, int prioridad_query, int socket){
 
 void cambiar_estado(t_qcb* qcb, int nuevo_estado) {
     qcb->estado = nuevo_estado;
-
+    
     if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
         //actualizar el tiempo aging
     }

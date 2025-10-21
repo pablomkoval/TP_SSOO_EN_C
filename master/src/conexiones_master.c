@@ -208,12 +208,18 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
 
 void manejar_desconexion_query_control(int socket_cliente, int qid){
     log_info(logger, "Query control de qid %d, socket %d se desconecto. Iniciando desconexion.", qid, socket_cliente);
+    
+    char* qid_str = string_itoa(qid);
+    t_qcb* qcb = dictionary_get(diccionario_querys, qid_str);
+    if(qcb->estado == READY){
+    list_remove_element(cola_ready, qcb);   
+    dictionary_remove(diccionario_querys,qid_str);
+    cambiar_estado(qcb, EXIT);
 
-    //t_qcb* qcb_en_ready = list_remove_by_condition(cola_ready, (void*)qcb_esta_en_cola_ready);
-    //ver como usar el socket_cliente para q lo busque en la cola de ready
-    if(qcb_en_ready != NULL){
-        cambiar_estado(qcb_en_ready, EXIT);
-        return;
+    } else if (qcb->estado == EXEC){
+        char* wid_asociado_str = string_itoa(qcb->id_worker_asociado);
+        int socket_worker_asociado = dictionary_get(diccionario_workers, wid_asociado_str);
+        //enviar_cod_op(&socket_worker_asociado, DESALOJAR);
     }
 }
 
