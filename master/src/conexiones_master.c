@@ -124,7 +124,10 @@ void hacer_desconexion_worker(int worker_id){
     log_info(logger, "Se cerro la conexion del worker de wid: %d", worker_id);
     char* wid_str = string_itoa(worker_id);
 
+    pthread_mutex_lock(&diccionario_exec);
     int* socket_query_asociada = dictionary_get(diccionario_exec, wid_str);
+    pthread_mutex_unlock(&diccionario_exec);
+
     t_paquete *paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, ERROR);
     enviar_paquete(paquete, &socket_query_asociada, logger);
@@ -216,11 +219,20 @@ void manejar_desconexion_query_control(int socket_cliente, int qid){
     log_info(logger, "Query control de qid %d, socket %d se desconecto. Iniciando desconexion.", qid, socket_cliente);
     
     char* qid_str = string_itoa(qid);
+
+    pthread_mutex_lock(&diccionario_querys);
     t_qcb* qcb = dictionary_get(diccionario_querys, qid_str);
+    pthread_mutex_unlock(&diccionario_querys);
+
     if(qcb->estado == READY){
-    list_remove_element(cola_ready, qcb);   
-    dictionary_remove(diccionario_querys,qid_str);
-    cambiar_estado(qcb, EXIT);
+    
+        list_remove_element(cola_ready, qcb);   
+
+        pthread_mutex_lock(&diccionario_querys);
+        dictionary_remove(diccionario_querys,qid_str);
+        pthread_mutex_unlock(&diccionario_querys);
+
+        cambiar_estado(qcb, EXIT);
 
     } else if (qcb->estado == EXEC){
         char* wid_asociado_str = string_itoa(qcb->id_worker_asociado);
