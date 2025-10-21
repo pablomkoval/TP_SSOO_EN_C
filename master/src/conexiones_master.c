@@ -121,7 +121,13 @@ void *funcion_main_escucha(void *socket_arg){
 }
 
 void hacer_desconexion_worker(int worker_id){
-    log_info(logger, "Se cerro la conexion de un worker");
+    log_info(logger, "Se cerro la conexion del worker de wid: %d", worker_id);
+    char* wid_str = string_itoa(worker_id);
+
+    int* socket_query_asociada = dictionary_get(diccionario_exec, wid_str);
+    t_paquete *paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, ERROR);
+    enviar_paquete(paquete, &socket_query_asociada, logger);
 
     pthread_mutex_lock(&mutex_diccionario_workers);
     dictionary_remove(diccionario_workers, string_itoa(worker_id));
@@ -221,6 +227,10 @@ void manejar_desconexion_query_control(int socket_cliente, int qid){
         int socket_worker_asociado = dictionary_get(diccionario_workers, wid_asociado_str);
         //enviar_cod_op(&socket_worker_asociado, DESALOJAR);
     }
+
+    free(qid_str);
+
+    //poner mutexsss
 }
 
 bool qcb_esta_en_cola_ready(void* arg, int socket_buscado){
