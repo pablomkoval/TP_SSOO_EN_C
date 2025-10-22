@@ -13,6 +13,7 @@ void *manejar_servidor_worker(void *arg){
         switch (op_code){
             case -1:
                 hacer_desconexion_worker(worker_id);
+                return NULL
                 break;
 
             case READ:
@@ -52,7 +53,7 @@ void *manejar_servidor_querycontrol(void *arg){
                 return NULL;
             case PAQUETE:
                 qcb = hacer_qcb_nueva(socket_cliente);
-                break;
+                break;socket_query_asociado
 
             default:
                 log_error(logger, "Error al recibir opcode, %d", op_code);
@@ -127,13 +128,14 @@ void hacer_desconexion_worker(int worker_id){
     log_info(logger, "Se cerro la conexion del worker de wid: %d", worker_id);
     char* wid_str = string_itoa(worker_id);
 
-    pthread_mutex_lock(&diccionario_exec);
-    int* socket_query_asociada = dictionary_get(diccionario_exec, wid_str);
-    pthread_mutex_unlock(&diccionario_exec);
+    pthread_mutex_lock(&mutex_diccionario_exec);
+    int* socket_qc_ptr = dictionary_get(diccionario_exec, wid_str);
+    pthread_mutex_unlock(&mutex_diccionario_exec);
+
 
     t_paquete *paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, ERROR);
-    enviar_paquete(paquete, &socket_query_asociada, logger);
+    enviar_paquete(paquete, *socket_qc_ptr, logger);
 
     pthread_mutex_lock(&mutex_diccionario_workers);
     dictionary_remove(diccionario_workers, string_itoa(worker_id));
@@ -199,14 +201,6 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
     t_qcb *qcb = crear_qcb(path_query, prioridad_query, socket_cliente);
     char *qid_str = string_itoa(qcb->qid);
 
-    pthread_mutex_lock(&mutex_diccionario_querys);
-    dictionary_put(diccionario_querys, qid_str, qcb);
-    pthread_mutex_unlock(&mutex_diccionario_querys);
-
-    pthread_mutex_lock(&mutex_ready);
-    list_add(cola_ready, qcb); //funcion que encole segun algoritmo de planificacion
-    pthread_mutex_unlock(&mutex_ready);
-
     sem_post(&sem_queries_ready);
 
     free(qid_str);
@@ -223,23 +217,23 @@ void manejar_desconexion_query_control(int socket_cliente, int qid){
     
     char* qid_str = string_itoa(qid);
 
-    pthread_mutex_lock(&diccionario_querys);
+    pthread_mutex_lock(&mutex_diccionario_querys);
     t_qcb* qcb = dictionary_get(diccionario_querys, qid_str);
-    pthread_mutex_unlock(&diccionario_querys);
+    pthread_mutex_unlock(&mutex_diccionario_querys);
 
     if(qcb->estado == READY){
     
         list_remove_element(cola_ready, qcb);   
 
-        pthread_mutex_lock(&diccionario_querys);
+        pthread_mutex_lock(&mutex_diccionario_querys);
         dictionary_remove(diccionario_querys,qid_str);
-        pthread_mutex_unlock(&diccionario_querys);
+        pthread_mutex_unlock(&mutex_diccionario_querys);
 
         cambiar_estado(qcb, EXIT);
 
     } else if (qcb->estado == EXEC){
         char* wid_asociado_str = string_itoa(qcb->id_worker_asociado);
-        int socket_worker_asociado = dictionary_get(diccionario_workers, wid_asociado_str);
+        int* socket_worker_asociado = dictionary_get(diccionario_workers, wid_asociado_str);
         //enviar_cod_op(&socket_worker_asociado, DESALOJAR);
     }
 
