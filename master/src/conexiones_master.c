@@ -44,9 +44,12 @@ void *manejar_servidor_querycontrol(void *arg){
 
         switch (op_code){
             case -1:
-                manejar_desconexion_query_control(socket_cliente, qcb->qid);
-                break;
-
+                if (qcb != NULL){
+                    manejar_desconexion_query_control(socket_cliente, qcb->qid);
+                } else{
+                    log_error(logger, "Error al recibir paquete de query conectada.");
+                }
+                return NULL;
             case PAQUETE:
                 qcb = hacer_qcb_nueva(socket_cliente);
                 break;
@@ -99,7 +102,7 @@ void *funcion_main_escucha(void *socket_arg){
 
                 pthread_create(&hilo_cliente, NULL, manejar_servidor_worker, (void *)args);
                 pthread_detach(hilo_cliente);
-
+                
                 free(worker_id_str);
                 break;
 
@@ -201,7 +204,7 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
     pthread_mutex_unlock(&mutex_diccionario_querys);
 
     pthread_mutex_lock(&mutex_ready);
-    list_add(cola_ready, qcb);
+    list_add(cola_ready, qcb); //funcion que encole segun algoritmo de planificacion
     pthread_mutex_unlock(&mutex_ready);
 
     sem_post(&sem_queries_ready);
