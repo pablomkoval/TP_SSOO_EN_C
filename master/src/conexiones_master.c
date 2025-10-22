@@ -13,7 +13,7 @@ void *manejar_servidor_worker(void *arg){
         switch (op_code){
             case -1:
                 hacer_desconexion_worker(worker_id);
-                return NULL
+                return NULL;
                 break;
 
             case READ:
@@ -53,7 +53,7 @@ void *manejar_servidor_querycontrol(void *arg){
                 return NULL;
             case PAQUETE:
                 qcb = hacer_qcb_nueva(socket_cliente);
-                break;socket_query_asociado
+                break;
 
             default:
                 log_error(logger, "Error al recibir opcode, %d", op_code);
@@ -78,7 +78,6 @@ void *funcion_main_escucha(void *socket_arg){
                 log_info(logger, "Recibi handshake de un worker");
                 int worker_id;
                 recv(socket_cliente, &worker_id, sizeof(int), MSG_WAITALL);
-                log_info(logger, "Conexion de Worker ID: %d", worker_id);
 
                 t_argumentos_worker *args = malloc(sizeof(t_argumentos_worker));
                 args->socket = socket_cliente;
@@ -91,6 +90,10 @@ void *funcion_main_escucha(void *socket_arg){
                 pthread_mutex_lock(&mutex_diccionario_workers);
                 dictionary_put(diccionario_workers, worker_id_str, (void *)socket_worker_ptr);
                 pthread_mutex_unlock(&mutex_diccionario_workers);
+
+                int cantidad_tot_workers = workers_conectados();
+
+                log_info(logger, "## Se conecta el Worker <%d> - Cantidad total de Workers: <%d>", worker_id, cantidad_tot_workers);
 
                 int *worker_id_ptr = malloc(sizeof(int));
                 *worker_id_ptr = worker_id;
@@ -129,13 +132,15 @@ void hacer_desconexion_worker(int worker_id){
     char* wid_str = string_itoa(worker_id);
 
     pthread_mutex_lock(&mutex_diccionario_exec);
-    int* socket_qc_ptr = dictionary_get(diccionario_exec, wid_str);
+    int* socket_qc_ptr = dictionary_remove(diccionario_exec, wid_str);
     pthread_mutex_unlock(&mutex_diccionario_exec);
 
-
     t_paquete *paquete = crear_paquete();
-    cambiar_opcode_paquete(paquete, ERROR);
+    cambiar_opcode_paquete(paquete, END);
+    char *motivo = "Desconexion de Worker.";
+    agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
     enviar_paquete(paquete, *socket_qc_ptr, logger);
+    borrar_paquete(paquete);
 
     pthread_mutex_lock(&mutex_diccionario_workers);
     dictionary_remove(diccionario_workers, string_itoa(worker_id));
@@ -201,18 +206,27 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
     t_qcb *qcb = crear_qcb(path_query, prioridad_query, socket_cliente);
     char *qid_str = string_itoa(qcb->qid);
 
+    pthread_mutex_lock(&mutex_diccionario_querys);
+    dictionary_put(diccionario_querys, qid_str, qcb);
+    pthread_mutex_unlock(&mutex_diccionario_querys);
+
+    pthread_mutex_lock(&mutex_ready);
+    encolar_qcb(cola_ready, qcb);
+    pthread_mutex_unlock(&mutex_ready);
+
     sem_post(&sem_queries_ready);
 
     free(qid_str);
 
-    log_info(logger, "Query recibida con id: %d, path: %s, prioridad: %d", id_query, path_query, prioridad_query);
+    int nivel_multiprocesamiento = workers_conectados();
 
+    log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, id_query, nivel_multiprocesamiento);
     list_destroy_and_destroy_elements(elementos, free);
 
     return qcb;
 }
-
-void manejar_desconexion_query_control(int socket_cliente, int qid){
+// if segun algoritmo de planificacion
+void hacer_desconexion_query_control(int socket_cliente, int qid){
     log_info(logger, "Query control de qid %d, socket %d se desconecto. Iniciando desconexion.", qid, socket_cliente);
     
     char* qid_str = string_itoa(qid);
@@ -233,13 +247,17 @@ void manejar_desconexion_query_control(int socket_cliente, int qid){
 
     } else if (qcb->estado == EXEC){
         char* wid_asociado_str = string_itoa(qcb->id_worker_asociado);
+        pthread_mutex_lock(&mutex_diccionario_workers);
         int* socket_worker_asociado = dictionary_get(diccionario_workers, wid_asociado_str);
+        pthread_mutex_unlock(&mutex_diccionario_workers);
+        
+        
         //enviar_cod_op(&socket_worker_asociado, DESALOJAR);
     }
 
     free(qid_str);
 
-    //poner mutexsss
+    //poner mutexs para desalojo en exec?
 }
 
 bool qcb_esta_en_cola_ready(void* arg, int socket_buscado){
@@ -247,16 +265,16 @@ bool qcb_esta_en_cola_ready(void* arg, int socket_buscado){
     return qcb->socket == socket_buscado;
 }
 
-void encolar_qcb(t_list *cola_ready, t_qcb *qcb){ // if segun algoritmo de planificacion
+void encolar_qcb(t_list *cola_ready, t_qcb *qcb){
     if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
 
         list_add_sorted(cola_ready, qcb, (void*)comparar_qcb_por_prioridad);
-        log_info(logger, "qcb de qid: %d encolado en READY con prioridad: %d", qcb->qid, qcb->prioridad);
+        log_info(logger, "qcb de qid: %d encolado en READY con Prioridad: %d", qcb->qid, qcb->prioridad);
 
     } else{
 
         list_add(cola_ready, qcb);
-        log_info(logger, "qcb de qid: %d encolado en READY.", qcb->qid);
+        log_info(logger, "qcb de qid: %d encolado en READY con FIFO.", qcb->qid);
     }
 }
 
@@ -265,4 +283,11 @@ bool comparar_qcb_por_prioridad(void* qcb1, void* qcb2){
     t_qcb *qcb_mayor = (t_qcb *)qcb2;
 
     return qcb_menor->prioridad < qcb_mayor->prioridad; 
+}
+
+int workers_conectados(){
+    pthread_mutex_lock(&mutex_diccionario_workers);
+    int workers_conectados = dictionary_size(diccionario_workers);
+    pthread_mutex_unlock(&mutex_diccionario_workers);
+    return workers_conectados;
 }

@@ -85,10 +85,7 @@ void recibir_mensajes_de_master(int socket){
                 close(socket);
                 free(motivo);
                 return;
-            case ERROR:
-                log_info(logger, "query finalizo con error por desconexion de worker");
-                close(socket);
-                return;
+
             default:
                 log_error(logger, "Código desconocido recibido: %d", codigo_operacion);
                 break;
