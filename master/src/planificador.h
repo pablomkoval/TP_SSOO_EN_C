@@ -10,6 +10,7 @@ void enviar_qcb_a_worker(t_qcb* qcb, int socket_worker);
 int obtener_worker_libre();
 void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id);
 void obtener_query_worker_fifo(t_qcb* query_a_ejecutar, int *worker_libre_id);
+t_qcb* obtener_query_worker_priori(int *worker_libre_id);
 
 extern t_list* cola_ready;
 extern t_list* workers_libres;

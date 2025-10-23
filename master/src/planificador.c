@@ -54,7 +54,7 @@ void* planificador(){
         if(strcmp(algoritmo_planificacion, "FIFO") == 0){
             obtener_query_worker_fifo(query_a_ejecutar, &worker_seleccionado_id);
         }   else{
-            //planificar por prioridadess obtener_query_worker_priori(query_a_ejecutar, &worker_seleccionado_id)
+            query_a_ejecutar = obtener_query_worker_priori(&worker_seleccionado_id);
         }
         
         
@@ -85,4 +85,10 @@ void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id){
 void obtener_query_worker_fifo(t_qcb* query_a_ejecutar, int *worker_libre_id){
     query_a_ejecutar = list_remove(cola_ready, 0);
     *worker_libre_id = obtener_worker_libre();
+}
+
+t_qcb* obtener_query_worker_priori(int *worker_libre_id){
+    t_qcb* query_a_ejecutar = list_remove(cola_ready, 0); 
+    *worker_libre_id = obtener_worker_libre(); 
+    return query_a_ejecutar;
 }

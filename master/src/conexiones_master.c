@@ -13,6 +13,7 @@ void *manejar_servidor_worker(void *arg){
         switch (op_code){
             case -1:
                 hacer_desconexion_worker(worker_id);
+                free(worker_id_str);
                 return NULL;
                 break;
 
@@ -106,7 +107,6 @@ void *funcion_main_escucha(void *socket_arg){
                 pthread_create(&hilo_cliente, NULL, manejar_servidor_worker, (void *)args);
                 pthread_detach(hilo_cliente);
                 
-                free(worker_id_str);
                 break;
 
             case QUERY_CONTROL:
@@ -143,11 +143,12 @@ void hacer_desconexion_worker(int worker_id){
     borrar_paquete(paquete);
 
     pthread_mutex_lock(&mutex_diccionario_workers);
-    dictionary_remove(diccionario_workers, string_itoa(worker_id));
+    dictionary_remove(diccionario_workers, wid_str);
     pthread_mutex_unlock(&mutex_diccionario_workers);
 
 
     log_info(logger, "## Se desconecta el Worker <%d> - Se finaliza la Query <%d> - Cantidad total de Workers: <%d> ", worker_id, qcb->qid, workers_conectados());
+
 }
 
 void hacer_read_worker(int socket_worker, char *worker_id_str){
@@ -159,18 +160,22 @@ void hacer_read_worker(int socket_worker, char *worker_id_str){
     pthread_mutex_unlock(&mutex_diccionario_exec);
 
     if (qcb->socket > 0){
+
+        
         t_paquete *paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, READ);
         agregar_a_paquete(paquete, mensaje_worker, strlen(mensaje_worker) + 1);
         enviar_paquete(paquete, qcb->socket, logger);
         borrar_paquete(paquete);
 
+        log_info(logger, "mensaje del worker a enviar: %s", mensaje_worker);
         log_info(logger, "## Se envía un mensaje de lectura de la Query <%d> en el Worker <%s> al Query Control", qcb->qid, worker_id_str);
 
     }   else{
         log_error(logger, "No se encontro qcb asociado a un worker id: %s", worker_id_str);
     }
-
+    
+    free(mensaje_worker);
     list_destroy_and_destroy_elements(recibido, free);
 }
 
@@ -220,8 +225,13 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
     sem_post(&sem_queries_ready);
 
     free(qid_str);
-
+    
     log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, id_query, workers_conectados());
+
+    if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0) {
+        //realizar_chequeo_desalojo(qcb); tikitititktkikitikt
+    }
+
     list_destroy_and_destroy_elements(elementos, free);
 
     return qcb;
@@ -291,4 +301,8 @@ int workers_conectados(){
     int workers_conectados = dictionary_size(diccionario_workers);
     pthread_mutex_unlock(&mutex_diccionario_workers);
     return workers_conectados;
+}
+
+void realizar_chequeo_desalojo(t_qcb* qcb){
+    ////tiki tiki tiki tiki
 }
