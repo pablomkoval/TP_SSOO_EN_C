@@ -46,7 +46,7 @@ void *manejar_servidor_querycontrol(void *arg){
         switch (op_code){
             case -1:
                 if (qcb != NULL){
-                    manejar_desconexion_query_control(socket_cliente, qcb->qid);
+                    hacer_desconexion_query_control(socket_cliente, qcb->qid);
                 } else{
                     log_error(logger, "Error al recibir paquete de query conectada.");
                 }
@@ -155,15 +155,15 @@ void hacer_read_worker(int socket_worker, char *worker_id_str){
     t_qcb *qcb = dictionary_get(diccionario_exec, worker_id_str);
     pthread_mutex_unlock(&mutex_diccionario_exec);
 
-    log_info(logger, "Recibi mensaje de worker: %s, id: %s", mensaje_worker, worker_id_str);
-
     if (qcb->socket > 0){
-        log_info(logger, "Reenviando mensaje a Query Control con socket: %d", qcb->socket);
         t_paquete *paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, READ);
         agregar_a_paquete(paquete, mensaje_worker, strlen(mensaje_worker) + 1);
         enviar_paquete(paquete, qcb->socket, logger);
         borrar_paquete(paquete);
+
+        log_info(logger, "## Se envía un mensaje de lectura de la Query <%d> en el Worker <%s> al Query Control", qcb->qid, worker_id_str);
+
     }   else{
         log_error(logger, "No se encontro qcb asociado a un worker id: %s", worker_id_str);
     }

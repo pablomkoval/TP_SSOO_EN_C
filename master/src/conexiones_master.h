@@ -24,5 +24,6 @@ void hacer_end_worker(char* worker_id_str, int worker_id);
 t_qcb* hacer_qcb_nueva(int socket_cliente);
 void encolar_qcb(t_list* cola_ready, t_qcb* qcb);
 bool comparar_qcb_por_prioridad(void* qcb1, void* qcb2);
+int workers_conectados();
 
 #endif
