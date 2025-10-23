@@ -46,7 +46,7 @@ void *manejar_servidor_querycontrol(void *arg){
         switch (op_code){
             case -1:
                 if (qcb != NULL){
-                    hacer_desconexion_query_control(socket_cliente, qcb->qid);
+                    hacer_desconexion_query_control(socket_cliente, qcb);
                 } else{
                     log_error(logger, "Error al recibir paquete de query conectada.");
                 }
@@ -91,9 +91,8 @@ void *funcion_main_escucha(void *socket_arg){
                 dictionary_put(diccionario_workers, worker_id_str, (void *)socket_worker_ptr);
                 pthread_mutex_unlock(&mutex_diccionario_workers);
 
-                int cantidad_tot_workers = workers_conectados();
 
-                log_info(logger, "## Se conecta el Worker <%d> - Cantidad total de Workers: <%d>", worker_id, cantidad_tot_workers);
+                log_info(logger, "## Se conecta el Worker <%d> - Cantidad total de Workers: <%d>", worker_id, workers_conectados());
 
                 int *worker_id_ptr = malloc(sizeof(int));
                 *worker_id_ptr = worker_id;
@@ -128,23 +127,27 @@ void *funcion_main_escucha(void *socket_arg){
 }
 
 void hacer_desconexion_worker(int worker_id){
-    log_info(logger, "Se cerro la conexion del worker de wid: %d", worker_id);
+    
     char* wid_str = string_itoa(worker_id);
+    
 
     pthread_mutex_lock(&mutex_diccionario_exec);
-    int* socket_qc_ptr = dictionary_remove(diccionario_exec, wid_str);
+    t_qcb * qcb = dictionary_remove(diccionario_exec, wid_str);
     pthread_mutex_unlock(&mutex_diccionario_exec);
 
     t_paquete *paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, END);
     char *motivo = "Desconexion de Worker.";
     agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
-    enviar_paquete(paquete, *socket_qc_ptr, logger);
+    enviar_paquete(paquete, qcb->socket, logger);
     borrar_paquete(paquete);
 
     pthread_mutex_lock(&mutex_diccionario_workers);
     dictionary_remove(diccionario_workers, string_itoa(worker_id));
     pthread_mutex_unlock(&mutex_diccionario_workers);
+
+
+    log_info(logger, "## Se desconecta el Worker <%d> - Se finaliza la Query <%d> - Cantidad total de Workers: <%d> ", worker_id, qcb->qid, workers_conectados());
 }
 
 void hacer_read_worker(int socket_worker, char *worker_id_str){
@@ -218,22 +221,18 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
 
     free(qid_str);
 
-    int nivel_multiprocesamiento = workers_conectados();
-
-    log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, id_query, nivel_multiprocesamiento);
+    log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, id_query, workers_conectados());
     list_destroy_and_destroy_elements(elementos, free);
 
     return qcb;
 }
 // if segun algoritmo de planificacion
-void hacer_desconexion_query_control(int socket_cliente, int qid){
-    log_info(logger, "Query control de qid %d, socket %d se desconecto. Iniciando desconexion.", qid, socket_cliente);
-    
-    char* qid_str = string_itoa(qid);
-
-    pthread_mutex_lock(&mutex_diccionario_querys);
+void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
+    /* pthread_mutex_lock(&mutex_diccionario_querys);
     t_qcb* qcb = dictionary_get(diccionario_querys, qid_str);
-    pthread_mutex_unlock(&mutex_diccionario_querys);
+    pthread_mutex_unlock(&mutex_diccionario_querys); */
+
+    char* qid_str = string_itoa(qcb->qid);
 
     if(qcb->estado == READY){
     
@@ -254,6 +253,8 @@ void hacer_desconexion_query_control(int socket_cliente, int qid){
         
         //enviar_cod_op(&socket_worker_asociado, DESALOJAR);
     }
+    
+    log_info(logger, "## Se desconecta un Query Control. Se finaliza la Query <%d> con prioridad <%d>. Nivel multiprocesamiento <%d>", qcb->qid, qcb->prioridad, workers_conectados());
 
     free(qid_str);
 

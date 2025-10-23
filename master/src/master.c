@@ -5,7 +5,7 @@ pthread_t hilo_planificador;
 
 t_dictionary* diccionario_querys;   // key: qid, valor: qcb
 t_dictionary* diccionario_workers;  // key: id_worker, valor: socket_worker
-t_dictionary* diccionario_exec;     //key: id_worker, valor: socket del query a procesar
+t_dictionary* diccionario_exec;     //key: id_worker, valor: qcb
 //El diccionario de exec es el representante del estado running, asigna cada worker a su query que esta laburando
 
 pthread_mutex_t mutex_diccionario_querys;
