@@ -386,7 +386,7 @@ int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buff
 
     free(file_tag);
     free(aux);
-    free(bloque_lohico);
+    free(bloque_logico);
     free(bloque_fisico);
     free(contenido);
 
