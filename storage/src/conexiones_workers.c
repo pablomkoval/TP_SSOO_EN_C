@@ -150,12 +150,11 @@ void manejar_create(int socket_worker)
     {
         log_info(logger, "##<%i> - File Creado <%s>:<%s>", *query_id, file, tag);
         log_info(logger, "##<%i> - Tag Creado <%s>:<%s>", *query_id, file, tag);
-    }else
-    {
-
+        mandar_resultado(socket_worker, resultado);
     }
+    else mandar_resultado(socket_worker, resultado);
+    
 }
-
 void manejar_truncate(int socket_worker)
 {
     sleep(retardo_operacion);
@@ -171,7 +170,9 @@ void manejar_truncate(int socket_worker)
     if(resultado == 1)
     {
         log_info(logger, "##<%i> - File Truncado <%s>:<%s> - Tamaño: <%i>", *query_id, file, tag, *tamanio);
+        mandar_resultado(socket_worker, resultado);
     }
+    else mandar_resultado(socket_worker, resultado);
    
 }
 
@@ -189,7 +190,9 @@ void manejar_commit(int socket_worker)
     if(resultado == 1)
     {
         log_info(logger, "##<%i> - Commit de File:tag <%s>:<%s>", *query_id, file, tag);
+        mandar_resultado(socket_worker, resultado);
     }
+    else mandar_resultado(socket_worker, resultado);
 }
 
 void manejar_tag(int socket_worker)
@@ -209,7 +212,9 @@ void manejar_tag(int socket_worker)
     {
         log_info(logger, "##<%i> - File Creado <%s>:<%s>", *query_id, file_destino, tag_destino);
         log_info(logger, "##<%i> - Tag Creado <%s>:<%s>", *query_id, file_destino, tag_destino);
-    }   
+        mandar_resultado(socket_worker, resultado);
+    } 
+    else mandar_resultado(socket_worker, resultado);
 }
 
 void manejar_write(int socket_worker)
@@ -229,7 +234,9 @@ void manejar_write(int socket_worker)
     if(resultado == 1)
     {
         //log_info(logger, "##<%s> - Bloque Lógico Escrito <%s>:<%s> - Número de Bloque <%i>", query_id, file, tag, bloque);
+        mandar_resultado(socket_worker, resultado);
     }
+    else mandar_resultado(socket_worker, resultado);
 }
 
 void manejar_read(int socket_worker)
@@ -250,7 +257,9 @@ void manejar_read(int socket_worker)
     if(resultado == 1)
     {
         log_info(logger, "##<%d> - Bloque Lógico Leído <%s>:<%s> - Número de Bloque <%d>", *query_id, file, tag, *bloque);
+        mandar_resultado(socket_worker, resultado);
     }
+    else mandar_resultado(socket_worker, resultado);
 }
 
 void manejar_delete(int socket_worker)
@@ -267,7 +276,9 @@ void manejar_delete(int socket_worker)
     if(resultado == 1)
     {
         log_info(logger, "##<%i> - Tag Eliminado <%s>:<%s>", *query_id, file, tag);
+        mandar_resultado(socket_worker, resultado);
     }
+    else mandar_resultado(socket_worker, resultado);
 }
 
 void manejar_desconexion(int* socket_worker)
@@ -285,6 +296,14 @@ void manejar_desconexion(int* socket_worker)
 
 }
 
+void mandar_resultado(int socket_worker, int resultado)
+{
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OK);
+    agregar_a_paquete(paquete, &resultado, sizeof(int));
+    enviar_paquete(paquete, socket_worker, logger);
+    borrar_paquete(paquete);
+}
 
 
 
