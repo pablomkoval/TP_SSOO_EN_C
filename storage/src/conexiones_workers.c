@@ -299,7 +299,7 @@ void manejar_desconexion(int* socket_worker)
 void mandar_resultado(int socket_worker, int resultado)
 {
     t_paquete* paquete = crear_paquete();
-    cambiar_opcode_paquete(paquete, OK);
+    cambiar_opcode_paquete(paquete, RESPUESTA_STORAGE);
     agregar_a_paquete(paquete, &resultado, sizeof(int));
     enviar_paquete(paquete, socket_worker, logger);
     borrar_paquete(paquete);

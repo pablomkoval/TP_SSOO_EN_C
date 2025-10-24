@@ -42,7 +42,8 @@ typedef enum
     DELETE,
     FLUSH,
     END,
-    SOLICITUD_NUEVA_QUERY
+    SOLICITUD_NUEVA_QUERY,
+    RESPUESTA_STORAGE
 } op_code;
 
 typedef enum 
