@@ -20,7 +20,7 @@ int handshake_master(int socket){
         return -1;
     }
 
-    return;
+    return -1;
 }
 
 //devuelve el socket del servidor master o -1 si falló la conexion
@@ -50,14 +50,15 @@ int conectar_master(){
 }
 
 t_paquete* empaquetar_query(char* archivo_query, int prioridad){
-    log_trace(logger, "Comencé a empaquetar");
+    //log_trace(logger, "Comencé a empaquetar");
     
-    int* prioridad_ptr = &prioridad;
-    void *prioridad_ptr_void = (void*)prioridad_ptr;
+    //int* prioridad_ptr = &prioridad;
+    //void *prioridad_ptr_void = (void*)prioridad_ptr;
 
     t_paquete* paquete_query = crear_paquete();
     agregar_a_paquete(paquete_query, archivo_query, strlen(archivo_query) + 1);
-    agregar_a_paquete(paquete_query, prioridad_ptr_void, __SIZEOF_INT__);
+    //agregar_a_paquete(paquete_query, prioridad_ptr_void, __SIZEOF_INT__);
+    agregar_a_paquete(paquete_query, &prioridad, sizeof(int));
 
     return paquete_query;
 }

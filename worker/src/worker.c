@@ -39,11 +39,11 @@ int main(int argc, char** argv) {
 
     log_debug(logger, "se iniciaron conexiones");
 
-    //pthread_create(&thread_query_interpreter, NULL, ciclo_query_interpreter, NULL);
-    //pthread_detach(thread_query_interpreter);
+    pthread_create(&thread_query_interpreter, NULL, ciclo_query_interpreter, NULL);
+    pthread_detach(thread_query_interpreter);
 
-    query_t* query_a_ejecutar = leer_query("query1", 0);
-    ejecutar_query(query_a_ejecutar, 0);
+    // query_t* query_a_ejecutar = leer_query("query1", 0);
+    // ejecutar_query(query_a_ejecutar, 0);
 
     pause();
 

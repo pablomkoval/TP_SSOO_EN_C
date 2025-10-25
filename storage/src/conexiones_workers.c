@@ -4,7 +4,7 @@ t_dictionary* worker_id_por_socket = NULL;
 
 void* manejar_conexion_worker(void* arg) {
     int* socket_worker = arg;
-    free(arg);
+    
 
     while(1) {
         int codigo_operacion = recibir_opcode(*socket_worker);
@@ -54,6 +54,7 @@ void* manejar_conexion_worker(void* arg) {
                 break;
         }
      }
+     free(arg);
      close(*socket_worker);
      return NULL;
 }
@@ -63,7 +64,7 @@ void* manejar_conexion_worker(void* arg) {
 void* manejar_conexiones_storage(void* socket_ptr)
 {
     int* socket_cliente = socket_ptr;
-    free(socket_ptr);
+    
     if (recibir_opcode(*socket_cliente) == HANDSHAKE) {
 
         t_list* recibido = recibir_paquete(*socket_cliente);
@@ -89,8 +90,7 @@ void* manejar_conexiones_storage(void* socket_ptr)
 
         log_trace(logger, "Recibi el handshake de un WORKER");
 
-        int* socket_worker = malloc(sizeof(int));
-        log_trace(logger, "socket worker: %d", *socket_worker);
+        log_trace(logger, "socket worker: %d", *socket_cliente);
         
         pthread_t hilo_worker;
         pthread_create(&hilo_worker, NULL, (void*)manejar_conexion_worker, socket_cliente);
@@ -100,6 +100,7 @@ void* manejar_conexiones_storage(void* socket_ptr)
 
         return NULL;
     }
+    free(socket_ptr);
     return NULL;
 }
 void* manejar_servidor(void* socket_ptr) 

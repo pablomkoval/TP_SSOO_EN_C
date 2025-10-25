@@ -113,6 +113,7 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     t_list* recibido = recibir_paquete(socket_storage);
     char* contenido = list_get(recibido, 0);
 
+    //averiguar si el memset es correcto
     memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
     memcpy(memoria_interna + frame * tam_pagina, contenido, tam_pagina);
 

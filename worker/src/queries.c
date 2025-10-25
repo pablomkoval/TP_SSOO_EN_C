@@ -12,7 +12,7 @@ void ejecutar_create(char* file, char* tag, int qid){
     borrar_paquete(paquete);
 }
 
-void ejecutar_trucate(char* file, char* tag, int tamanio, int qid){
+void ejecutar_truncate(char* file, char* tag, int tamanio, int qid){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, TRUNCATE);
     

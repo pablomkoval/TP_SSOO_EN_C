@@ -1,10 +1,12 @@
 #include <query_interpreter.h>
 
+
 void* ciclo_query_interpreter(){
     while(1){
+        //fetch
         int opcode = recibir_opcode(socket_master);
         if(opcode != SOLICITUD_NUEVA_QUERY){
-            log_error(logger, "blabla");
+            log_error(logger, "Llego de master un opcode (%d)", opcode);
             return NULL;
         }
         t_list* recibido = recibir_paquete(socket_master);
@@ -21,17 +23,25 @@ void* ciclo_query_interpreter(){
 }
 
 void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
-    while(1){
+    bool ejecutando = true;
+    while(ejecutando){
+        //fetch de operandos
         query_t* query_a_ejecutar = leer_query(nombre_archivo, pc);
-        ejecutar_query(query_a_ejecutar, qid);
-        //chequear interrupcion 
-
+        
+        //decode + execute
+        ejecutando = ejecutar_query(query_a_ejecutar, qid);
+        if(!ejecutando) return;
 
         //aguardar respuesta siempre, todas las instrucciones son bloqueantes
-        int respuesta = recibir_opcode(socket_storage);
-        manejar_respuesta(respuesta);
-
-        //añadir retardo antes de volver a empezar?
+        if(recibir_opcode(socket_storage) == RESPUESTA_STORAGE){
+            t_list* recibido = recibir_paquete(socket_storage);
+            int respuesta = *((int*)list_get(recibido, 0));
+            list_destroy_and_destroy_elements(recibido, free);
+            manejar_respuesta(respuesta);
+        } else return;
+        
+        check_interrupt();
+        //chequear interrupcion 
         pc++;
     }
 }
@@ -114,7 +124,7 @@ query_t* parsear_query(char* query_raw){
 }
 
 
-void ejecutar_query(query_t* query, int qid){
+bool ejecutar_query(query_t* query, int qid){
     char** partes = separar_file_tag(query->file_tag);
     char* file = strdup(partes[0]);
     char* tag = strdup(partes[1]);
@@ -123,6 +133,7 @@ void ejecutar_query(query_t* query, int qid){
     switch(query->identificador){
         case -1:
             log_error(logger, "No se recibio query de master: Conexion cerrada");
+            return false;
             break;
 
         case CREATE_Q:
@@ -131,7 +142,9 @@ void ejecutar_query(query_t* query, int qid){
             break;
         
         case TRUNCATE_Q:
-            log_info(logger, "se quiso ejecutar un ");
+        
+            log_info(logger, "se quiso ejecutar un TRUNCATE");
+            ejecutar_truncate(file, tag, atoi(query->param1), qid);
             break;
         
         case WRITE_Q:
@@ -140,32 +153,57 @@ void ejecutar_query(query_t* query, int qid){
             break;
 
         case READ_Q:
-            log_info(logger, "se quiso ejecutar un ");
+            log_info(logger, "se quiso ejecutar un READ");
+            ejecutar_read(query->file_tag, atoi(query->param1), atoi(query->param2), qid);
             break;
 
         case TAG_Q:
-            log_info(logger, "se quiso ejecutar un ");
+            log_info(logger, "se quiso ejecutar un TAG");
+            ejecutar_tag(file, tag, query->param1, query->param2, qid);
             break;
             
         case COMMIT_Q:
-            log_info(logger, "se quiso ejecutar un ");
+            log_info(logger, "se quiso ejecutar un COMMIT");
+            ejecutar_commit(file, tag, query->file_tag, qid);
             break;
 
         case FLUSH_Q:
-            log_info(logger, "se quiso ejecutar un ");
+            log_info(logger, "se quiso ejecutar un FLUSH");
+            ejecutar_flush(file, tag, query->file_tag, qid);
             break;
 
         case DELETE_Q:
-            log_info(logger, "se quiso ejecutar un ");
+            log_info(logger, "se quiso ejecutar un DELETE");
+            ejecutar_delete(file, tag, qid);
             break;
 
         case END_Q:
-            log_info(logger, "se quiso ejecutar un ");
+            log_info(logger, "se quiso ejecutar un END");
+            ejecutar_end();
+            return false;
             break;
         
         default:
             log_error(logger, "Error al recibir el query por parte de master");
+            return false;
             break;
+    }
+    return true;
+}
+
+
+bool check_interrupt(){
+    int opcode;
+    int interrupcion = recv(socket_master, &opcode, sizeof(int), MSG_DONTWAIT);
+    if(interrupcion > 0){
+        log_info(logger, "Llego opcode: %d", opcode);
+        return true;
+    } else if (interrupcion == 0){
+        log_error(logger, "Se cerró conexión con Master");
+        exit(EXIT_FAILURE);
+    } else{
+        log_debug(logger, "Caso else en check interrupt");
+        return false;
     }
 }
 

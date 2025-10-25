@@ -26,6 +26,7 @@ int main(int argc, char* argv[]) {
     } else{
         t_paquete* paquete_query = empaquetar_query(archivo_query, prioridad);
         enviar_paquete(paquete_query, socket_master, logger);
+        borrar_paquete(paquete_query);
         log_info(logger, "## Solicitud de ejecución de Query: %s, prioridad: %d", archivo_query, prioridad);
         recibir_mensajes_de_master(socket_master);
     }

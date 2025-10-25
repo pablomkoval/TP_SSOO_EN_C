@@ -35,9 +35,8 @@ void *manejar_servidor_worker(void *arg){
     return NULL;
 }
 
-void *manejar_servidor_querycontrol(void *arg){
-    int socket_cliente = *(int *)arg;
-    free(arg);
+void* manejar_servidor_querycontrol(void* arg){
+    int socket_cliente = *((int*)arg);
 
     t_qcb* qcb = NULL;
 
@@ -61,6 +60,7 @@ void *manejar_servidor_querycontrol(void *arg){
                 break;
         }
     }
+    free(arg);
     return NULL;
 }
 
@@ -101,9 +101,8 @@ void *funcion_main_escucha(void *socket_arg){
                 pthread_mutex_lock(&mutex_workers_libres);
                 list_add(workers_libres, worker_id_ptr);
                 pthread_mutex_unlock(&mutex_workers_libres);
-
                 sem_post(&sem_workers_libres);
-
+                
                 pthread_create(&hilo_cliente, NULL, manejar_servidor_worker, (void *)args);
                 pthread_detach(hilo_cliente);
                 
@@ -111,13 +110,11 @@ void *funcion_main_escucha(void *socket_arg){
 
             case QUERY_CONTROL:
                 log_trace(logger, "Recibi handshake de un query control");
-                int *socket_query_ptr = malloc(sizeof(int));
+                int* socket_query_ptr = malloc(sizeof(int));
                 *socket_query_ptr = socket_cliente;
 
-                pthread_create(&hilo_cliente, NULL, manejar_servidor_querycontrol, (void *)socket_query_ptr);
+                pthread_create(&hilo_cliente, NULL, manejar_servidor_querycontrol, socket_query_ptr);
                 pthread_detach(hilo_cliente);
-
-                free(socket_query_ptr);
                 break;
 
             case SIN_DEFINIR:
@@ -226,7 +223,7 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
 
     free(qid_str);
     
-    log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, id_query, workers_conectados());
+    log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, qcb->qid, workers_conectados());
 
     if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0) {
         //realizar_chequeo_desalojo(qcb); tikitititktkikitikt

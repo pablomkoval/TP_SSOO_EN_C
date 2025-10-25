@@ -15,8 +15,6 @@ pthread_mutex_t mutex_diccionario_exec;
 t_config* config_master;
 t_log* logger;
 
-int id_query = 0;
-
 int main(int argc, char* argv[]){
     
     inicializar_diccionarios_y_semaforos();
@@ -32,6 +30,7 @@ int main(int argc, char* argv[]){
     config_master = iniciar_config(archivo_config);
     logger = iniciar_logger();
     log_debug(logger, "se iniciaron logger y config");
+    inicializar_planificador();
 
     int socket_escucha = iniciar_servidor(puerto_escucha, logger);
 
@@ -41,9 +40,9 @@ int main(int argc, char* argv[]){
     pthread_create(&hilo_main_escucha, NULL, funcion_main_escucha, socket_ptr);
     pthread_detach(hilo_main_escucha);
 
-    // inicializar_planificador();
-    // pthread_create(&hilo_planificador, NULL, planificador, NULL);
-    // pthread_detach(hilo_planificador);
+    
+    pthread_create(&hilo_planificador, NULL, planificador, NULL);
+    pthread_detach(hilo_planificador);
 
     pause();
 

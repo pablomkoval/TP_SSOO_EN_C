@@ -32,7 +32,7 @@ void handshake_storage(int socket, int worker_id){
     log_info(logger, "Envié el handshake a Storage");
     
     int respuesta = recibir_opcode(socket);
-    if(0 >= respuesta){
+    if(respuesta <= 0){
         log_error(logger, "Fallo al recibir OK de Storage");
         return;
     }

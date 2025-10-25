@@ -1,6 +1,7 @@
 #ifndef QUERY_INTERPRETER_H_
 #define QUERY_INTERPRETER_H_
 
+#include <stdbool.h>
 #include <utils/utils.h>
 #include <worker.h>
 #include <queries.h>
@@ -23,10 +24,10 @@ typedef struct {
     char* param2;
 } query_t;
 
-
+bool check_interrupt();
 query_t* parsear_query(char* query_raw);
 query_t* leer_query();
-void ejecutar_query(query_t* query, int qid);
+bool ejecutar_query(query_t* query, int qid);
 void manejar_respuesta(int respuesta);
 void ciclo_ejecucion(char* nombre_archivo, int pc, int qid);
 void* ciclo_query_interpreter();
