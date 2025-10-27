@@ -6,6 +6,7 @@ void crear_bloque_logico(char *file_tag, int numero)
     char *logical_blocks_path = concatenar_path(file_tag, "logical_blocks");
 
     char *bloque_logico = obtener_bloque_logico(logical_blocks_path, numero);
+    log_debug(logger, "bloque logico: (%s)", bloque_logico);
 
     char *bloque_fisico = concatenar_path(punto_montaje, "physical_blocks/bloque0000.dat");
 

@@ -100,10 +100,10 @@ void ejecutar_tag(char* file_origen, char* tag_origen, char* file_destino, char*
     cambiar_opcode_paquete(paquete, TAG);
 
     agregar_a_paquete(paquete, &qid, sizeof(int));
-    agregar_a_paquete(paquete, file_origen, strlen(file_origen));
-    agregar_a_paquete(paquete, tag_origen, strlen(tag_origen));
-    agregar_a_paquete(paquete, file_destino, strlen(file_destino));
-    agregar_a_paquete(paquete, tag_destino, strlen(tag_destino));
+    agregar_a_paquete(paquete, file_origen, strlen(file_origen) + 1);
+    agregar_a_paquete(paquete, tag_origen, strlen(tag_origen) + 1);
+    agregar_a_paquete(paquete, file_destino, strlen(file_destino) + 1);
+    agregar_a_paquete(paquete, tag_destino, strlen(tag_destino) + 1);
 
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
@@ -133,8 +133,8 @@ void ejecutar_commit(char* file, char* tag, char* file_tag, int qid){
     cambiar_opcode_paquete(paquete, COMMIT);
     
     agregar_a_paquete(paquete, &qid, sizeof(int));
-    agregar_a_paquete(paquete, file, strlen(file));
-    agregar_a_paquete(paquete, tag, strlen(tag));
+    agregar_a_paquete(paquete, file, strlen(file) + 1);
+    agregar_a_paquete(paquete, tag, strlen(tag) + 1);
 
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
@@ -145,8 +145,8 @@ void ejecutar_delete(char* nombre_file, char* tag, int qid){
     cambiar_opcode_paquete(paquete, DELETE);
 
     agregar_a_paquete(paquete, &qid, sizeof(int));
-    agregar_a_paquete(paquete, nombre_file, strlen(nombre_file));
-    agregar_a_paquete(paquete, tag, strlen(tag));
+    agregar_a_paquete(paquete, nombre_file, strlen(nombre_file) + 1);
+    agregar_a_paquete(paquete, tag, strlen(tag) + 1);
 
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);

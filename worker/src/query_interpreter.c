@@ -55,7 +55,6 @@ query_t* leer_query(char* nombre_archivo, int pc){
     log_debug(logger, "El Archivo queda (%s)", path_completo);
     FILE* archivo = fopen( path_completo, "r");
     free(path_completo);
-    //t_list* lista_queries = list_create();
 
     if (!archivo) 
     {
