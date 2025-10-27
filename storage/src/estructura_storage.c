@@ -29,19 +29,19 @@ void crear_directorios_y_archivos()
 
   /// pruebas 
   
-    char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0000.dat" );
+    // char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0000.dat" );
 
-    crear_file("materias", "sistemas");
+    // crear_file("materias", "sistemas");
 
-    truncar_archivo(0, 512, "materias", "sistemas");
+    // truncar_archivo(0, 512, "materias", "sistemas");
 
-    truncar_archivo(0, 384, "materias", "sistemas");
+    // truncar_archivo(0, 384, "materias", "sistemas");
 
-    int a = escribir_bloque(0, "materias","sistemas",130, "manu lindo" );
+    // int a = escribir_bloque(0, "materias","sistemas",130, "manu lindo" );
 
-    copiar_tag(0, "initial_file", "BASE", "jose", "hola");
+    // copiar_tag(0, "initial_file", "BASE", "jose", "hola");
 
-    free(bloque_fisico);
+    // free(bloque_fisico);
 
 }
 
