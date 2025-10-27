@@ -126,10 +126,11 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
         t_list* recibido = recibir_paquete(socket_storage);
         int* resultado = list_get(recibido, 0);
         if(*resultado == 1){
-            char* contenido = list_get(recibido, 1);
+            char* contenido = strdup(list_get(recibido, 1));
         } else{
             log_error(logger, "Storage no me devolvio el contenido, resultado (%d)", resultado);
         }
+        list_destroy_and_destroy_elements(recibido, free);
     }
     // if(recibir_opcode(socket_storage) != READ) return;
 
@@ -139,8 +140,6 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     //averiguar si el memset es correcto
     memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
     memcpy(memoria_interna + frame * tam_pagina, contenido, tam_pagina);
-
-    list_destroy_and_destroy_elements(recibido, free);
 }
 
 void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int qid){
