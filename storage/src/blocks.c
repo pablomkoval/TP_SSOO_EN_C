@@ -3,9 +3,8 @@
 void crear_bloque_logico(char *file_tag, int numero)
 {
 
-    char *logical_blocks_path = concatenar_path(file_tag, "logical_blocks");
 
-    char *bloque_logico = obtener_bloque_logico(logical_blocks_path, numero);
+    char *bloque_logico = obtener_bloque_logico(file_tag, numero);
     log_debug(logger, "bloque logico: (%s)", bloque_logico);
 
     char *bloque_fisico = concatenar_path(punto_montaje, "physical_blocks/bloque0000.dat");
@@ -16,7 +15,6 @@ void crear_bloque_logico(char *file_tag, int numero)
     agregar_bloque_metadata(file_tag, 0, numero);
     unlock_metadata(file_tag);
 
-    free(logical_blocks_path);
     free(bloque_logico);
     free(bloque_fisico);
 }
@@ -24,7 +22,7 @@ void crear_bloque_logico(char *file_tag, int numero)
 char *obtener_bloque_logico(char *path, int numero)  //no hace falta sincro
 {
     char *aux = string_from_format("%06d.dat", numero);
-    char *bloque_logico = string_from_format("%s/files/%s/%s", punto_montaje, path, aux);
+    char *bloque_logico = string_from_format("%s/files/%s/logical_blocks/%s", punto_montaje, path, aux);
     free(aux);
     return bloque_logico;
 }
@@ -353,7 +351,7 @@ int escribir_bloque(int query_id, char *file, char* tag, int offset, char *conte
         log_info(logger, "##<%i> - <%s>:<%s> Se eliminó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, nro_bloque, nro_block_f);
         log_info(logger, "##<%i> - <%s>:<%s> Se agregó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, nro_bloque, nro_bloque_f_nuevo);
         //log_info(logger, "##<%d> - Bloque Lógico <%i> se reasigna de <%i> a <%i>",query_id, nro_bloque, nro_block_f, nro_bloque_f_nuevo);
-        log_info(logger, "##<%d> - Bloque Lógico Escrito <%s>:<$%s> - Número de Bloque: <%i>",query_id, file, tag, nro_bloque);
+        log_info(logger, "##<%d> - Bloque Lógico Escrito <%s>:<%s> - Número de Bloque: <%i>",query_id, file, tag, nro_bloque);
     }
     free(aux);
     free(bloque_logico);

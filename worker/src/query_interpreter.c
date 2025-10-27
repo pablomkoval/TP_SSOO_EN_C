@@ -35,7 +35,6 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
         //aguardar respuesta siempre, todas las instrucciones son bloqueantes
         if(resultado_ejecucion != 2){
             if(recibir_opcode(socket_storage) == RESPUESTA_STORAGE){
-                log_debug(logger, "aaaaaaabbb");
                 t_list* recibido = recibir_paquete(socket_storage);
                 int respuesta = *((int*)list_get(recibido, 0));
                 manejar_respuesta(respuesta);
