@@ -33,8 +33,8 @@ t_config* iniciar_config(void){
         puerto_escucha = config_get_string_value(nueva_config, "PUERTO_ESCUCHA");
         punto_montaje = config_get_string_value(nueva_config, "PUNTO_MONTAJE");
         fresh_start = config_get_int_value(nueva_config, "FRESH_START");
-        retardo_acceso_bloque = config_get_int_value(nueva_config, "RETARDO_ACCESO_BLOQUE");
-        retardo_operacion = config_get_int_value(nueva_config, "RETARDO_OPERACION");
+        retardo_acceso_bloque = 1000 * config_get_int_value(nueva_config, "RETARDO_ACCESO_BLOQUE");
+        retardo_operacion = 1000 * config_get_int_value(nueva_config, "RETARDO_OPERACION");
         log_level = config_get_string_value(nueva_config, "LOG_LEVEL");
     }
     return nueva_config;
