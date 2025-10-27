@@ -219,15 +219,15 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
     encolar_qcb(cola_ready, qcb);
     pthread_mutex_unlock(&mutex_ready);
 
-    sem_post(&sem_queries_ready);
+    
 
     free(qid_str);
     
     log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, qcb->qid, workers_conectados());
 
-    if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0) {
+    /* if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0) { se termina moviendo a encolar_qcb
         //realizar_chequeo_desalojo(qcb); tikitititktkikitikt
-    }
+    } */
 
     list_destroy_and_destroy_elements(elementos, free);
 
@@ -276,6 +276,9 @@ bool qcb_esta_en_cola_ready(void* arg, int socket_buscado){
 void encolar_qcb(t_list *cola_ready, t_qcb *qcb){
     if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
 
+
+
+
         list_add_sorted(cola_ready, qcb, (void*)comparar_qcb_por_prioridad);
         log_info(logger, "qcb de qid: %d encolado en READY con Prioridad: %d", qcb->qid, qcb->prioridad);
 
@@ -284,6 +287,8 @@ void encolar_qcb(t_list *cola_ready, t_qcb *qcb){
         list_add(cola_ready, qcb);
         log_info(logger, "qcb de qid: %d encolado en READY con FIFO.", qcb->qid);
     }
+
+    sem_post(&sem_queries_ready);
 }
 
 bool comparar_qcb_por_prioridad(void* qcb1, void* qcb2){
