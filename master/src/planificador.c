@@ -91,6 +91,8 @@ void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id){
     enviar_qcb_a_worker(query_a_ejecutar, socket_worker_asignado);
     cambiar_estado(query_a_ejecutar, EXEC);
 
+    //sem_post(&sem_queries_ready);
+
     log_info(logger, "## Se envía la Query <%d> (<%d>) al Worker <%d>", query_a_ejecutar->qid, query_a_ejecutar->prioridad, worker_asignado_id);
 }
 
