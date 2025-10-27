@@ -23,23 +23,26 @@ void* ciclo_query_interpreter(){
 }
 
 void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
-    bool ejecutando = true;
-    while(ejecutando){
+    int resultado_ejecucion = 1;
+    while(resultado_ejecucion != -1){
         //fetch de operandos
         query_t* query_a_ejecutar = leer_query(nombre_archivo, pc);
         
         //decode + execute
-        ejecutando = ejecutar_query(query_a_ejecutar, qid);
-        if(!ejecutando) return;
+        resultado_ejecucion = ejecutar_query(query_a_ejecutar, qid);
+        if(resultado_ejecucion == -1) return;
 
         //aguardar respuesta siempre, todas las instrucciones son bloqueantes
-        if(recibir_opcode(socket_storage) == RESPUESTA_STORAGE){
-            log_debug(logger, "aaaaaaabbb");
-            t_list* recibido = recibir_paquete(socket_storage);
-            int respuesta = *((int*)list_get(recibido, 0));
-            manejar_respuesta(respuesta);
-            list_destroy_and_destroy_elements(recibido, free);
-        } else return;
+        if(resultado_ejecucion != 2){
+            if(recibir_opcode(socket_storage) == RESPUESTA_STORAGE){
+                log_debug(logger, "aaaaaaabbb");
+                t_list* recibido = recibir_paquete(socket_storage);
+                int respuesta = *((int*)list_get(recibido, 0));
+                manejar_respuesta(respuesta);
+                list_destroy_and_destroy_elements(recibido, free);
+            } else return;
+        }
+        
         
         check_interrupt();
         //chequear interrupcion 
@@ -127,23 +130,20 @@ query_t* parsear_query(char* query_raw){
 }
 
 
-bool ejecutar_query(query_t* query, int qid){
-    log_debug(logger, "Entre aca");
+int ejecutar_query(query_t* query, int qid){
     char** partes = separar_file_tag(query->file_tag);
-    log_debug(logger, "Entre aca 2");
     char* file = strdup(partes[0]);
     char* tag = strdup(partes[1]);
-    log_debug(logger, "Entre aca 3");
     string_array_destroy(partes);
 
     switch(query->identificador){
         case -1:
             log_error(logger, "No se recibio query de master: Conexion cerrada");
-            return false;
+            return -1;
             break;
 
         case CREATE_Q:
-            log_info(logger, "se quiso ejecutar un create");
+            log_info(logger, "se quizo ejecutar un create");
             ejecutar_create(file, tag, qid);
             break;
         
@@ -156,6 +156,7 @@ bool ejecutar_query(query_t* query, int qid){
         case WRITE_Q:
             log_info(logger, "se quiso ejecutar un WRITE");
             ejecutar_write(query->file_tag, query->param1, query->param2, qid);
+            return 2;
             break;
 
         case READ_Q:
@@ -186,15 +187,15 @@ bool ejecutar_query(query_t* query, int qid){
         case END_Q:
             log_info(logger, "se quiso ejecutar un END");
             ejecutar_end();
-            return false;
+            return -1;
             break;
         
         default:
             log_error(logger, "Error al recibir el query por parte de master");
-            return false;
+            return -1;
             break;
     }
-    return true;
+    return 1;
 }
 
 

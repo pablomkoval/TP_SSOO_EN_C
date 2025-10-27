@@ -27,7 +27,7 @@ typedef struct {
 bool check_interrupt();
 query_t* parsear_query(char* query_raw);
 query_t* leer_query();
-bool ejecutar_query(query_t* query, int qid);
+int ejecutar_query(query_t* query, int qid);
 void manejar_respuesta(int respuesta);
 void ciclo_ejecucion(char* nombre_archivo, int pc, int qid);
 void* ciclo_query_interpreter();

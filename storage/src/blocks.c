@@ -376,7 +376,7 @@ int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buff
     //int offset_interno = offset - (nro_bloque * block_size);
 
     char *aux = string_from_format("%06d.dat", nro_bloque);
-    char *bloque_logico = string_from_format("%s/%s/%s", punto_montaje, file_tag, aux);
+    char *bloque_logico = string_from_format("%s/files/%s/logical_blocks/%s", punto_montaje, file_tag, aux);
     char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
 
     lock_bloque_fisico(bloque_fisico);

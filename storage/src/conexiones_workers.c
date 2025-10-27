@@ -251,11 +251,11 @@ void manejar_read(int socket_worker)
 
     char* data;
 
-    log_debug(logger, "query_id: %d, file: %s, tag: %s", *query_id, file, tag);
+    
     int resultado = leer_bloque(*query_id, file, tag, *bloque, &data);
+    log_debug(logger, "query_id: %d, file: %s, tag: %s, data: %s", *query_id, file, tag, data);
     usleep(retardo_acceso_bloque);
 
-    log_debug(logger, "Resultado de read: %d", resultado);
     if(resultado == 1)
     {
         log_info(logger, "##<%d> - Bloque Lógico Leído <%s>:<%s> - Número de Bloque <%d>", *query_id, file, tag, *bloque);

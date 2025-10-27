@@ -29,6 +29,7 @@ int crear_file(char *file, char *tag)
 void crear_tag(char *path_tag)
 {
     crear_directorio(path_tag);
+    log_debug(logger, "(%s)", path_tag);
 
     char *path_blocks = concatenar_path(path_tag, "logical_blocks");
     crear_directorio(path_blocks);
