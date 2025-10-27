@@ -16,6 +16,7 @@ int main(int argc, char* argv[]) {
     // int prioridad = atoi(argv[3]);
 
     char* archivo_config = "query.config";//hardcodeado para manu
+    char* archivo_query = "query1";
     int prioridad = 0;//hardcodeado para manu
 
     config = iniciar_config(archivo_config);

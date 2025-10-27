@@ -275,7 +275,7 @@ void cambiar_hard_link(char *bloque_logico, char *bloque_fisico)
     link(bloque_fisico, bloque_logico);
 }
 
-int escribir_bloque(int query_id, char *file, char* tag, int offset, char *contenido)
+int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque char *contenido)
 {
     char *path = concatenar_path(file, tag);
     int tamanio = strlen(contenido);
@@ -299,9 +299,6 @@ int escribir_bloque(int query_id, char *file, char* tag, int offset, char *conte
         
 
     unlock_metadata(path);
-
-    int nro_bloque = offset / block_size;
-    int offset_interno = offset - (nro_bloque * block_size);
 
     char *aux = string_from_format("%06d.dat", nro_bloque);
     char *bloque_logico = string_from_format("%s/files/%s/logical_blocks/%s", punto_montaje, path, aux);
