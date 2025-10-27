@@ -55,9 +55,8 @@ query_t* leer_query(char* nombre_archivo, int pc){
 
     if (!archivo) 
     {
-        log_error(logger, "No se logro abrir el archivo");
-        query_t* vacio = {0};
-        return vacio;
+        log_error(logger, "No se logró abrir el archivo");
+        return NULL;
     }
 
     char buffer[256];
@@ -102,15 +101,18 @@ query_t* parsear_query(char* query_raw){
     query->param1 = NULL;
     query->param2 = NULL;
 
+    log_trace(logger, "La query raw es: %s", query_raw);
     char **separado = string_split(query_raw, " ");
 
     int cant_param = 0;
     while(separado[cant_param] != NULL) cant_param++;
+
     
     query->identificador = parsear_query_id(separado[0]);
 
+
     if(cant_param > 1){
-        query->file_tag = separado[1];
+        query->file_tag = strdup(separado[1]);
     }
     if(cant_param > 2){
         query->param1 = strdup(separado[2]);
@@ -125,10 +127,16 @@ query_t* parsear_query(char* query_raw){
 
 
 bool ejecutar_query(query_t* query, int qid){
+    log_debug(logger, "Entre aca");
     char** partes = separar_file_tag(query->file_tag);
+    log_debug(logger, "Entre aca 2");
     char* file = strdup(partes[0]);
     char* tag = strdup(partes[1]);
+    log_debug(logger, "Entre aca 3");
+    log_debug(logger, "ID: %s",query->identificador);
+    log_debug(logger, "file: %s", file);
     string_array_destroy(partes);
+    log_debug(logger, "file: %s", file);
 
     switch(query->identificador){
         case -1:
@@ -208,6 +216,7 @@ bool check_interrupt(){
 }
 
 char** separar_file_tag(char* file_tag){
+    log_trace(logger, "String a separar: %s", file_tag);
     char** partes = string_split(file_tag, ":");
     return partes;
 }

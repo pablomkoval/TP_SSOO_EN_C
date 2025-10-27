@@ -30,12 +30,16 @@ void enviar_qcb_a_worker(t_qcb* qcb, int socket_worker){
 }
 
 int obtener_worker_libre(){
+    log_debug(logger, "##DEBUG: PRE-MUTEX");
     pthread_mutex_lock(&mutex_workers_libres);
+    log_debug(logger, "##DEBUG: POST-MUTEX");
     int* worker_id_ptr = list_remove(workers_libres, 0);
-    pthread_mutex_lock(&mutex_workers_libres);
+    log_debug(logger, "##DEBUG: POST-LIST_REMOVE");
+    pthread_mutex_unlock(&mutex_workers_libres);
 
     int worker_id = *worker_id_ptr;
     free(worker_id_ptr);
+    log_debug(logger, "##DEBUG: RETORNA WORKER ID: (%d)", worker_id);
     return worker_id;
 }
 
@@ -43,22 +47,30 @@ void* planificador(){
     while(1){
         log_info(logger,"Planificador esperando query....");
         sem_wait(&sem_queries_ready);
+        log_debug(logger, "##DEBUG: PASO SEMAFORO 1");
         sem_wait(&sem_workers_libres);
+        log_debug(logger, "##DEBUG: PASO SEMAFORO 2");
         
-        pthread_mutex_lock(&mutex_ready);
+        //pthread_mutex_lock(&mutex_ready);
 
 
         t_qcb* query_a_ejecutar = NULL;
         int worker_seleccionado_id;
 
         if(strcmp(algoritmo_planificacion, "FIFO") == 0){
-            obtener_query_worker_fifo(query_a_ejecutar, &worker_seleccionado_id);
+            pthread_mutex_lock(&mutex_ready);
+            log_debug(logger, "##DEBUG: PASO MUTEX 1");
+            query_a_ejecutar = obtener_query_worker_fifo(&worker_seleccionado_id);
+            log_debug(logger, "##DEBUG: PASO OBTENER QUERY FIFO");
+            pthread_mutex_unlock(&mutex_ready);
         }   else{
+            pthread_mutex_lock(&mutex_ready);
             query_a_ejecutar = obtener_query_worker_priori(&worker_seleccionado_id);
+            pthread_mutex_unlock(&mutex_ready);
         }
         
         
-    enviar_query_a_worker(query_a_ejecutar, worker_seleccionado_id);
+        enviar_query_a_worker(query_a_ejecutar, worker_seleccionado_id);
     }
 }
 
@@ -82,9 +94,9 @@ void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id){
     log_info(logger, "## Se envía la Query <%d> (<%d>) al Worker <%d>", query_a_ejecutar->qid, query_a_ejecutar->prioridad, worker_asignado_id);
 }
 
-void obtener_query_worker_fifo(t_qcb* query_a_ejecutar, int *worker_libre_id){
-    query_a_ejecutar = list_remove(cola_ready, 0);
+t_qcb* obtener_query_worker_fifo(int *worker_libre_id){
     *worker_libre_id = obtener_worker_libre();
+    return list_remove(cola_ready, 0);
 }
 
 t_qcb* obtener_query_worker_priori(int *worker_libre_id){
