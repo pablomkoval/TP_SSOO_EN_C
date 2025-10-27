@@ -24,14 +24,19 @@ tabla_paginas_t* crear_tabla(char* file_tag){
     tabla_paginas_t* tabla = malloc(sizeof(tabla_paginas_t));
     tabla->paginas = list_create();
 
+    log_debug(logger, "se creo la tabla");
     dictionary_put(tablas_de_paginas, strdup(file_tag), tabla);
+    log_debug(logger, "se metio al diccionario la tabla");
     return tabla;
 }
 
 tabla_paginas_t* obtener_tabla(char* file_tag){
+    log_debug(logger, "morcilla");
     tabla_paginas_t* tabla = dictionary_get(tablas_de_paginas, file_tag);
+    log_debug(logger, "chinchulin");
 
     if(tabla == NULL){
+        log_debug(logger, "va a crearse la tabla");
         tabla = crear_tabla(file_tag);
     }
     return tabla;
@@ -47,8 +52,11 @@ pagina_t* buscar_pagina(tabla_paginas_t* tabla, int nro_pagina) {
 
 
 pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
+    log_debug(logger, "##DEBUG: antes de obtener tabla");
     tabla_paginas_t* tabla = obtener_tabla(file_tag);
+    log_debug(logger, "##DEBUG: antes de buscar pagina");
     pagina_t* pag = buscar_pagina(tabla, nro_pagina);
+    log_debug(logger, "##DEBUG: despues de obtener tabla y pagina");
 
     if(pag == NULL){
         pag = malloc(sizeof(pagina_t));
@@ -57,6 +65,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         pag->bit_presencia = false;
         pag->frame = -1;
         list_add(tabla->paginas, pag);
+        log_debug(logger, "##DEBUG: cuando se creo la pagina");
     }
 
     if(pag && pag->bit_presencia){
@@ -65,8 +74,11 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
     }
 
     if(pag->bit_presencia == false){
+        log_debug(logger, "##DEBUG: antes de buscar frame libre");
         int frame = buscar_frame_libre();
+        log_debug(logger, "##DEBUG: despues de buscar frame libre");
         if(frame == -1){
+            log_debug(logger, "##DEBUG: antes de usar algoritmo de reemplazo");
             frame = buscar_victima_reemplazo();
         }
 
@@ -74,7 +86,9 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         char* file = separado[0];
         char* tag = separado[1];
         string_array_destroy(separado);
+        log_debug(logger, "##DEBUG: antes de cargar pagina de storage");
         cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid);
+        log_debug(logger, "##DEBUG: despues de cargar pagina de storage");
         pag->bit_presencia = true;
         pag->frame = frame;
         pag->bit_modificado = false;
@@ -108,10 +122,19 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
 
-    if(recibir_opcode(socket_storage) != READ) return;
+    if(recibir_opcode(socket_storage) == RESPUESTA_STORAGE){
+        t_list* recibido = recibir_paquete(socket_storage);
+        int* resultado = list_get(recibido, 0);
+        if(*resultado == 1){
+            char* contenido = list_get(recibido, 1);
+        } else{
+            log_error(logger, "Storage no me devolvio el contenido, resultado (%d)", resultado);
+        }
+    }
+    // if(recibir_opcode(socket_storage) != READ) return;
 
-    t_list* recibido = recibir_paquete(socket_storage);
-    char* contenido = list_get(recibido, 0);
+    // t_list* recibido = recibir_paquete(socket_storage);
+    // char* contenido = list_get(recibido, 0);
 
     //averiguar si el memset es correcto
     memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo

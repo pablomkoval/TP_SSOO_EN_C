@@ -26,16 +26,22 @@ void ejecutar_truncate(char* file, char* tag, int tamanio, int qid){
 }
 
 void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido, int qid){
+    log_debug(logger, "##DEBUG: PRE-ASIGNACIONES");
     int direccion_base = atoi(direccion_base_str);
     int bytes_restantes = strlen(contenido);
     int direccion_actual = direccion_base;
     int bytes_escritos = 0;
+    log_debug(logger, "##DEBUG: POST-ASIGNACIONES");
 
     while(bytes_restantes > 0){
         int pagina_logica = obtener_pagina_logica(direccion_actual);
+        log_debug(logger, "##DEBUG: obtuvo pagina logica (%d)", pagina_logica);
         int offset = obtener_offset_pagina(direccion_actual);
+        log_debug(logger, "##DEBUG: obtuvo offset (%d)", offset);
 
         pagina_t* pag = obtener_pagina(file_tag, pagina_logica, qid);
+
+        log_debug(logger, "##DEBUG: OBTUVO PAGINA");
 
         int faltante_pagina = tam_pagina - offset;
         int cant_escritura;

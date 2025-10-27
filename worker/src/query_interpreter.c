@@ -34,10 +34,11 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
 
         //aguardar respuesta siempre, todas las instrucciones son bloqueantes
         if(recibir_opcode(socket_storage) == RESPUESTA_STORAGE){
+            log_debug(logger, "aaaaaaabbb");
             t_list* recibido = recibir_paquete(socket_storage);
             int respuesta = *((int*)list_get(recibido, 0));
-            list_destroy_and_destroy_elements(recibido, free);
             manejar_respuesta(respuesta);
+            list_destroy_and_destroy_elements(recibido, free);
         } else return;
         
         check_interrupt();
@@ -133,10 +134,7 @@ bool ejecutar_query(query_t* query, int qid){
     char* file = strdup(partes[0]);
     char* tag = strdup(partes[1]);
     log_debug(logger, "Entre aca 3");
-    log_debug(logger, "ID: %s",query->identificador);
-    log_debug(logger, "file: %s", file);
     string_array_destroy(partes);
-    log_debug(logger, "file: %s", file);
 
     switch(query->identificador){
         case -1:

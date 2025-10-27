@@ -34,8 +34,10 @@ int main(int argc, char** argv) {
 
     log_debug(logger, "se iniciaron logger y config");
 
+
     socket_storage = conectar_storage(worker_id);
     socket_master = conectar_master(worker_id);
+    inicializar_memoria_interna();
 
     log_debug(logger, "se iniciaron conexiones");
 

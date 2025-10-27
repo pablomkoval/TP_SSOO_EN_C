@@ -21,6 +21,7 @@ typedef struct
 extern t_dictionary* tablas_de_paginas;
 extern void* memoria_interna;
 
+void inicializar_memoria_interna();
 tabla_paginas_t* obtener_tabla(char* file_tag);
 int buscar_frame_libre();
 int buscar_victima_reemplazo();
