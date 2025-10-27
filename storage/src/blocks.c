@@ -125,11 +125,10 @@ char *leer_archivo(char *path) //sincro cuando se usa
     return buffer;
 }
 
-int escribir_archivo(char *path, char *contenido, int offset) //sincro cuando se usa
+int escribir_archivo(char *path, char *contenido) //sincro cuando se usa
 {
     FILE *f = fopen(path, "r+");
 
-    fseek(f, offset, SEEK_SET);
 
     fwrite(contenido, 1, strlen(contenido), f);
 
@@ -275,7 +274,7 @@ void cambiar_hard_link(char *bloque_logico, char *bloque_fisico)
     link(bloque_fisico, bloque_logico);
 }
 
-int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque char *contenido)
+int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque, char *contenido)
 {
     char *path = concatenar_path(file, tag);
     int tamanio = strlen(contenido);
@@ -292,7 +291,7 @@ int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque char *co
         return -4;
     }
         
-    if (operacion_fuera_de_rango(offset, tamanio, path)){
+    if (operacion_fuera_de_rango(nro_bloque, path)){
         free(path);
         return -5;
     }
@@ -310,7 +309,7 @@ int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque char *co
     if (obtener_referencias_bloque(nro_block_f) <= 1)
     {
         lock_bloque_fisico(bloque_fisico);
-        escribir_archivo(bloque_fisico, contenido, offset_interno);
+        escribir_archivo(bloque_fisico, contenido);
         unlock_bloque_fisico(bloque_fisico);
 
         log_info(logger, "##<%d> - Bloque Lógico Escrito <%s>:<%s> - Número de Bloque: <%i>",query_id, file, tag, nro_bloque);
@@ -334,7 +333,7 @@ int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque char *co
         lock_metadata(path);
         lock_bloque_fisico(nuevo_bloque_fisico);
 
-        escribir_archivo(nuevo_bloque_fisico, contenido, offset_interno);
+        escribir_archivo(nuevo_bloque_fisico, contenido);
         asociar_hash_block(nuevo_bloque_fisico);
         cambiar_hard_link(bloque_logico, nuevo_bloque_fisico);
         cambiar_bloque_metadata(path, nro_bloque_f_nuevo, nro_bloque);
@@ -365,7 +364,7 @@ int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buff
 
     if (!file_tag_existe(file_tag))
         return FILE_TAG_INEXISTENTE;
-    if (operacion_fuera_de_rango(nro_bloque * block_size, block_size, file_tag))
+    if (operacion_fuera_de_rango(nro_bloque, file_tag))
         return LECTURA_O_ESCRITURA_FUERA_DE_RANGO;
 
     //int nro_bloque = offset / block_size;
@@ -390,7 +389,7 @@ int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buff
     return 1;
 }
 
-bool operacion_fuera_de_rango(int offset, int tamanio, char *path)
+bool operacion_fuera_de_rango(int nro_bloque, char *path)
 {
     char* path_meta = path_config_meta(path);
     t_config *meta = config_create(path_meta);
@@ -399,7 +398,7 @@ bool operacion_fuera_de_rango(int offset, int tamanio, char *path)
     free(path_meta);
     config_destroy(meta);
 
-    if ((offset + tamanio) > tamanio_tag)
+    if ((nro_bloque * block_size + block_size) > tamanio_tag)
         return true;
 
     return false;
