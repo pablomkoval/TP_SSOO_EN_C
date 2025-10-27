@@ -257,7 +257,7 @@ void manejar_read(int socket_worker)
     if(resultado == 1)
     {
         log_info(logger, "##<%d> - Bloque Lógico Leído <%s>:<%s> - Número de Bloque <%d>", *query_id, file, tag, *bloque);
-        mandar_resultado(socket_worker, resultado);
+        mandar_read(socket_worker, resultado, data);
     }
     else mandar_resultado(socket_worker, resultado);
 }
@@ -301,6 +301,16 @@ void mandar_resultado(int socket_worker, int resultado)
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, RESPUESTA_STORAGE);
     agregar_a_paquete(paquete, &resultado, sizeof(int));
+    enviar_paquete(paquete, socket_worker, logger);
+    borrar_paquete(paquete);
+}
+
+void mandar_read(int socket_worker, int resultado, char* contenido)
+{
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, RESPUESTA_STORAGE);
+    agregar_a_paquete(paquete, &resultado, sizeof(int));
+    agregar_a_paquete(paquete, &contenido, strlen(contenido) + 1);
     enviar_paquete(paquete, socket_worker, logger);
     borrar_paquete(paquete);
 }

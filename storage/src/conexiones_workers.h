@@ -21,5 +21,6 @@ void manejar_read(int socket_worker);
 void manejar_delete(int socket_worker);
 void manejar_desconexion(int* socket_worker);
 void mandar_resultado(int socket_worker, int resultado);
+void mandar_read(int socket_worker, int resultado, char* contenido);
 
 #endif
