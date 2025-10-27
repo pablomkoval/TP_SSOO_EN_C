@@ -23,12 +23,14 @@ int worker_id;
 pthread_t thread_query_interpreter;
 
 int main(int argc, char** argv) {
-    if(argc < 3){
-        printf("Faltaron argumentos para iniciar el worker");
-        return EXIT_FAILURE;
-    }
-    char* nombre_archivo = argv[1];
-    worker_id = atoi(argv[2]);
+    // if(argc < 3){
+    //     printf("Faltaron argumentos para iniciar el worker");
+    //     return EXIT_FAILURE;
+    // }
+    // char* nombre_archivo = argv[1];
+    // worker_id = atoi(argv[2]);
+    char* nombre_archivo = "worker.config";
+    worker_id = 1;
     config_worker = iniciar_config(nombre_archivo);
     logger = iniciar_logger(worker_id);
 
