@@ -39,8 +39,6 @@ void crear_directorios_y_archivos()
 
     int a = escribir_bloque(0, "materias","sistemas",130, "manu lindo" );
 
-    log_error(logger, "ss%i", a);
-
     copiar_tag(0, "initial_file", "BASE", "jose", "hola");
 
     free(bloque_fisico);
