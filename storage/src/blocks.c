@@ -365,11 +365,12 @@ int escribir_bloque(int query_id, char *file, char* tag, int offset, char *conte
 int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buffer )
 {
     char *file_tag = concatenar_path(file, tag);
+    log_debug(logger, "File/tag: %s", file_tag);
 
     if (!file_tag_existe(file_tag))
-        return -2;
+        return FILE_TAG_INEXISTENTE;
     if (operacion_fuera_de_rango(nro_bloque * block_size, block_size, file_tag))
-        return -5;
+        return LECTURA_O_ESCRITURA_FUERA_DE_RANGO;
 
     //int nro_bloque = offset / block_size;
     //int offset_interno = offset - (nro_bloque * block_size);

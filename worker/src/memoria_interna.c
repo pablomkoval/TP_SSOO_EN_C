@@ -85,13 +85,14 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         char** separado = separar_file_tag(file_tag);
         char* file = separado[0];
         char* tag = separado[1];
-        string_array_destroy(separado);
+        
         log_debug(logger, "##DEBUG: antes de cargar pagina de storage");
         cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid);
         log_debug(logger, "##DEBUG: despues de cargar pagina de storage");
         pag->bit_presencia = true;
         pag->frame = frame;
         pag->bit_modificado = false;
+        string_array_destroy(separado);
         return pag;
     }
     return pag;
@@ -113,6 +114,7 @@ int buscar_victima_reemplazo(){
 }
 
 void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pagina, int frame, int qid){
+    log_debug(logger, "qid: %d file: %s, tag: %s", qid, file, tag);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, READ);
     agregar_a_paquete(paquete, &qid, sizeof(int));
@@ -122,16 +124,14 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
 
-    if(recibir_opcode(socket_storage) == RESPUESTA_STORAGE){
-        t_list* recibido = recibir_paquete(socket_storage);
-        int* resultado = list_get(recibido, 0);
-        if(*resultado == 1){
-            char* contenido = strdup(list_get(recibido, 1));
-        } else{
-            log_error(logger, "Storage no me devolvio el contenido, resultado (%d)", resultado);
-        }
-        list_destroy_and_destroy_elements(recibido, free);
-    }
+    if(recibir_opcode(socket_storage) != RESPUESTA_STORAGE) return;
+
+    t_list* recibido = recibir_paquete(socket_storage);
+    int* resultado = (int*)list_get(recibido, 0);
+
+    if(*resultado != 1) log_error(logger, "Storage no me devolvio el contenido, resultado (%d)", resultado);
+    
+    char* contenido = strdup(list_get(recibido, 1));  
     // if(recibir_opcode(socket_storage) != READ) return;
 
     // t_list* recibido = recibir_paquete(socket_storage);
@@ -140,6 +140,8 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     //averiguar si el memset es correcto
     memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
     memcpy(memoria_interna + frame * tam_pagina, contenido, tam_pagina);
+    list_destroy_and_destroy_elements(recibido, free);
+    return;
 }
 
 void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int qid){
