@@ -293,7 +293,6 @@ void cambiar_hard_link(char *bloque_logico, char *bloque_fisico)
 int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque, char *contenido)
 {
     char *path = concatenar_path(file, tag);
-    int tamanio = strlen(contenido);
 
     if (!file_tag_existe(path)){
         free(path);

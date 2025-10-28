@@ -46,6 +46,16 @@ int cambiar_tamanio_metadata(char *path, char *nuevo_tamanio)
     return tamanio_viejo;
 }
 
+int tamanio_metadata(char *path)
+{
+    char *path_config = path_config_meta(path);
+    t_config *meta = config_create(path_config);
+    int tamanio_viejo = config_get_int_value(meta, "TAMAÑO");
+    config_destroy(meta);
+    free(path_config);
+    return tamanio_viejo;
+}
+
 char *estado_metadata(char *path)
 {
     char *path_config = path_config_meta(path);

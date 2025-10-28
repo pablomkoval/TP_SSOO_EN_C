@@ -18,5 +18,6 @@ void cambiar_bloque_metadata(char* path, int bloque, int pos);
 char* path_config_meta(char* file_tag);
 void agregar_bloque_metadata(char* path, int bloque, int pos);
 void quitar_ultimo_bloque_metadata(char *path);
+int tamanio_metadata(char *path);
 
 #endif
