@@ -10,6 +10,6 @@ int crear_file(char* file, char* tag);
 int copiar_tag(int query_id, char* origen, char* destino, char* a, char* b);
 bool file_tag_existe(char* path);
 int eliminar_tag(int query_id, char* file, char* tag);
-void dupear_hard_links(char *file_origen, char *tag_origen, char *file_destino, char *tag_destino);
+void dupear_hard_links(int query_id, char *file_origen, char *tag_origen, char *file_destino, char *tag_destino);
 
 #endif

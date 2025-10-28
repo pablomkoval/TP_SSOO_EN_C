@@ -60,7 +60,7 @@ int copiar_tag(int query_id, char *file_origen, char *tag_origen, char *file_des
 
     crear_file(file_destino, tag_destino);
 
-    dupear_hard_links(file_origen, tag_origen, file_destino, tag_destino);
+    dupear_hard_links(query_id, file_origen, tag_origen, file_destino, tag_destino);
 
     //char *comando = string_from_format("cp -r '%s/.' '%s'", path_origen, path_destino);
 
@@ -118,6 +118,7 @@ int eliminar_tag(int query_id, char *file, char* tag)
     config_destroy(meta);
     free(comando);
     free(file_tag);
+    free(path_config);
 
     return 1;
 }
@@ -141,7 +142,7 @@ bool file_tag_existe(char *file_tag)
         
 }
 
-void dupear_hard_links(char *file_origen, char *tag_origen, char *file_destino, char *tag_destino)
+void dupear_hard_links(int query_id, char *file_origen, char *tag_origen, char *file_destino, char *tag_destino)
 {
     char* file_tag_origen = concatenar_path(file_origen, tag_origen);
     int cant_bloques = cant_bloques_logicos(file_tag_origen);
@@ -153,11 +154,15 @@ void dupear_hard_links(char *file_origen, char *tag_origen, char *file_destino, 
         char* bloque_logico = obtener_bloque_logico(file_tag_origen, i);
         char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
 
+        int nro_block_f = obtener_numero_bloque(bloque_fisico);
+
         crear_bloque_logico(file_tag_destino, i);
 
         char* nuevo_bloque_logico = string_from_format("%s/files/%s/%s/logical_blocks/%06d.dat", punto_montaje, file_destino, tag_destino, i);
 
         cambiar_hard_link(nuevo_bloque_logico, bloque_fisico);
+
+        log_info(logger, "##<%i> - <%s>:<%s> Se agregó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file_destino, tag_destino, i, nro_block_f);
 
         free(bloque_fisico);
         free(nuevo_bloque_logico);

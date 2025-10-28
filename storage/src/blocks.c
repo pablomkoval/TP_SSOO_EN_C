@@ -390,16 +390,14 @@ int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buff
     char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
 
     lock_bloque_fisico(bloque_fisico);
-    char *contenido = leer_archivo(bloque_fisico);
+    *buffer = leer_archivo(bloque_fisico);
     unlock_bloque_fisico(bloque_fisico);
 
-    *buffer = contenido;
 
     free(file_tag);
     free(aux);
     free(bloque_logico);
     free(bloque_fisico);
-    free(contenido);
 
     return 1;
 }

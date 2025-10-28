@@ -25,6 +25,7 @@ void crear_directorios_y_archivos()
         crear_archivo_hash_bloques();
         char* bloque_0 = concatenar_path(punto_montaje, "physical_blocks/bloque0000.dat");
         asociar_hash_block(bloque_0);
+        free(bloque_0);
     }
     
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");

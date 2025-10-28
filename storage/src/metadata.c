@@ -214,7 +214,7 @@ int cant_bloques_logicos(char *path)   //si aparece hay que lockear metadata
     char *path_config = path_config_meta(path);
     t_config *meta = config_create(path_config);
     char **bloques = config_get_array_value(meta, "BLOCKS");
-    config_destroy(meta);
+    
 
     int cant = 0;
     while (bloques[cant] != NULL)
@@ -222,9 +222,10 @@ int cant_bloques_logicos(char *path)   //si aparece hay que lockear metadata
         cant++;
     }
 
+    config_destroy(meta);
+    free(path_config); 
+    
     return cant;
-
-    free(path_config);
 }
 
 int commmit_file(int query_id, char *file, char *tag)  //sincronizada
@@ -236,7 +237,8 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
     
     lock_metadata(file_tag);
 
-    if (strcmp(estado_metadata(file_tag), "COMMITED") == 0)
+    char* estado = estado_metadata(file_tag);
+    if (strcmp(estado, "COMMITED") == 0)
     {
         return 1;
     }
@@ -280,9 +282,15 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
             asociar_hash_block(bloque_fisico);
             pthread_mutex_unlock(&mutex_hash_index);
         }
+
+        free(bloque_logico);
+        free(md5);
+        free(bloque_fisico);
+        free(bloque_fisico_nuevo);
     }
 
     free(file_tag);
+    free(estado);
 
     return 1;
 }
