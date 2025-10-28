@@ -160,11 +160,12 @@ int ejecutar_query(query_t* query, int qid){
         case READ_Q:
             log_info(logger, "se quiso ejecutar un READ");
             ejecutar_read(query->file_tag, atoi(query->param1), atoi(query->param2), qid);
+            return 2;
             break;
 
         case TAG_Q:
             log_info(logger, "se quiso ejecutar un TAG");
-            ejecutar_tag(file, tag, query->param1, query->param2, qid);
+            ejecutar_tag(file, tag, query->param1, qid);
             break;
             
         case COMMIT_Q:

@@ -91,11 +91,16 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
         bytes_leidos += cant_lectura;
         direccion_actual += cant_lectura;
     }
+    log_debug(logger, "La lectura previa a mandarselo a master es: %s", buffer);
     //mandarselo a master
     return;
 }
 
-void ejecutar_tag(char* file_origen, char* tag_origen, char* file_destino, char* tag_destino, int qid){
+void ejecutar_tag(char* file_origen, char* tag_origen, char* file_tag_destino, int qid){
+    char** partes = separar_file_tag(file_tag_destino);
+    char* file_destino = strdup(partes[0]);
+    char* tag_destino = strdup(partes[1]);
+    
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, TAG);
 
@@ -107,6 +112,8 @@ void ejecutar_tag(char* file_origen, char* tag_origen, char* file_destino, char*
 
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
+    string_array_destroy(partes);
+    return;
 }
 
 void ejecutar_flush(char* file, char* tag, char* file_tag, int qid){

@@ -9,7 +9,7 @@ void ejecutar_create(char* file, char* tag, int qid);
 void ejecutar_truncate(char* file, char* tag, int tamanio, int qid);
 void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido, int qid);
 void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid);
-void ejecutar_tag(char* file_origen, char* tag_origen, char* file_destino, char* tag_destino, int qid);
+void ejecutar_tag(char* file_origen, char* tag_origen, char* file_tag_destino, int qid);
 void ejecutar_flush(char* file, char* tag, char* file_tag, int qid);
 void ejecutar_commit(char* file, char* tag, char* file_tag, int qid);
 void ejecutar_delete(char* nombre_file, char* tag, int qid);
