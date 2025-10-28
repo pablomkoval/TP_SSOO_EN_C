@@ -328,7 +328,14 @@ void mandar_read(int socket_worker, int resultado, char* contenido)
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, RESPUESTA_STORAGE);
     agregar_a_paquete(paquete, &resultado, sizeof(int));
-    agregar_a_paquete(paquete, &contenido, strlen(contenido) + 1);
+    
+    if (contenido != NULL) {
+        agregar_a_paquete(paquete, contenido, strlen(contenido) + 1); 
+    } else {
+        char* vacio = "";
+        agregar_a_paquete(paquete, vacio, 1); 
+    }
+
     enviar_paquete(paquete, socket_worker, logger);
     borrar_paquete(paquete);
 }
