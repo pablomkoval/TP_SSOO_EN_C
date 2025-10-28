@@ -24,8 +24,8 @@ typedef struct {
     char* param2;
 } query_t;
 
-bool check_interrupt();
-query_t* parsear_query(char* query_raw);
+int check_interrupt(int qid);
+query_t* parsear_query(char* query_raw, char** instruccion);
 query_t* leer_query();
 int ejecutar_query(query_t* query, int qid);
 void manejar_respuesta(int respuesta);

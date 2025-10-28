@@ -41,7 +41,6 @@ void handshake_storage(int socket, int worker_id){
         t_list* recibido = recibir_paquete(socket);
         int tam_bloque = *((int*)list_get(recibido, 0));
         tam_pagina = tam_bloque;
-        //send(socket, &worker_id, sizeof(int), 0);
         return;
     }else {
         log_error(logger, "Fallo en el handshake con Storage, recibí %d", respuesta);

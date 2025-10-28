@@ -25,11 +25,18 @@ void ejecutar_truncate(char* file, char* tag, int tamanio, int qid){
     borrar_paquete(paquete);
 }
 
-void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido, int qid){
-    int direccion_base = atoi(direccion_base_str);
+void ejecutar_write(char* file_tag, int direccion_base, char* contenido, int qid){
     int bytes_restantes = strlen(contenido);
     int direccion_actual = direccion_base;
     int bytes_escritos = 0;
+
+    int pagina_logica_inicial = obtener_pagina_logica(direccion_base);
+    int offset_inicial = obtener_offset_pagina(direccion_base);
+
+    pagina_t* pag_inicial = obtener_pagina(file_tag, pagina_logica_inicial, qid);
+    int direccion_fisica_inicial = pag_inicial->frame * tam_pagina + offset_inicial;
+
+    char* escrito = malloc(bytes_restantes + 1);
 
     while(bytes_restantes > 0){
         int pagina_logica = obtener_pagina_logica(direccion_actual);
@@ -40,6 +47,7 @@ void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido, i
         log_debug(logger, "##DEBUG: OBTUVO PAGINA");
 
         int faltante_pagina = tam_pagina - offset;
+
         int cant_escritura;
         if(faltante_pagina < bytes_restantes){
             cant_escritura = faltante_pagina;
@@ -47,9 +55,11 @@ void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido, i
             cant_escritura = bytes_restantes;
         }
 
-        void* destino = memoria_interna + pag->frame * tam_pagina + offset;
+        int direccion_fisica = pag->frame * tam_pagina + offset;
+        void* destino = memoria_interna + direccion_fisica;
 
         memcpy(destino, contenido + bytes_escritos, cant_escritura);
+        memcpy(escrito + bytes_escritos, contenido + bytes_escritos, cant_escritura);
 
         pag->bit_modificado = true;
 
@@ -57,17 +67,29 @@ void ejecutar_write(char* file_tag, char* direccion_base_str, char* contenido, i
         bytes_escritos += cant_escritura;
         direccion_actual += cant_escritura;
     }
-    log_info(logger, "WRITE de %s desde %d (%d bytes): '%s'",
+
+    //escrito[bytes_escritos] = '\0';
+
+    log_debug(logger, "WRITE de %s desde %d (%d bytes): '%s'",
              file_tag, direccion_base, (int)strlen(contenido), contenido);
+
+    log_info(logger, "Query %d: Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", qid, direccion_fisica_inicial, escrito);
+
+    free(escrito);
     return;
 }
 
 
 void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
     int bytes_restantes = tamanio;
-    char* buffer = malloc(tamanio);
+    char* buffer = malloc(tamanio + 1);
     int direccion_actual = direccion_base;
     int bytes_leidos = 0;
+
+    int pagina_logica_inicial = obtener_pagina_logica(direccion_base);
+    int offset_inicial = obtener_offset_pagina(direccion_base);
+    pagina_t* pag_inicial = obtener_pagina(file_tag, pagina_logica_inicial, qid);
+    int direccion_fisica_inicial = pag_inicial->frame * tam_pagina + offset_inicial;
 
     while(bytes_restantes > 0){
         int pagina_logica = obtener_pagina_logica(direccion_actual);
@@ -76,6 +98,7 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
         pagina_t* pag = obtener_pagina(file_tag, pagina_logica, qid);
 
         int faltante_pagina = tam_pagina - offset;
+
         int cant_lectura;
         if(faltante_pagina < bytes_restantes){
             cant_lectura = faltante_pagina;
@@ -83,16 +106,20 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
             cant_lectura = bytes_restantes;
         }
 
-        void* inicio = memoria_interna + pag->frame * tam_pagina + offset;
+        int direccion_fisica = pag->frame * tam_pagina + offset;
+        //void* inicio = memoria_interna + pag->frame * tam_pagina + offset;
 
-        memcpy(buffer + bytes_leidos, inicio, cant_lectura);
+        memcpy(buffer + bytes_leidos, memoria_interna + direccion_fisica, cant_lectura);
 
         bytes_restantes -= cant_lectura;
         bytes_leidos += cant_lectura;
         direccion_actual += cant_lectura;
     }
+    //buffer[bytes_leidos] = '\0';
     log_debug(logger, "La lectura previa a mandarselo a master es: %s", buffer);
+    log_info(logger, "Query %d: Acción: LEER - Dirección Física: %d - Valor: %s", qid, direccion_fisica_inicial, buffer);
     //mandarselo a master
+    free(buffer);
     return;
 }
 
