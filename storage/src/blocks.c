@@ -77,7 +77,7 @@ void asociar_hash_block(char *bloque_fisico)
 
     int numero = obtener_numero_bloque(bloque_fisico);
 
-    char *bloque = string_from_format("BLOCK_%04d", numero);
+    char *bloque = string_from_format("BLOCK%04d", numero);
 
     if (config_has_property(hash, md5))
     {
@@ -105,6 +105,22 @@ int obtener_numero_bloque(char *path) //no hace falta sincro
         nombre++;
     int numero;
     sscanf(nombre, "bloque%d.dat", &numero);
+    return numero;
+}
+
+int obtener_numero_bloque_metadata(char *path) //no hace falta sincro
+{
+    const char *nombre = strrchr(path, '/');
+
+    if (!nombre)
+    {
+        nombre = path;
+    }
+
+    else
+        nombre++;
+    int numero;
+    sscanf(nombre, "BLOCK%d", &numero);
     return numero;
 }
 
@@ -223,7 +239,7 @@ int obtener_bloque_por_hash(char *md5)
     if (config_has_property(hash, md5))
     {
         char *bloque = config_get_string_value(hash, md5);
-        return obtener_numero_bloque(bloque);
+        return obtener_numero_bloque_metadata(bloque);
     }
     else
         return -1;

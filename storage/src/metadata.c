@@ -251,7 +251,7 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
             cambiar_bloque_metadata(file_tag, nro_block_f, i);
             unlock_metadata(file_tag);
 
-            log_info(logger, "##<%i> - <%s>:<%s> Se eliminó el hard link del bloque lógico <%dO> al bloque físico <%d>", query_id, file, tag, i, nro_bloque);
+            log_info(logger, "##<%i> - <%s>:<%s> Se eliminó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, i, nro_bloque);
             log_info(logger, "##<%i> - <%s>:<%s> Se agregó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, i, nro_block_f);
             
 

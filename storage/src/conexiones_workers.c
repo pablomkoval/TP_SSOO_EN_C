@@ -225,10 +225,10 @@ void manejar_write(int socket_worker)
     int* query_id = list_get(datos, 0);
     char* file = list_get(datos, 1);
     char* tag = list_get(datos, 2);
-    int* offset = list_get(datos, 3);
+    int* nro_bloque = list_get(datos, 3);
     char* contenido = list_get(datos, 4);
     
-    int resultado = escribir_bloque(*query_id, file, tag, *offset, contenido);
+    int resultado = escribir_bloque(*query_id, file, tag, *nro_bloque, contenido);
     usleep(retardo_acceso_bloque);
 
     if(resultado == 1)
