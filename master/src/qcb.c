@@ -10,7 +10,8 @@ t_qcb* crear_qcb(char* query_entrante, int prioridad_query, int socket){
     qcb->path = strdup(query_entrante);
     qcb->id_worker_asociado = -1;
     qcb->estado = READY;
-
+    qcb->pc = 0;
+    
     if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
         qcb->tiempo_aging = temporal_create();
     } else{

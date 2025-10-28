@@ -27,6 +27,5 @@ bool comparar_qcb_por_prioridad(void* qcb1, void* qcb2);
 int workers_conectados();
 
 void hacer_chequeo_desalojo(t_qcb* qcb_exec);
-t_qcb* buscar_candidato_desalojo();
 
 #endif
