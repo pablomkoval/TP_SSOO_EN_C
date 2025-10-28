@@ -132,7 +132,7 @@ char *leer_archivo(char *path) //sincro cuando se usa
     long size = ftell(f);
     rewind(f);
 
-    char* buffer = malloc(size + 1);
+    char* buffer = calloc(1, size + 1);
 
     size_t leidos = fread(buffer, 1, size, f);
     buffer[leidos] = '\0';  
