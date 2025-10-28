@@ -219,25 +219,17 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
     encolar_qcb(cola_ready, qcb);
     pthread_mutex_unlock(&mutex_ready);
 
-    sem_post(&sem_queries_ready);
-
     free(qid_str);
     
     log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, qcb->qid, workers_conectados());
-
-    if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0) {
-        //realizar_chequeo_desalojo(qcb); tikitititktkikitikt
-    }
 
     list_destroy_and_destroy_elements(elementos, free);
 
     return qcb;
 }
+
 // if segun algoritmo de planificacion
 void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
-    /* pthread_mutex_lock(&mutex_diccionario_querys);
-    t_qcb* qcb = dictionary_get(diccionario_querys, qid_str);
-    pthread_mutex_unlock(&mutex_diccionario_querys); */
 
     char* qid_str = string_itoa(qcb->qid);
 
@@ -275,8 +267,11 @@ bool qcb_esta_en_cola_ready(void* arg, int socket_buscado){
 
 void encolar_qcb(t_list *cola_ready, t_qcb *qcb){
     if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
+    
+        hacer_chequeo_desalojo(qcb);
 
         list_add_sorted(cola_ready, qcb, (void*)comparar_qcb_por_prioridad);
+
         log_info(logger, "qcb de qid: %d encolado en READY con Prioridad: %d", qcb->qid, qcb->prioridad);
 
     } else{
@@ -284,6 +279,8 @@ void encolar_qcb(t_list *cola_ready, t_qcb *qcb){
         list_add(cola_ready, qcb);
         log_info(logger, "qcb de qid: %d encolado en READY con FIFO.", qcb->qid);
     }
+
+    sem_post(&sem_queries_ready);
 }
 
 bool comparar_qcb_por_prioridad(void* qcb1, void* qcb2){
@@ -300,42 +297,45 @@ int workers_conectados(){
     return workers_conectados;
 }
 
-void realizar_chequeo_desalojo(t_qcb* qcb){
-    ////tiki tiki tiki tiki
+void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
+
+    t_qcb* qcb_a_desalojar = NULL;
+
+    void buscar_candidato_desalojo(char* wid_str, void* qcb_exec_ptr){
+        t_qcb* qcb_exec = (t_qcb*)qcb_exec_ptr;
+        
+        if (qcb_a_desalojar == NULL || qcb_exec->prioridad > qcb_a_desalojar->prioridad) {
+            qcb_a_desalojar = qcb_exec;
+        }
+    }
+
+    int total_workers = workers_conectados();
+
+    pthread_mutex_lock(&mutex_diccionario_exec);
+    int querys_en_exec = dictionary_size(diccionario_exec);
+
+    if(total_workers == querys_en_exec && total_workers > 0){
+        
+        dictionary_iterator(diccionario_exec, buscar_candidato_desalojo);
+
+        if (qcb_a_desalojar != NULL){
+
+            if(qcb_entrante->prioridad < qcb_a_desalojar->prioridad){
+                char *wid_str_asociado = string_itoa(qcb_a_desalojar->id_worker_asociado);
+
+                pthread_mutex_lock(&mutex_diccionario_workers);
+                int* socket_worker_asignado = dictionary_get(diccionario_workers, wid_str_asociado);
+                pthread_mutex_unlock(&mutex_diccionario_workers);
+
+                // t_paquete paquete = crear_paquete();
+                // cambiar_opcode_paquete(paquete, DESALOJAR);
+                // enviar_paquete(paquete, socket_worker_asignado, logger);
+                
+
+                log_info(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d> - Motivo: <PRIORIDAD>", qcb_entrante->qid, qcb_entrante->prioridad, qcb_entrante->id_worker_asociado);
+
+                free(wid_str_asociado);
+            }
+        }
+    }
 }
-
-
-// void hacer_chequeo_desalojo(t_qcb* qcb){
-
-//     int total_workers = workers_conectados();
-
-//     pthread_mutex_lock(&mutex_diccionario_exec);
-//     int querys_en_exec = dictionary_size(diccionario_exec);
-
-//     if(total_workers == querys_en_exec && total_workers > 0){
-
-//         t_qcb* qcb_menor_prioridad = NULL;
-
-
-//         // void buscar_candidato_desalojo(char* wid_str, void* qcb_exec_ptr){
-//         //     t_qcb* qcb_exec = (t_qcb)qcb_exec_ptr;
-
-//         //     if (qcb_menor_prioridad == NULL || qcb_exec->prioridad > qcb_menor_prioridad->prioridad) {
-//         //         qcb_menor_prioridad = qcb_exec;
-//         //     }
-//         // }
-
-//         dictionary_iterator(diccionario_exec, buscar_candidato_desalojo);
-
-//         if (qcb_menor_prioridad != NULL){
-//             int socket_worker_asignado =((int)dictionary_get(diccionario_workers, qcb_menor_prioridad -> id_worker_asociado);
-
-//             t_paquete paquete = crear_paquete();
-//             cambiar_opcode_paquete(paquete, DESALOJAR);
-
-//         }
-
-//     } else{
-
-//     }
-// }

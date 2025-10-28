@@ -26,4 +26,6 @@ void encolar_qcb(t_list* cola_ready, t_qcb* qcb);
 bool comparar_qcb_por_prioridad(void* qcb1, void* qcb2);
 int workers_conectados();
 
+void hacer_chequeo_desalojo(t_qcb* qcb_exec);
+
 #endif
