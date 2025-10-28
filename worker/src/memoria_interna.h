@@ -7,9 +7,12 @@
 typedef struct 
 {
     bool bit_presencia;
+    bool bit_uso;
     bool bit_modificado;
+    int timestamp;//usamos un int incremental en vez de un temporal porque es mas facil de manejar
     int nro_pagina;
     int frame;
+    char* file_tag;
 } pagina_t;
 
 typedef struct
@@ -18,6 +21,7 @@ typedef struct
 } tabla_paginas_t;
 
 
+extern int contador_lru;
 extern t_dictionary* tablas_de_paginas;
 extern void* memoria_interna;
 
