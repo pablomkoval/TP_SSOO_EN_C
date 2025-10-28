@@ -44,7 +44,8 @@ typedef enum
     FLUSH,
     END,
     SOLICITUD_NUEVA_QUERY,
-    RESPUESTA_STORAGE
+    RESPUESTA_STORAGE,
+    INTERRUPCION
 } op_code;
 
 typedef enum 

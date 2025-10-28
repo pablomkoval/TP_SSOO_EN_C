@@ -1,24 +1,19 @@
 #include <query_interpreter.h>
 
 
-void* ciclo_query_interpreter(){
-    while(1){
-        int opcode = recibir_opcode(socket_master);
-        if(opcode != SOLICITUD_NUEVA_QUERY){
-            log_error(logger, "Llego de master un opcode (%d)", opcode);
-            return NULL;
-        }
-        t_list* recibido = recibir_paquete(socket_master);
+void* iniciar_query_interpreter(){
+    //en vez de un while 1 simplemente se llama a esta funcion cuando llega una solicitud nueva query de master al hilo de conexiones!!!!
+    t_list* recibido = recibir_paquete(socket_master);
         
-        int qid = *((int*)list_get(recibido, 0));
-        void* nombre_elem = list_get(recibido, 1);
-        int pc = *((int*)list_get(recibido, 2));
-        char* nombre_archivo = strdup((char*)nombre_elem);
+    int qid = *((int*)list_get(recibido, 0));
+    void* nombre_elem = list_get(recibido, 1);
+    int pc = *((int*)list_get(recibido, 2));
+    char* nombre_archivo = strdup((char*)nombre_elem);
 
-        log_info(logger, "## Query %d: Se recibe la Query. El path de operaciones es: %s", qid, nombre_archivo);
-        ciclo_ejecucion(nombre_archivo, pc, qid);
-        list_destroy_and_destroy_elements(recibido, free);
-    }
+    log_info(logger, "## Query %d: Se recibe la Query. El path de operaciones es: %s", qid, nombre_archivo);
+    ciclo_ejecucion(nombre_archivo, pc, qid);
+    list_destroy_and_destroy_elements(recibido, free);
+    
     return NULL;
 }
 
@@ -204,19 +199,15 @@ int ejecutar_query(query_t* query, int qid){
 
 
 int check_interrupt(int qid){
-    int opcode;
-    int interrupcion = recv(socket_master, &opcode, sizeof(int), MSG_DONTWAIT);
-    if(interrupcion > 0){
-        log_debug(logger, "##DEBUG: CHECK INTERRUPT - Llego opcode: %d", opcode);
+    pthread_mutex_lock(&mutex_interrupcion);
+    if(hay_interrupcion){
         log_info(logger, "## Query %d: Desalojada por pedido del Master", qid);
         return 1;
-    } else if (interrupcion == 0){
-        log_error(logger, "Se cerró conexión con Master");
-        exit(EXIT_FAILURE);
-    } else{
+    } else {
         log_debug(logger, "Caso else en check interrupt");
         return 0;
     }
+    pthread_mutex_unlock(&mutex_interrupcion);
 }
 
 char** separar_file_tag(char* file_tag){

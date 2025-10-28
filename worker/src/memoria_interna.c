@@ -72,6 +72,11 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
     }
 
     if(pag->bit_presencia == false){
+        char** separado = separar_file_tag(file_tag);
+        char* file = separado[0];
+        char* tag = separado[1];
+
+        log_info(logger, "Query %d: - Memoria Miss - File: %s - Tag: %s - Pagina: %d", qid, file, tag, nro_pagina);
         int frame = buscar_frame_libre();
         if(frame == -1){
             log_debug(logger, "##DEBUG: antes de usar algoritmo de reemplazo");
@@ -79,12 +84,9 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
             frame = liberar_frame(victima);
             log_info(logger, "## Query %d: Se reemplaza la página %s/%d por la %s/%d", qid, victima->file_tag, victima->nro_pagina, pag->file_tag, pag->nro_pagina);
         }
-
-        char** separado = separar_file_tag(file_tag);
-        char* file = separado[0];
-        char* tag = separado[1];
         
         cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid);
+        log_info(logger, "Query %d: - Memoria Add - File: %s - Tag: %s - Pagina: %d - Marco: %d", qid, file, tag, nro_pagina, frame);
         log_debug(logger, "##DEBUG: despues de cargar pagina de storage");
         pag->bit_presencia = true;
         pag->bit_uso = true;

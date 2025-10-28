@@ -21,6 +21,9 @@ int socket_master;
 int worker_id;
 
 pthread_t thread_query_interpreter;
+pthread_t thread_escucha_master;
+bool hay_interrupcion = false;
+pthread_mutex_t mutex_interrupcion = PTHREAD_MUTEX_INITIALIZER;
 
 int main(int argc, char** argv) {
     // if(argc < 3){
@@ -43,11 +46,9 @@ int main(int argc, char** argv) {
 
     log_debug(logger, "se iniciaron conexiones");
 
-    pthread_create(&thread_query_interpreter, NULL, ciclo_query_interpreter, NULL);
-    pthread_detach(thread_query_interpreter);
 
-    // query_t* query_a_ejecutar = leer_query("query1", 0);
-    // ejecutar_query(query_a_ejecutar, 0);
+    pthread_create(&thread_escucha_master, NULL, funcion_escucha_master, NULL);
+    pthread_detach(thread_escucha_master);
 
     pause();
 
