@@ -26,6 +26,7 @@
 
 typedef enum
 {
+    CERRADO,
     HANDSHAKE,
     HANDSHAKE_WORKER,
     HANDSHAKE_QUERY_CONTROL,

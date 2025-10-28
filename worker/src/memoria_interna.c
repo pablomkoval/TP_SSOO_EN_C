@@ -76,7 +76,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         if(frame == -1){
             log_debug(logger, "##DEBUG: antes de usar algoritmo de reemplazo");
             pagina_t* victima = buscar_victima_reemplazo();
-            frame = reemplazar_pagina(victima);
+            frame = liberar_frame(victima);
             log_info(logger, "## Query %d: Se reemplaza la página %s/%d por la %s/%d", qid, victima->file_tag, victima->nro_pagina, pag->file_tag, pag->nro_pagina);
         }
 
@@ -92,6 +92,8 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         pag->frame = frame;
         pag->bit_modificado = false;
         list_add(paginas_en_memoria, pag);
+        
+        log_info(logger, "Query %d: Se asigna el Marco: %d a la Página: %d perteneciente al - File: %s - Tag: %s", qid, frame, nro_pagina, file, tag);
         string_array_destroy(separado);
         return pag;
     }
@@ -167,7 +169,7 @@ pagina_t* buscar_victima_reemplazo(){
     return victima;
 }
 
-int reemplazar_pagina(pagina_t* victima, int qid){
+int liberar_frame(pagina_t* victima, int qid){
     if (victima == NULL) {
         log_error(logger, "Intento de reemplazo con víctima NULL");
         return -1;
@@ -176,6 +178,7 @@ int reemplazar_pagina(pagina_t* victima, int qid){
     if (victima->bit_modificado) {
         char** separado = separar_file_tag(victima->file_tag);
         hacer_flush_de_pagina(separado[0], separado[1], victima->nro_pagina, victima->frame, qid);
+        log_info(logger, "Query %d: Se libera el Marco: %d perteneciente al - File: %s - Tag: %s", qid, victima->frame, separado[0], separado[1]);
         string_array_destroy(separado);
         victima->bit_modificado = false;
     }
@@ -205,10 +208,6 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     if(*resultado != 1) log_error(logger, "Storage no me devolvio el contenido, resultado (%d)", resultado);
     
     char* contenido = strdup(list_get(recibido, 1));  
-    // if(recibir_opcode(socket_storage) != READ) return;
-
-    // t_list* recibido = recibir_paquete(socket_storage);
-    // char* contenido = list_get(recibido, 0);
 
     //averiguar si el memset es correcto
     memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
@@ -240,8 +239,4 @@ int obtener_pagina_logica(int direccion_logica){
 
 int obtener_offset_pagina(int direccion_logica) {
     return direccion_logica % tam_pagina;
-}
-
-void liberar_frame(int frame){
-    bitarray_clean_bit(bitmap_frames, frame);
 }

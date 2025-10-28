@@ -68,7 +68,7 @@ void ejecutar_write(char* file_tag, int direccion_base, char* contenido, int qid
         direccion_actual += cant_escritura;
     }
 
-    //escrito[bytes_escritos] = '\0';
+    escrito[bytes_escritos] = '\0';
 
     log_debug(logger, "WRITE de %s desde %d (%d bytes): '%s'",
              file_tag, direccion_base, (int)strlen(contenido), contenido);
@@ -107,7 +107,6 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
         }
 
         int direccion_fisica = pag->frame * tam_pagina + offset;
-        //void* inicio = memoria_interna + pag->frame * tam_pagina + offset;
 
         memcpy(buffer + bytes_leidos, memoria_interna + direccion_fisica, cant_lectura);
 
@@ -115,10 +114,15 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
         bytes_leidos += cant_lectura;
         direccion_actual += cant_lectura;
     }
-    //buffer[bytes_leidos] = '\0';
-    log_debug(logger, "La lectura previa a mandarselo a master es: %s", buffer);
+    buffer[bytes_leidos] = '\0';
     log_info(logger, "Query %d: Acción: LEER - Dirección Física: %d - Valor: %s", qid, direccion_fisica_inicial, buffer);
-    //mandarselo a master
+
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, READ);
+    agregar_a_paquete(paquete, file_tag, strlen(file_tag) + 1);
+    agregar_a_paquete(paquete, buffer, strlen(buffer) + 1);
+    enviar_paquete(paquete, socket_master, logger);
+    borrar_paquete(paquete);
     free(buffer);
     return;
 }
