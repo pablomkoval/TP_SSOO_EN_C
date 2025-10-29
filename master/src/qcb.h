@@ -2,7 +2,7 @@
 #define QCB_H_
 
 #include<utils/utils.h>
-#include <master_config.h>
+#include<master_config.h>
 
 typedef enum{
     READY,

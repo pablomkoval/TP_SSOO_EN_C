@@ -24,10 +24,10 @@ void cambiar_estado(t_qcb* qcb, int nuevo_estado){
     int estado_anterior = qcb->estado;
     qcb->estado = nuevo_estado;
     
-    if(strcmp(algoritmo_planfiicacion, "PRIORIDADES") == 0 && estado_anterior == READY){
+    if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0 && estado_anterior == READY){
 
         if(nuevo_estado == EXEC || nuevo_estado == EXIT){
-            log_info(logger, "qid: %d. Termino hilo de aging. Estado nuevo de qcb: %s", qcb->qid, qcb->estado);
+            //log_info(logger, "qid: %d. Termino hilo de aging. Estado nuevo de qcb: %s", qcb->qid, qcb->estado);
             
             //terminar el hilo
         }

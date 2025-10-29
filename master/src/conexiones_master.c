@@ -230,7 +230,7 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
         pthread_detach(qcb->hilo_aging_id); 
     }
 
-    
+
     log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, qcb->qid, workers_conectados());
 
     list_destroy_and_destroy_elements(elementos, free);
@@ -254,13 +254,15 @@ void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
         cambiar_estado(qcb, EXIT);
 
     } else if (qcb->estado == EXEC){
+
         char* wid_asociado_str = string_itoa(qcb->id_worker_asociado);
         pthread_mutex_lock(&mutex_diccionario_workers);
-        int* socket_worker_asociado = dictionary_get(diccionario_workers, wid_asociado_str);
+        int* socket_worker_asociado_ptr = dictionary_get(diccionario_workers, wid_asociado_str);
         pthread_mutex_unlock(&mutex_diccionario_workers);
         
-        
-        //enviar_cod_op(&socket_worker_asociado, DESALOJAR);
+        int socket_worker_asociado = *socket_worker_asociado_ptr;
+
+        enviar_cod_op(socket_worker_asociado, INTERRUPCION);
     }
     
     log_info(logger, "## Se desconecta un Query Control. Se finaliza la Query <%d> con prioridad <%d>. Nivel multiprocesamiento <%d>", qcb->qid, qcb->prioridad, workers_conectados());
@@ -334,12 +336,12 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
                 char *wid_str_asociado = string_itoa(qcb_a_desalojar->id_worker_asociado);
 
                 pthread_mutex_lock(&mutex_diccionario_workers);
-                int* socket_worker_asignado = dictionary_get(diccionario_workers, wid_str_asociado);
+                int* socket_worker_asignado_ptr = dictionary_get(diccionario_workers, wid_str_asociado);
                 pthread_mutex_unlock(&mutex_diccionario_workers);
 
-                // t_paquete paquete = crear_paquete();
-                // cambiar_opcode_paquete(paquete, DESALOJAR);
-                // enviar_paquete(paquete, socket_worker_asignado, logger);
+                int socket_worker_asignado = *socket_worker_asignado_ptr;
+                
+                enviar_cod_op(socket_worker_asignado, INTERRUPCION); 
                 
 
                 log_info(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d> - Motivo: <PRIORIDAD>", qcb_entrante->qid, qcb_entrante->prioridad, qcb_entrante->id_worker_asociado);

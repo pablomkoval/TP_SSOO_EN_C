@@ -51,7 +51,7 @@ void* planificador(){
         sem_wait(&sem_workers_libres);
         log_debug(logger, "##DEBUG: PASO SEMAFORO 2");
         
-        //pthread_mutex_lock(&mutex_ready);
+
 
 
         t_qcb* query_a_ejecutar = NULL;
@@ -148,8 +148,6 @@ void* hilo_aging_individual(void* arg){
             pthread_mutex_unlock(&mutex_ready);
             break; 
         }
-        
-        pthread_mutex_unlock(&mutex_ready);
     }
     
     log_info(logger, "qid %d: Hilo de aging individual finalizo.", qcb->qid);
