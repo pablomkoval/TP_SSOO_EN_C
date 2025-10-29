@@ -46,6 +46,16 @@ int cambiar_tamanio_metadata(char *path, char *nuevo_tamanio)
     return tamanio_viejo;
 }
 
+int tamanio_metadata(char *path)
+{
+    char *path_config = path_config_meta(path);
+    t_config *meta = config_create(path_config);
+    int tamanio_viejo = config_get_int_value(meta, "TAMAÑO");
+    config_destroy(meta);
+    free(path_config);
+    return tamanio_viejo;
+}
+
 char *estado_metadata(char *path)
 {
     char *path_config = path_config_meta(path);
@@ -204,7 +214,7 @@ int cant_bloques_logicos(char *path)   //si aparece hay que lockear metadata
     char *path_config = path_config_meta(path);
     t_config *meta = config_create(path_config);
     char **bloques = config_get_array_value(meta, "BLOCKS");
-    config_destroy(meta);
+    
 
     int cant = 0;
     while (bloques[cant] != NULL)
@@ -212,9 +222,11 @@ int cant_bloques_logicos(char *path)   //si aparece hay que lockear metadata
         cant++;
     }
 
+    config_destroy(meta);
+    free(path_config); 
+    string_array_destroy(bloques);
+    
     return cant;
-
-    free(path_config);
 }
 
 int commmit_file(int query_id, char *file, char *tag)  //sincronizada
@@ -226,7 +238,8 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
     
     lock_metadata(file_tag);
 
-    if (strcmp(estado_metadata(file_tag), "COMMITED") == 0)
+    char* estado = estado_metadata(file_tag);
+    if (strcmp(estado, "COMMITED") == 0)
     {
         return 1;
     }
@@ -235,16 +248,16 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
 
     unlock_metadata(file_tag);
 
-    for (int i = 0; i < cant; i++)
+    for (int i = 0; i < cant; i++)   //por cada bloque logico
     {
-        char *bloque_logico = obtener_bloque_logico(file_tag, i);
-        char *md5 = obtener_hash_block(bloque_logico);                             // hay que ver que onda con la sincro acá
-        char *bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
-        int nro_bloque = obtener_bloque_por_hash(md5);
+        char *bloque_logico = obtener_bloque_logico(file_tag, i);   
+        char *md5 = obtener_hash_block(bloque_logico);                             // veo su contenido md5
+        char *bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);       // consigo su bloque fisico
+        int nro_bloque = obtener_bloque_por_hash(md5);                              // me fijo si hay otro bloque fisico con el mismo contenido
         char *bloque_fisico_nuevo = bloque_fisico_por_nro(nro_bloque);
         int nro_block_f = obtener_numero_bloque(bloque_fisico);
 
-        if (nro_bloque != -1) // obtener bloque por hash devuelve -1 si no hay ninguno :p
+        if (nro_bloque != -1) // si hay algún bloque fisico con el mismo contenido...
         {
             lock_metadata(file_tag);
             cambiar_hard_link(bloque_logico, bloque_fisico_nuevo);
@@ -264,15 +277,21 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
                 pthread_mutex_unlock(&mutex_bitmap);
             }
         }
-        else
+        else   //si no hay 
         {
             pthread_mutex_lock(&mutex_hash_index);
-            asociar_hash_block(bloque_fisico);
+            asociar_hash_block(bloque_fisico);            // creo la entrada de hash en el archivo 
             pthread_mutex_unlock(&mutex_hash_index);
         }
+
+        free(bloque_logico);
+        free(md5);
+        free(bloque_fisico);
+        free(bloque_fisico_nuevo);
     }
 
     free(file_tag);
+    free(estado);
 
     return 1;
 }

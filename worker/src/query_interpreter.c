@@ -1,36 +1,37 @@
 #include <query_interpreter.h>
 
 
-void* ciclo_query_interpreter(){
-    while(1){
-        //fetch
-        int opcode = recibir_opcode(socket_master);
-        if(opcode != SOLICITUD_NUEVA_QUERY){
-            log_error(logger, "Llego de master un opcode (%d)", opcode);
-            return NULL;
-        }
-        t_list* recibido = recibir_paquete(socket_master);
+void* iniciar_query_interpreter(){
+    //en vez de un while 1 simplemente se llama a esta funcion cuando llega una solicitud nueva query de master al hilo de conexiones!!!!
+    t_list* recibido = recibir_paquete(socket_master);
         
-        int qid = *((int*)list_get(recibido, 0));
-        void* nombre_elem = list_get(recibido, 1);
-        int pc = *((int*)list_get(recibido, 2));
-        char* nombre_archivo = strdup((char*)nombre_elem);
+    int qid = *((int*)list_get(recibido, 0));
+    void* nombre_elem = list_get(recibido, 1);
+    int pc = *((int*)list_get(recibido, 2));
+    char* nombre_archivo = strdup((char*)nombre_elem);
 
-        ciclo_ejecucion(nombre_archivo, pc, qid);
-        list_destroy_and_destroy_elements(recibido, free);
-    }
+    log_info(logger, "## Query %d: Se recibe la Query. El path de operaciones es: %s", qid, nombre_archivo);
+    ciclo_ejecucion(nombre_archivo, pc, qid);
+    list_destroy_and_destroy_elements(recibido, free);
+    
     return NULL;
 }
 
 void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
     int resultado_ejecucion = 1;
     while(resultado_ejecucion != -1){
-        //fetch de operandos
-        query_t* query_a_ejecutar = leer_query(nombre_archivo, pc);
+        //fetch
+        char* instruccion = NULL;
+        query_t* query_a_ejecutar = leer_query(nombre_archivo, pc, &instruccion);
+        log_info(logger, "## Query %d: FETCH - Program Counter: %d - %s", qid, pc, instruccion);
         
         //decode + execute
         resultado_ejecucion = ejecutar_query(query_a_ejecutar, qid);
-        if(resultado_ejecucion == -1) return;
+        if(resultado_ejecucion == -2) return; // caso para errores extraordinarios 
+        log_info(logger, "## Query %d: - Instrucción realizada: %s", qid, instruccion);
+
+        if(resultado_ejecucion == -1) return; // caso para el END
+
 
         //aguardar respuesta siempre, todas las instrucciones son bloqueantes
         if(resultado_ejecucion != 2){
@@ -43,12 +44,12 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
         }
         
         
-        check_interrupt();
-        //chequear interrupcion 
+        resultado_ejecucion = check_interrupt(qid);
+        //verifica si llego una interrupción
         pc++;
     }
 }
-query_t* leer_query(char* nombre_archivo, int pc){
+query_t* leer_query(char* nombre_archivo, int pc, char** instruccion){
     
     char* path_completo = string_from_format("%s%s", path_queries, nombre_archivo);
     log_debug(logger, "El Archivo queda (%s)", path_completo);
@@ -66,10 +67,10 @@ query_t* leer_query(char* nombre_archivo, int pc){
     query_t* query = NULL;
 
     while(fgets(buffer, sizeof(buffer), archivo)){
-        log_debug(logger, "linea actual (%d), pc (%d)", linea_actual, pc);
+        //log_trace(logger, "linea actual (%d), pc (%d)", linea_actual, pc);
         if(linea_actual == pc){
             buffer[strcspn(buffer, "\n")] = 0; // eliminar \n
-            query = parsear_query(buffer);
+            query = parsear_query(buffer, instruccion);
             fclose(archivo);
             return query;
         }
@@ -96,7 +97,7 @@ id_query_t parsear_query_id(char* identificador) {
     return END;
 }
 
-query_t* parsear_query(char* query_raw){
+query_t* parsear_query(char* query_raw, char** instruccion){
 
     query_t* query = malloc(sizeof(query_t));
     query->file_tag = NULL;
@@ -109,7 +110,7 @@ query_t* parsear_query(char* query_raw){
     int cant_param = 0;
     while(separado[cant_param] != NULL) cant_param++;
 
-    
+    *instruccion = strdup(separado[0]);
     query->identificador = parsear_query_id(separado[0]);
 
 
@@ -129,6 +130,11 @@ query_t* parsear_query(char* query_raw){
 
 
 int ejecutar_query(query_t* query, int qid){
+    if(query->identificador == END_Q){
+        log_debug(logger, "##DEBUG: Se esta por ejecutar un END");
+        ejecutar_end();
+        return -1;
+    }
     char** partes = separar_file_tag(query->file_tag);
     char* file = strdup(partes[0]);
     char* tag = strdup(partes[1]);
@@ -137,79 +143,71 @@ int ejecutar_query(query_t* query, int qid){
     switch(query->identificador){
         case -1:
             log_error(logger, "No se recibio query de master: Conexion cerrada");
-            return -1;
+            return -2;
             break;
 
         case CREATE_Q:
-            log_info(logger, "se quizo ejecutar un create");
+            log_debug(logger, "##DEBUG: Se esta por ejecutar un CREATE");
             ejecutar_create(file, tag, qid);
             break;
         
         case TRUNCATE_Q:
         
-            log_info(logger, "se quiso ejecutar un TRUNCATE");
+            log_debug(logger, "##DEBUG: Se esta por ejecutar un TRUNCATE");
             ejecutar_truncate(file, tag, atoi(query->param1), qid);
             break;
         
         case WRITE_Q:
-            log_info(logger, "se quiso ejecutar un WRITE");
-            ejecutar_write(query->file_tag, query->param1, query->param2, qid);
+            log_debug(logger, "##DEBUG: Se esta por ejecutar un WRITE");
+            ejecutar_write(query->file_tag, atoi(query->param1), query->param2, qid);
             return 2;
             break;
 
         case READ_Q:
-            log_info(logger, "se quiso ejecutar un READ");
+            log_debug(logger, "##DEBUG: Se esta por ejecutar un READ");
             ejecutar_read(query->file_tag, atoi(query->param1), atoi(query->param2), qid);
+            return 2;
             break;
 
         case TAG_Q:
-            log_info(logger, "se quiso ejecutar un TAG");
-            ejecutar_tag(file, tag, query->param1, query->param2, qid);
+            log_debug(logger, "##DEBUG: Se esta por ejecutar un TAG");
+            ejecutar_tag(file, tag, query->param1, qid);
             break;
             
         case COMMIT_Q:
-            log_info(logger, "se quiso ejecutar un COMMIT");
+            log_debug(logger, "##DEBUG: Se esta por ejecutar un COMMIT");
             ejecutar_commit(file, tag, query->file_tag, qid);
             break;
 
         case FLUSH_Q:
-            log_info(logger, "se quiso ejecutar un FLUSH");
+            log_debug(logger, "##DEBUG: Se esta por ejecutar un FLUSH");
             ejecutar_flush(file, tag, query->file_tag, qid);
             break;
 
         case DELETE_Q:
-            log_info(logger, "se quiso ejecutar un DELETE");
+            log_debug(logger, "##DEBUG: Se esta por ejecutar un DELETE");
             ejecutar_delete(file, tag, qid);
-            break;
-
-        case END_Q:
-            log_info(logger, "se quiso ejecutar un END");
-            ejecutar_end();
-            return -1;
             break;
         
         default:
             log_error(logger, "Error al recibir el query por parte de master");
-            return -1;
+            return -2;
             break;
     }
     return 1;
 }
 
 
-bool check_interrupt(){
-    int opcode;
-    int interrupcion = recv(socket_master, &opcode, sizeof(int), MSG_DONTWAIT);
-    if(interrupcion > 0){
-        log_info(logger, "Llego opcode: %d", opcode);
-        return true;
-    } else if (interrupcion == 0){
-        log_error(logger, "Se cerró conexión con Master");
-        exit(EXIT_FAILURE);
-    } else{
+int check_interrupt(int qid){
+    pthread_mutex_lock(&mutex_interrupcion);
+    if(hay_interrupcion){
+        log_info(logger, "## Query %d: Desalojada por pedido del Master", qid);
+        return 1;
+    } else {
         log_debug(logger, "Caso else en check interrupt");
-        return false;
+        return 0;
     }
+    pthread_mutex_unlock(&mutex_interrupcion);
 }
 
 char** separar_file_tag(char* file_tag){

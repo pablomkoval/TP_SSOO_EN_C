@@ -23,8 +23,6 @@ void crear_directorios_y_archivos()
         asignar_bloque(0);
         log_info(logger, "##<> - Bloque Físico Reservado - Número de Bloque: <%i>", 0);
         crear_archivo_hash_bloques();
-        char* bloque_0 = concatenar_path(punto_montaje, "physical_blocks/bloque0000.dat");
-        asociar_hash_block(bloque_0);
     }
     
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");

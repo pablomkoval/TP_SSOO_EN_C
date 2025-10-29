@@ -26,6 +26,7 @@
 
 typedef enum
 {
+    CERRADO,
     HANDSHAKE,
     HANDSHAKE_WORKER,
     HANDSHAKE_QUERY_CONTROL,
@@ -43,7 +44,8 @@ typedef enum
     FLUSH,
     END,
     SOLICITUD_NUEVA_QUERY,
-    RESPUESTA_STORAGE
+    RESPUESTA_STORAGE,
+    INTERRUPCION
 } op_code;
 
 typedef enum 

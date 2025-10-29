@@ -14,10 +14,12 @@ extern char* path_queries;
 extern int tam_pagina;
 extern int worker_id;
 
-
+extern pthread_t thread_query_interpreter;
 extern int socket_storage;
 extern int socket_master;
 extern t_log* logger;
+extern bool hay_interrupcion;
+extern pthread_mutex_t mutex_interrupcion;
 
 #include <conexiones_worker.h>
 #include <query_interpreter.h>

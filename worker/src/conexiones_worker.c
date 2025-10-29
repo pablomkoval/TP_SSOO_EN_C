@@ -41,7 +41,6 @@ void handshake_storage(int socket, int worker_id){
         t_list* recibido = recibir_paquete(socket);
         int tam_bloque = *((int*)list_get(recibido, 0));
         tam_pagina = tam_bloque;
-        //send(socket, &worker_id, sizeof(int), 0);
         return;
     }else {
         log_error(logger, "Fallo en el handshake con Storage, recibí %d", respuesta);
@@ -97,4 +96,26 @@ int conectar_storage(int worker_id){
     handshake_storage(socket_servidor, worker_id);
 
     return socket_servidor;
+}
+
+void* funcion_escucha_master(){
+    while (1){
+        int op_code = recibir_opcode(socket_master);
+        switch (op_code)
+        {
+        case SOLICITUD_NUEVA_QUERY:
+            pthread_create(&thread_query_interpreter, NULL, iniciar_query_interpreter, NULL);
+            pthread_detach(thread_query_interpreter);
+            break;
+        
+        case INTERRUPCION:
+            pthread_mutex_unlock(&mutex_interrupcion);
+            hay_interrupcion = true;
+            pthread_mutex_lock(&mutex_interrupcion);
+            //abrir mutex y cambiar booleano interrumpido
+            break;
+        default:
+            break;
+        }
+    }
 }

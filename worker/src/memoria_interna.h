@@ -7,9 +7,12 @@
 typedef struct 
 {
     bool bit_presencia;
+    bool bit_uso;
     bool bit_modificado;
+    int timestamp;//usamos un int incremental en vez de un temporal porque es mas facil de manejar
     int nro_pagina;
     int frame;
+    char* file_tag;
 } pagina_t;
 
 typedef struct
@@ -18,13 +21,14 @@ typedef struct
 } tabla_paginas_t;
 
 
+extern int contador_lru;
 extern t_dictionary* tablas_de_paginas;
 extern void* memoria_interna;
 
 void inicializar_memoria_interna();
 tabla_paginas_t* obtener_tabla(char* file_tag);
 int buscar_frame_libre();
-int buscar_victima_reemplazo();
+pagina_t* buscar_victima_reemplazo();
 void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pagina, int frame, int qid);
 pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid);
 void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int qid);

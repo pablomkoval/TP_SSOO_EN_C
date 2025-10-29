@@ -132,7 +132,7 @@ char *leer_archivo(char *path) //sincro cuando se usa
     long size = ftell(f);
     rewind(f);
 
-    char* buffer = malloc(size + 1);
+    char* buffer = calloc(1, size + 1);
 
     size_t leidos = fread(buffer, 1, size, f);
     buffer[leidos] = '\0';  
@@ -293,7 +293,6 @@ void cambiar_hard_link(char *bloque_logico, char *bloque_fisico)
 int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque, char *contenido)
 {
     char *path = concatenar_path(file, tag);
-    int tamanio = strlen(contenido);
 
     if (!file_tag_existe(path)){
         free(path);
@@ -350,7 +349,6 @@ int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque, char *c
         lock_bloque_fisico(nuevo_bloque_fisico);
 
         escribir_archivo(nuevo_bloque_fisico, contenido);
-        asociar_hash_block(nuevo_bloque_fisico);
         cambiar_hard_link(bloque_logico, nuevo_bloque_fisico);
         cambiar_bloque_metadata(path, nro_bloque_f_nuevo, nro_bloque);
 
@@ -391,16 +389,14 @@ int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buff
     char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
 
     lock_bloque_fisico(bloque_fisico);
-    char *contenido = leer_archivo(bloque_fisico);
+    *buffer = leer_archivo(bloque_fisico);
     unlock_bloque_fisico(bloque_fisico);
 
-    *buffer = contenido;
 
     free(file_tag);
     free(aux);
     free(bloque_logico);
     free(bloque_fisico);
-    free(contenido);
 
     return 1;
 }

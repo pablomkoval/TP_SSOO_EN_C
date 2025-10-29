@@ -205,7 +205,7 @@ int recibir_opcode(int socket_cliente){
     }
     else if(resultado == 0){
         //el cliente cerro la conexion
-        printf("se cerro la conexion");
+        //printf("se cerro la conexion");
         close(socket_cliente);
         return 0;
     }

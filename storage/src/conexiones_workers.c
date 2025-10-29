@@ -153,6 +153,8 @@ void manejar_create(int socket_worker)
         mandar_resultado(socket_worker, resultado);
     }
     else mandar_resultado(socket_worker, resultado);
+
+    list_destroy_and_destroy_elements(datos, free);
     
 }
 void manejar_truncate(int socket_worker)
@@ -173,6 +175,8 @@ void manejar_truncate(int socket_worker)
         mandar_resultado(socket_worker, resultado);
     }
     else mandar_resultado(socket_worker, resultado);
+
+    list_destroy_and_destroy_elements(datos, free);
    
 }
 
@@ -193,6 +197,8 @@ void manejar_commit(int socket_worker)
         mandar_resultado(socket_worker, resultado);
     }
     else mandar_resultado(socket_worker, resultado);
+
+    list_destroy_and_destroy_elements(datos, free);
 }
 
 void manejar_tag(int socket_worker)
@@ -215,6 +221,8 @@ void manejar_tag(int socket_worker)
         mandar_resultado(socket_worker, resultado);
     } 
     else mandar_resultado(socket_worker, resultado);
+
+    list_destroy_and_destroy_elements(datos, free);
 }
 
 void manejar_write(int socket_worker)
@@ -237,6 +245,8 @@ void manejar_write(int socket_worker)
         mandar_resultado(socket_worker, resultado);
     }
     else mandar_resultado(socket_worker, resultado);
+
+    list_destroy_and_destroy_elements(datos, free);
 }
 
 void manejar_read(int socket_worker)
@@ -249,7 +259,7 @@ void manejar_read(int socket_worker)
     char* tag = list_get(datos, 2);
     int* bloque = list_get(datos, 3);
 
-    char* data;
+    char* data = NULL;
 
     
     int resultado = leer_bloque(*query_id, file, tag, *bloque, &data);
@@ -262,6 +272,10 @@ void manejar_read(int socket_worker)
         mandar_read(socket_worker, resultado, data);
     }
     else mandar_resultado(socket_worker, resultado);
+
+    free(data);
+
+    list_destroy_and_destroy_elements(datos, free);
 }
 
 void manejar_delete(int socket_worker)
@@ -281,6 +295,8 @@ void manejar_delete(int socket_worker)
         mandar_resultado(socket_worker, resultado);
     }
     else mandar_resultado(socket_worker, resultado);
+
+    list_destroy_and_destroy_elements(datos, free);
 }
 
 void manejar_desconexion(int* socket_worker)
@@ -312,7 +328,14 @@ void mandar_read(int socket_worker, int resultado, char* contenido)
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, RESPUESTA_STORAGE);
     agregar_a_paquete(paquete, &resultado, sizeof(int));
-    agregar_a_paquete(paquete, &contenido, strlen(contenido) + 1);
+    
+    if (contenido != NULL) {
+        agregar_a_paquete(paquete, contenido, strlen(contenido) + 1); 
+    } else {
+        char* vacio = "";
+        agregar_a_paquete(paquete, vacio, 1); 
+    }
+
     enviar_paquete(paquete, socket_worker, logger);
     borrar_paquete(paquete);
 }

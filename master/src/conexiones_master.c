@@ -25,6 +25,9 @@ void *manejar_servidor_worker(void *arg){
                 hacer_end_worker(worker_id_str, worker_id);
                 break;
 
+            case 0:
+                break;
+
             default:
                 log_info(logger, "Error al recibir opcode, %d", op_code);
             break;
@@ -150,7 +153,8 @@ void hacer_desconexion_worker(int worker_id){
 
 void hacer_read_worker(int socket_worker, char *worker_id_str){
     t_list *recibido = recibir_paquete(socket_worker);
-    char *mensaje_worker = list_get(recibido, 0);
+    char* file_tag = list_get(recibido, 0);
+    char *mensaje_worker = list_get(recibido, 1);
 
     pthread_mutex_lock(&mutex_diccionario_exec);
     t_qcb *qcb = dictionary_get(diccionario_exec, worker_id_str);
@@ -161,6 +165,7 @@ void hacer_read_worker(int socket_worker, char *worker_id_str){
         
         t_paquete *paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, READ);
+        agregar_a_paquete(paquete, file_tag, strlen(file_tag) + 1);
         agregar_a_paquete(paquete, mensaje_worker, strlen(mensaje_worker) + 1);
         enviar_paquete(paquete, qcb->socket, logger);
         borrar_paquete(paquete);
@@ -172,7 +177,6 @@ void hacer_read_worker(int socket_worker, char *worker_id_str){
         log_error(logger, "No se encontro qcb asociado a un worker id: %s", worker_id_str);
     }
     
-    free(mensaje_worker);
     list_destroy_and_destroy_elements(recibido, free);
 }
 
