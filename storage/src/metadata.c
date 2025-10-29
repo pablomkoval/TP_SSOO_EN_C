@@ -224,6 +224,7 @@ int cant_bloques_logicos(char *path)   //si aparece hay que lockear metadata
 
     config_destroy(meta);
     free(path_config); 
+    string_array_destroy(bloques);
     
     return cant;
 }
