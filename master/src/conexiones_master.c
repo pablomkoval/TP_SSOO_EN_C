@@ -131,7 +131,7 @@ void hacer_desconexion_worker(int worker_id){
     
 
     pthread_mutex_lock(&mutex_diccionario_exec);
-    t_qcb * qcb = dictionary_remove(diccionario_exec, wid_str,);
+    t_qcb * qcb = dictionary_remove(diccionario_exec, wid_str);
     pthread_mutex_unlock(&mutex_diccionario_exec);
 
     t_paquete *paquete = crear_paquete();
