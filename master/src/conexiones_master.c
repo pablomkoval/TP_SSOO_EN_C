@@ -15,7 +15,6 @@ void *manejar_servidor_worker(void *arg){
                 hacer_desconexion_worker(worker_id);
                 free(worker_id_str);
                 return NULL;
-                break;
 
             case READ:
                 hacer_read_worker(socket_worker, worker_id_str);
@@ -132,7 +131,7 @@ void hacer_desconexion_worker(int worker_id){
     
 
     pthread_mutex_lock(&mutex_diccionario_exec);
-    t_qcb * qcb = dictionary_remove(diccionario_exec, wid_str);
+    t_qcb * qcb = dictionary_remove(diccionario_exec, wid_str,);
     pthread_mutex_unlock(&mutex_diccionario_exec);
 
     t_paquete *paquete = crear_paquete();
@@ -146,6 +145,7 @@ void hacer_desconexion_worker(int worker_id){
     dictionary_remove(diccionario_workers, wid_str);
     pthread_mutex_unlock(&mutex_diccionario_workers);
 
+    free(wid_str);
 
     log_info(logger, "## Se desconecta el Worker <%d> - Se finaliza la Query <%d> - Cantidad total de Workers: <%d> ", worker_id, qcb->qid, workers_conectados());
 
@@ -194,6 +194,8 @@ void hacer_end_worker(char *worker_id_str, int worker_id){
     agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
     enviar_paquete(paquete, qcb->socket, logger);
     borrar_paquete(paquete);
+
+    free(worker_id_str);
 
     int *worker_id_ptr = malloc(sizeof(int));
     *worker_id_ptr = worker_id;
@@ -340,7 +342,7 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
                 pthread_mutex_unlock(&mutex_diccionario_workers);
 
                 int socket_worker_asignado = *socket_worker_asignado_ptr;
-                
+
                 enviar_cod_op(socket_worker_asignado, INTERRUPCION); 
                 
 

@@ -1,7 +1,6 @@
 #ifndef CONEXIONES_MASTER_H_
 #define CONEXIONES_MASTER_H_
 
-#include <utils/utils.h>
 #include <master.h>
 #include <qcb.h>
 #include <planificador.h>

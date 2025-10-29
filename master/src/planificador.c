@@ -76,7 +76,7 @@ void* planificador(){
 
 void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id){
     
-    char* worker_asignado_id_ptr = string_itoa(worker_asignado_id);
+    char* worker_asignado_id_ptr = string_itoa(worker_asignado_id); 
 
     pthread_mutex_lock(&mutex_diccionario_exec);
     dictionary_put(diccionario_exec, worker_asignado_id_ptr, query_a_ejecutar);
@@ -124,7 +124,7 @@ void* hilo_aging_individual(void* arg){
     t_qcb* qcb = (t_qcb*)arg;
     free(arg);
 
-    int tiempo_espera = tiempo_aging; 
+    int tiempo_espera = tiempo_aging * 1000; // para el unsleepppp 
 
     log_info(logger, "qid %d: Hilo de aging individual iniciado. Intervalo: %d ms", qcb->qid, tiempo_espera);
 
@@ -151,5 +151,6 @@ void* hilo_aging_individual(void* arg){
     }
     
     log_info(logger, "qid %d: Hilo de aging individual finalizo.", qcb->qid);
+
     return NULL;
 }

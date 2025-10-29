@@ -30,6 +30,7 @@ void cambiar_estado(t_qcb* qcb, int nuevo_estado){
             //log_info(logger, "qid: %d. Termino hilo de aging. Estado nuevo de qcb: %s", qcb->qid, qcb->estado);
             
             //terminar el hilo
+            //pthread_cancel() poner ese??? o otro que haga terminar el hilo de una
         }
     }
 }
