@@ -106,3 +106,52 @@ t_qcb* obtener_query_worker_priori(int *worker_libre_id){
     *worker_libre_id = obtener_worker_libre(); 
     return query_a_ejecutar;
 }
+
+void chequear_aging(t_qcb* qcb){
+    int tiempo_qcb = temporal_gettime(qcb->tiempo_aging);
+
+    if(tiempo_qcb >= tiempo_aging){
+        qcb->prioridad--;
+        temporal_destroy(qcb->tiempo_aging);
+
+        if(qcb->prioridad > 0){
+        qcb->tiempo_aging = temporal_create();
+        }
+    }
+}
+
+void* hilo_aging_individual(void* arg){
+    t_qcb* qcb = (t_qcb*)arg;
+    free(arg);
+
+    int tiempo_espera = tiempo_aging; 
+
+    log_info(logger, "qid %d: Hilo de aging individual iniciado. Intervalo: %d ms", qcb->qid, tiempo_espera);
+
+    while(qcb->prioridad > 0){
+        usleep(tiempo_espera); 
+
+        pthread_mutex_lock(&mutex_ready); 
+  
+        if (qcb->estado == READY){ 
+            chequear_aging(qcb);
+
+            log_info(logger, "Aging aplicado a qid %d. Nueva prioridad: %d", qcb->qid, qcb->prioridad);
+        
+            list_sort(cola_ready, (void*)comparar_qcb_por_prioridad);
+            
+            hacer_chequeo_desalojo(qcb); 
+
+            pthread_mutex_unlock(&mutex_ready);
+
+        } else{
+            pthread_mutex_unlock(&mutex_ready);
+            break; 
+        }
+        
+        pthread_mutex_unlock(&mutex_ready);
+    }
+    
+    log_info(logger, "qid %d: Hilo de aging individual finalizo.", qcb->qid);
+    return NULL;
+}

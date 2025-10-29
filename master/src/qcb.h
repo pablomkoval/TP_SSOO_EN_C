@@ -19,6 +19,7 @@ typedef struct{
     int id_worker_asociado;
     estados_query estado;
     t_temporal* tiempo_aging;
+    pthread_t hilo_aging_id;
 } t_qcb;
 
 extern int qid_global;

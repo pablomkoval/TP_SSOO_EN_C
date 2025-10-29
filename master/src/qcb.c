@@ -20,10 +20,16 @@ t_qcb* crear_qcb(char* query_entrante, int prioridad_query, int socket){
     return qcb;
 }
 
-void cambiar_estado(t_qcb* qcb, int nuevo_estado) {
+void cambiar_estado(t_qcb* qcb, int nuevo_estado){
+    int estado_anterior = qcb->estado;
     qcb->estado = nuevo_estado;
     
-    if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
-        //actualizar el tiempo aging
+    if(strcmp(algoritmo_planfiicacion, "PRIORIDADES") == 0 && estado_anterior == READY){
+
+        if(nuevo_estado == EXEC || nuevo_estado == EXIT){
+            log_info(logger, "qid: %d. Termino hilo de aging. Estado nuevo de qcb: %s", qcb->qid, qcb->estado);
+            
+            //terminar el hilo
+        }
     }
 }

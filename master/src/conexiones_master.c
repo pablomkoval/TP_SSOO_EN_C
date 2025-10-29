@@ -220,6 +220,12 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
     pthread_mutex_unlock(&mutex_ready);
 
     free(qid_str);
+
+    if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
+        pthread_create(&qcb->hilo_aging_id, NULL, hilo_aging_individual, (void*)qcb);
+        pthread_detach(qcb->hilo_aging_id); 
+    }
+
     
     log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, qcb->qid, workers_conectados());
 
