@@ -248,16 +248,16 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
 
     unlock_metadata(file_tag);
 
-    for (int i = 0; i < cant; i++)
+    for (int i = 0; i < cant; i++)   //por cada bloque logico
     {
-        char *bloque_logico = obtener_bloque_logico(file_tag, i);
-        char *md5 = obtener_hash_block(bloque_logico);                             // hay que ver que onda con la sincro acá
-        char *bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
-        int nro_bloque = obtener_bloque_por_hash(md5);
+        char *bloque_logico = obtener_bloque_logico(file_tag, i);   
+        char *md5 = obtener_hash_block(bloque_logico);                             // veo su contenido md5
+        char *bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);       // consigo su bloque fisico
+        int nro_bloque = obtener_bloque_por_hash(md5);                              // me fijo si hay otro bloque fisico con el mismo contenido
         char *bloque_fisico_nuevo = bloque_fisico_por_nro(nro_bloque);
         int nro_block_f = obtener_numero_bloque(bloque_fisico);
 
-        if (nro_bloque != -1) // obtener bloque por hash devuelve -1 si no hay ninguno :p
+        if (nro_bloque != -1) // si hay algún bloque fisico con el mismo contenido...
         {
             lock_metadata(file_tag);
             cambiar_hard_link(bloque_logico, bloque_fisico_nuevo);
@@ -277,10 +277,10 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
                 pthread_mutex_unlock(&mutex_bitmap);
             }
         }
-        else
+        else   //si no hay 
         {
             pthread_mutex_lock(&mutex_hash_index);
-            asociar_hash_block(bloque_fisico);
+            asociar_hash_block(bloque_fisico);            // creo la entrada de hash en el archivo 
             pthread_mutex_unlock(&mutex_hash_index);
         }
 
