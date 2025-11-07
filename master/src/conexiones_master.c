@@ -77,7 +77,7 @@ void *funcion_main_escucha(void *socket_arg){
         pthread_t hilo_cliente;
 
         switch (tipo_conexion){
-            case WORKER:
+            case WORKER: //se puede derivar lo de este case para que quede clean como el case query
                 log_info(logger, "Recibi handshake de un worker");
                 int worker_id;
                 recv(socket_cliente, &worker_id, sizeof(int), MSG_WAITALL);
@@ -227,10 +227,10 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
 
     free(qid_str);
 
-    if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
+    /* if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){ //movido a crear qcb y cambiar estado a ready
         pthread_create(&qcb->hilo_aging_id, NULL, hilo_aging_individual, (void*)qcb);
         pthread_detach(qcb->hilo_aging_id); 
-    }
+    } */
 
 
     log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, qcb->qid, workers_conectados());
@@ -315,7 +315,7 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
 
     t_qcb* qcb_a_desalojar = NULL;
 
-    void buscar_candidato_desalojo(char* wid_str, void* qcb_exec_ptr){
+    void buscar_candidato_desalojo(char* wid_str, void* qcb_exec_ptr){ //tiene que estar esta funcion aca?
         t_qcb* qcb_exec = (t_qcb*)qcb_exec_ptr;
         
         if (qcb_a_desalojar == NULL || qcb_exec->prioridad > qcb_a_desalojar->prioridad) {
@@ -331,7 +331,7 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
     if(total_workers == querys_en_exec && total_workers > 0){
         
         dictionary_iterator(diccionario_exec, buscar_candidato_desalojo);
-
+        pthread_mutex_unlock(&mutex_diccionario_exec); //mutex cierra aca o area critica mas grande?
         if (qcb_a_desalojar != NULL){
 
             if(qcb_entrante->prioridad < qcb_a_desalojar->prioridad){

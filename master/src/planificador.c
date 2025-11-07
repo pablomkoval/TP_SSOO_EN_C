@@ -107,47 +107,48 @@ t_qcb* obtener_query_worker_priori(int *worker_libre_id){
     return query_a_ejecutar;
 }
 
-void chequear_aging(t_qcb* qcb){
+bool chequear_y_hacer_aging(t_qcb* qcb){
     int tiempo_qcb = temporal_gettime(qcb->tiempo_aging);
 
     if(tiempo_qcb >= tiempo_aging){
         qcb->prioridad--;
+        log_info(logger, "##<%d> Cambio de prioridad: <%d> - <%d>", qcb->qid, qcb->prioridad + 1, qcb->prioridad);
         temporal_destroy(qcb->tiempo_aging);
 
         if(qcb->prioridad > 0){
         qcb->tiempo_aging = temporal_create();
         }
+        return true;
     }
+    return false;
 }
 
 void* hilo_aging_individual(void* arg){
     t_qcb* qcb = (t_qcb*)arg;
     free(arg);
+    bool query_sigue_en_cola = true;
 
-    int tiempo_espera = tiempo_aging * 1000; // para el unsleepppp 
+    int tiempo_aging_micro = tiempo_aging * 1000
 
-    log_info(logger, "qid %d: Hilo de aging individual iniciado. Intervalo: %d ms", qcb->qid, tiempo_espera);
+    log_info(logger, "qid %d: Hilo de aging individual iniciado. Intervalo: %d ms", qcb->qid, tiempo_aging);
 
-    while(qcb->prioridad > 0){
-        usleep(tiempo_espera); 
+    while(qcb->prioridad > 0 && query_sigue_en_cola){
+        usleep(tiempo_aging_micro); 
 
         pthread_mutex_lock(&mutex_ready); 
-  
         if (qcb->estado == READY){ 
-            chequear_aging(qcb);
+            if (chequear_y_hacer_aging(qcb)){
+                //log_info(logger, "Aging aplicado a qid %d. Nueva prioridad: %d", qcb->qid, qcb->prioridad);
+                
+                list_sort(cola_ready, (void*)comparar_qcb_por_prioridad);
 
-            log_info(logger, "Aging aplicado a qid %d. Nueva prioridad: %d", qcb->qid, qcb->prioridad);
-        
-            list_sort(cola_ready, (void*)comparar_qcb_por_prioridad);
-            
-            hacer_chequeo_desalojo(qcb); 
-
-            pthread_mutex_unlock(&mutex_ready);
-
+                hacer_chequeo_desalojo(qcb); 
+            }
         } else{
-            pthread_mutex_unlock(&mutex_ready);
-            break; 
+            query_sigue_en_cola = false;
+            temporal_destroy(qcb->tiempo_aging);
         }
+        pthread_mutex_unlock(&mutex_ready);
     }
     
     log_info(logger, "qid %d: Hilo de aging individual finalizo.", qcb->qid);

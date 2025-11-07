@@ -12,7 +12,7 @@ void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id);
 t_qcb* obtener_query_worker_fifo(int *worker_libre_id);
 t_qcb* obtener_query_worker_priori(int *worker_libre_id);
 
-void chequear_aging(t_qcb* qcb);
+bool chequear_y_hacer_aging(t_qcb* qcb);
 void* hilo_aging_individual(void* arg);
 
 extern t_list* cola_ready;

@@ -26,5 +26,6 @@ extern int qid_global;
 
 t_qcb* crear_qcb (char* query_entrante, int prioridad_query, int socket);
 void cambiar_estado(t_qcb* qcb, int nuevo_estado);
+void comenzar_aging_query(t_qcb* qcb);
 
 #endif
