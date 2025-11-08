@@ -19,13 +19,13 @@ int main(int argc, char* argv[]){
     
     inicializar_diccionarios_y_semaforos();
 
-    // if(argc < 2){
-    //     printf("Faltaron argumentos para iniciar el modulo master");
-    //     return EXIT_FAILURE;
-    // }
+    /* if(argc < 2){
+        printf("Faltaron argumentos para iniciar el modulo master");
+        return EXIT_FAILURE;
+    }
 
-    //char* archivo_config = argv[1];
-     char* archivo_config = "master.config";// !! No va, solo para debugeo
+    char* archivo_config = argv[1]; */
+    char* archivo_config = "master.config";// !! No va, solo para debugeo
      //hardcodeado para manu
 
     config_master = iniciar_config(archivo_config);

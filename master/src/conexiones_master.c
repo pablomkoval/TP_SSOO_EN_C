@@ -223,14 +223,10 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
 
     pthread_mutex_lock(&mutex_ready);
     encolar_qcb(cola_ready, qcb);
+    cambiar_estado(qcb, READY);
     pthread_mutex_unlock(&mutex_ready);
 
     free(qid_str);
-
-    /* if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){ //movido a crear qcb y cambiar estado a ready
-        pthread_create(&qcb->hilo_aging_id, NULL, hilo_aging_individual, (void*)qcb);
-        pthread_detach(qcb->hilo_aging_id); 
-    } */
 
 
     log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, qcb->qid, workers_conectados());
@@ -240,20 +236,15 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
     return qcb;
 }
 
-// if segun algoritmo de planificacion
+
 void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
 
     char* qid_str = string_itoa(qcb->qid);
 
+    pthread_mutex_lock(&mutex_ready);
     if(qcb->estado == READY){
-    
-        list_remove_element(cola_ready, qcb);   
 
-        pthread_mutex_lock(&mutex_diccionario_querys);
-        dictionary_remove(diccionario_querys,qid_str);
-        pthread_mutex_unlock(&mutex_diccionario_querys);
-
-        cambiar_estado(qcb, EXIT);
+        list_remove_element(cola_ready, qcb);    
 
     } else if (qcb->estado == EXEC){
 
@@ -261,17 +252,24 @@ void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
         pthread_mutex_lock(&mutex_diccionario_workers);
         int* socket_worker_asociado_ptr = dictionary_get(diccionario_workers, wid_asociado_str);
         pthread_mutex_unlock(&mutex_diccionario_workers);
-        
+
+        pthread_mutex_lock(&mutex_diccionario_exec);
+        dictionary_remove(diccionario_exec, wid_asociado_str);
+        pthread_mutex_unlock(&mutex_diccionario_exec);
+
+
         int socket_worker_asociado = *socket_worker_asociado_ptr;
 
         enviar_cod_op(socket_worker_asociado, INTERRUPCION);
     }
+
+    cambiar_estado(qcb, EXIT);
+    pthread_mutex_unlock(&mutex_ready);
     
     log_info(logger, "## Se desconecta un Query Control. Se finaliza la Query <%d> con prioridad <%d>. Nivel multiprocesamiento <%d>", qcb->qid, qcb->prioridad, workers_conectados());
 
     free(qid_str);
 
-    //poner mutexs para desalojo en exec?
 }
 
 bool qcb_esta_en_cola_ready(void* arg, int socket_buscado){
@@ -283,14 +281,15 @@ void encolar_qcb(t_list *cola_ready, t_qcb *qcb){
     if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
     
         hacer_chequeo_desalojo(qcb);
-
+        pthread_mutex_lock(&mutex_ready);
         list_add_sorted(cola_ready, qcb, (void*)comparar_qcb_por_prioridad);
-
+        pthread_mutex_unlock(&mutex_ready);
         log_info(logger, "qcb de qid: %d encolado en READY con Prioridad: %d", qcb->qid, qcb->prioridad);
 
     } else{
-
+        pthread_mutex_lock(&mutex_ready);
         list_add(cola_ready, qcb);
+        pthread_mutex_unlock(&mutex_ready);
         log_info(logger, "qcb de qid: %d encolado en READY con FIFO.", qcb->qid);
     }
 
