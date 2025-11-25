@@ -30,6 +30,7 @@ tabla_paginas_t* obtener_tabla(char* file_tag);
 int buscar_frame_libre();
 pagina_t* buscar_victima_reemplazo();
 void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pagina, int frame, int qid);
+int liberar_frame(pagina_t* victima, int qid);
 pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid);
 void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int qid);
 

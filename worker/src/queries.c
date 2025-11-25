@@ -193,5 +193,12 @@ void ejecutar_delete(char* nombre_file, char* tag, int qid){
 void ejecutar_end(){
     //finalizar query
     //provocar interrupcion(mediante una variable quizas(?))
-    enviar_cod_op(socket_master, END);
+    char* motivo = "FIN";
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, END);
+    agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
+    enviar_paquete(paquete, socket_master, logger);
+    borrar_paquete(paquete);
+    printf("Enviando FIN: size=%d\n", strlen(motivo)+1);
+    //enviar_cod_op(socket_master, END);
 }

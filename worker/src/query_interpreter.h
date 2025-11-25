@@ -24,13 +24,21 @@ typedef struct {
     char* param2;
 } query_t;
 
+typedef struct
+{
+    int qid;
+    char* archivo;
+    int pc;
+} t_args_query_interpreter;
+
+
 int check_interrupt(int qid);
 query_t* parsear_query(char* query_raw, char** instruccion);
 query_t* leer_query();
 int ejecutar_query(query_t* query, int qid);
-void manejar_respuesta(int respuesta);
+int manejar_respuesta(int respuesta);
 void ciclo_ejecucion(char* nombre_archivo, int pc, int qid);
-void* iniciar_query_interpreter();
+void* iniciar_query_interpreter(void* args);
 char** separar_file_tag(char* file_tag);
 
 #endif

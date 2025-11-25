@@ -81,7 +81,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         if(frame == -1){
             log_debug(logger, "##DEBUG: antes de usar algoritmo de reemplazo");
             pagina_t* victima = buscar_victima_reemplazo();
-            frame = liberar_frame(victima);
+            frame = liberar_frame(victima, qid);
             log_info(logger, "## Query %d: Se reemplaza la página %s/%d por la %s/%d", qid, victima->file_tag, victima->nro_pagina, pag->file_tag, pag->nro_pagina);
         }
         
@@ -207,7 +207,7 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     t_list* recibido = recibir_paquete(socket_storage);
     int* resultado = (int*)list_get(recibido, 0);
 
-    if(*resultado != 1) log_error(logger, "Storage no me devolvio el contenido, resultado (%d)", resultado);
+    if(*resultado != 1) log_error(logger, "Storage no me devolvio el contenido, resultado (%d)", *resultado);
     
     char* contenido = strdup(list_get(recibido, 1));  
 
@@ -228,7 +228,7 @@ void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int
 
     void* contenido = memoria_interna + frame * tam_pagina;
     agregar_a_paquete(paquete, contenido, tam_pagina);
-    log_debug(logger, "##EL CONTENIDO ANTES DEL FLUSH ES: %s, pagina a escribir: %d", contenido, nro_pagina);
+    log_debug(logger, "##EL CONTENIDO ANTES DEL FLUSH ES: %s, pagina a escribir: %d", (char*)contenido, nro_pagina);
 
     enviar_paquete(paquete, socket_storage,logger);
     borrar_paquete(paquete);

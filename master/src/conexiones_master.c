@@ -22,7 +22,7 @@ void *manejar_servidor_worker(void *arg){
                 break;
 
             case END:
-                hacer_end_worker(worker_id_str, worker_id);
+                hacer_end_worker(worker_id_str, worker_id, socket_worker);
                 break;
 
             case 0:
@@ -180,7 +180,14 @@ void hacer_read_worker(int socket_worker, char *worker_id_str){
     list_destroy_and_destroy_elements(recibido, free);
 }
 
-void hacer_end_worker(char *worker_id_str, int worker_id){
+void hacer_end_worker(char *worker_id_str, int worker_id, int socket_worker){
+
+    t_list* recibido = recibir_paquete(socket_worker);
+
+    char* motivo_r = (char*)list_get(recibido, 0);
+    char* motivo = strdup(motivo_r);
+    list_destroy_and_destroy_elements(recibido, free);
+    log_debug(logger, "## Query Finalizada - %s", motivo);
 
     pthread_mutex_lock(&mutex_diccionario_exec);
     t_qcb *qcb = dictionary_remove(diccionario_exec, worker_id_str);
@@ -190,7 +197,6 @@ void hacer_end_worker(char *worker_id_str, int worker_id){
 
     t_paquete *paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, END);
-    char *motivo = "Fin de instrucciones.";
     agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
     enviar_paquete(paquete, qcb->socket, logger);
     borrar_paquete(paquete);

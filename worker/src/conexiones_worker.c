@@ -104,11 +104,25 @@ void* funcion_escucha_master(){
         switch (op_code)
         {
         case SOLICITUD_NUEVA_QUERY:
-            pthread_create(&thread_query_interpreter, NULL, iniciar_query_interpreter, NULL);
+            log_debug(logger, "Se recibio una solicitud de nueva query");
+            t_list* recibido = recibir_paquete(socket_master);
+            t_args_query_interpreter* argumentos = malloc(sizeof(t_args_query_interpreter));
+
+            int qid = *((int*)list_get(recibido, 0));
+            void* nombre_elem = list_get(recibido, 1);
+            int pc = *((int*)list_get(recibido, 2));
+            argumentos->archivo = strdup((char*)nombre_elem);
+            argumentos->pc = pc;
+            argumentos->qid = qid;
+
+            pthread_create(&thread_query_interpreter, NULL, iniciar_query_interpreter, (void*)argumentos);
             pthread_detach(thread_query_interpreter);
+
+            list_destroy_and_destroy_elements(recibido, free);
             break;
         
         case INTERRUPCION:
+            log_debug(logger, "Se recibio una interrupcion");
             pthread_mutex_unlock(&mutex_interrupcion);
             hay_interrupcion = true;
             pthread_mutex_lock(&mutex_interrupcion);

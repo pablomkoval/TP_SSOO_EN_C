@@ -1,25 +1,24 @@
 #include <query_interpreter.h>
 
 
-void* iniciar_query_interpreter(){
+void* iniciar_query_interpreter(void* args){
+    t_args_query_interpreter* argumentos = (t_args_query_interpreter*) args;
+    int pc = argumentos->pc;
+    int qid = argumentos->qid;
+    char* nombre_archivo = strdup(argumentos->archivo);
+    free(args);
     //en vez de un while 1 simplemente se llama a esta funcion cuando llega una solicitud nueva query de master al hilo de conexiones!!!!
-    t_list* recibido = recibir_paquete(socket_master);
-        
-    int qid = *((int*)list_get(recibido, 0));
-    void* nombre_elem = list_get(recibido, 1);
-    int pc = *((int*)list_get(recibido, 2));
-    char* nombre_archivo = strdup((char*)nombre_elem);
+    
 
     log_info(logger, "## Query %d: Se recibe la Query. El path de operaciones es: %s", qid, nombre_archivo);
     ciclo_ejecucion(nombre_archivo, pc, qid);
-    list_destroy_and_destroy_elements(recibido, free);
     
     return NULL;
 }
 
 void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
     int resultado_ejecucion = 1;
-    while(resultado_ejecucion != -1){
+    while(resultado_ejecucion > 0){// > 0
         //fetch
         char* instruccion = NULL;
         query_t* query_a_ejecutar = leer_query(nombre_archivo, pc, &instruccion);
@@ -34,11 +33,11 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
 
 
         //aguardar respuesta siempre, todas las instrucciones son bloqueantes
-        if(resultado_ejecucion != 2){
+        if(resultado_ejecucion == 1){
             if(recibir_opcode(socket_storage) == RESPUESTA_STORAGE){
                 t_list* recibido = recibir_paquete(socket_storage);
                 int respuesta = *((int*)list_get(recibido, 0));
-                manejar_respuesta(respuesta);
+                resultado_ejecucion = manejar_respuesta(respuesta);
                 list_destroy_and_destroy_elements(recibido, free);
             } else return;
         }
@@ -94,7 +93,7 @@ id_query_t parsear_query_id(char* identificador) {
     if (strcmp(identificador, "END") == 0) return END_Q;
 
     log_error(logger, "la query que llego no es valida");
-    return END;
+    return END_Q;
 }
 
 query_t* parsear_query(char* query_raw, char** instruccion){
@@ -199,15 +198,17 @@ int ejecutar_query(query_t* query, int qid){
 
 
 int check_interrupt(int qid){
+    log_trace(logger, "Intento abrir mutex interrupcion");
     pthread_mutex_lock(&mutex_interrupcion);
     if(hay_interrupcion){
         log_info(logger, "## Query %d: Desalojada por pedido del Master", qid);
-        return 1;
+        pthread_mutex_unlock(&mutex_interrupcion);
+        return -1;
     } else {
         log_debug(logger, "Caso else en check interrupt");
-        return 0;
+        pthread_mutex_unlock(&mutex_interrupcion);
+        return 1;
     }
-    pthread_mutex_unlock(&mutex_interrupcion);
 }
 
 char** separar_file_tag(char* file_tag){
@@ -216,6 +217,41 @@ char** separar_file_tag(char* file_tag){
     return partes;
 }
 
-void manejar_respuesta(int respuesta){
+char* parsear_errores(int error){
+    switch(error){
+        case FILE_TAG_PREEXISTENTE:
+            return "File_tag preexistente";
+            break;
+        case FILE_TAG_INEXISTENTE:
+            return "File_tag inexistente";
+            break;
+        case ESPACIO_INSUFICIENTE:
+            return "Espacio insuficiente";
+            break;
+        case ESCRITURA_NO_PERMITIDA:
+            return "Escritura no permitida";
+            break;
+        case LECTURA_O_ESCRITURA_FUERA_DE_RANGO:
+            return "Lectura o escritura fuera de rango";
+            break;
+        default:
+            return "Error desconocido";
+    }
+}
 
+int manejar_respuesta(int respuesta){
+    
+    if(respuesta != 1){
+
+        char* motivo = parsear_errores(respuesta);
+        t_paquete* paquete = crear_paquete();
+        cambiar_opcode_paquete(paquete, END);
+        agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
+        enviar_paquete(paquete, socket_master, logger);
+        borrar_paquete(paquete);
+        return -1;
+    }else{
+        log_debug(logger, "Storage respondio un 1 a la ejecucion");
+        return 1;
+    }
 }

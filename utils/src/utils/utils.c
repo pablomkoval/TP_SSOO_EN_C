@@ -143,6 +143,8 @@ char* recibir_mensaje(int socket){
     recv(socket, &size_mensaje, sizeof(int), MSG_WAITALL);
     char* mensaje = malloc(size_mensaje);
     recv(socket, mensaje, size_mensaje, MSG_WAITALL);
+    printf("size recibido = %d\n", size_mensaje);
+    printf("mensaje recibido = %s\n", mensaje);
     return mensaje;
 }
 
