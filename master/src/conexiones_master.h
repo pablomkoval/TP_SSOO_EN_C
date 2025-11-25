@@ -1,7 +1,6 @@
 #ifndef CONEXIONES_MASTER_H_
 #define CONEXIONES_MASTER_H_
 
-#include <utils/utils.h>
 #include <master.h>
 #include <qcb.h>
 #include <planificador.h>
@@ -26,6 +25,6 @@ void encolar_qcb(t_list* cola_ready, t_qcb* qcb);
 bool comparar_qcb_por_prioridad(void* qcb1, void* qcb2);
 int workers_conectados();
 
-void hacer_chequeo_desalojo(t_qcb* qcb_exec);
+void hacer_chequeo_desalojo(t_qcb* qcb_entrante);
 
 #endif

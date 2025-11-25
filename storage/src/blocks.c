@@ -349,7 +349,6 @@ int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque, char *c
         lock_bloque_fisico(nuevo_bloque_fisico);
 
         escribir_archivo(nuevo_bloque_fisico, contenido);
-        asociar_hash_block(nuevo_bloque_fisico);
         cambiar_hard_link(bloque_logico, nuevo_bloque_fisico);
         cambiar_bloque_metadata(path, nro_bloque_f_nuevo, nro_bloque);
 

@@ -9,8 +9,10 @@ void inicializar_planificador();
 void enviar_qcb_a_worker(t_qcb* qcb, int socket_worker);
 int obtener_worker_libre();
 void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id);
-t_qcb* obtener_query_worker_fifo(int *worker_libre_id);
-t_qcb* obtener_query_worker_priori(int *worker_libre_id);
+t_qcb* obtener_query_y_worker(int *worker_libre_id);
+
+//bool chequear_y_hacer_aging(t_qcb* qcb);
+void* hilo_aging_individual(void* arg);
 
 extern t_list* cola_ready;
 extern t_list* workers_libres;

@@ -168,10 +168,12 @@ void dupear_hard_links(int query_id, char *file_origen, char *tag_origen, char *
         free(nuevo_bloque_logico);
         free(bloque_logico);
     }
-    
+
+    lock_metadata(file_tag_origen);
     int tamanio = tamanio_metadata(file_tag_origen);
     char* tamanio_str = string_itoa(tamanio);
     cambiar_tamanio_metadata(file_tag_destino, tamanio_str);
+    unlock_metadata(file_tag_origen);
 
     free(file_tag_destino);
     free(file_tag_origen);

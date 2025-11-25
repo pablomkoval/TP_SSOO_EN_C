@@ -15,7 +15,6 @@ void *manejar_servidor_worker(void *arg){
                 hacer_desconexion_worker(worker_id);
                 free(worker_id_str);
                 return NULL;
-                break;
 
             case READ:
                 hacer_read_worker(socket_worker, worker_id_str);
@@ -78,7 +77,7 @@ void *funcion_main_escucha(void *socket_arg){
         pthread_t hilo_cliente;
 
         switch (tipo_conexion){
-            case WORKER:
+            case WORKER: //se puede derivar lo de este case para que quede clean como el case query
                 log_info(logger, "Recibi handshake de un worker");
                 int worker_id;
                 recv(socket_cliente, &worker_id, sizeof(int), MSG_WAITALL);
@@ -146,6 +145,7 @@ void hacer_desconexion_worker(int worker_id){
     dictionary_remove(diccionario_workers, wid_str);
     pthread_mutex_unlock(&mutex_diccionario_workers);
 
+    free(wid_str);
 
     log_info(logger, "## Se desconecta el Worker <%d> - Se finaliza la Query <%d> - Cantidad total de Workers: <%d> ", worker_id, qcb->qid, workers_conectados());
 
@@ -201,6 +201,8 @@ void hacer_end_worker(char *worker_id_str, int worker_id, int socket_worker){
     enviar_paquete(paquete, qcb->socket, logger);
     borrar_paquete(paquete);
 
+    free(worker_id_str);
+
     int *worker_id_ptr = malloc(sizeof(int));
     *worker_id_ptr = worker_id;
 
@@ -227,10 +229,12 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
 
     pthread_mutex_lock(&mutex_ready);
     encolar_qcb(cola_ready, qcb);
+    cambiar_estado(qcb, READY);
     pthread_mutex_unlock(&mutex_ready);
 
     free(qid_str);
-    
+
+
     log_info(logger, "## Se conecta un Query Control para ejecutar la Query <%s> con prioridad <%d> - Id asignado: <%d>. Nivel multiprocesamiento <%d>",path_query, prioridad_query, qcb->qid, workers_conectados());
 
     list_destroy_and_destroy_elements(elementos, free);
@@ -238,36 +242,40 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
     return qcb;
 }
 
-// if segun algoritmo de planificacion
+
 void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
 
     char* qid_str = string_itoa(qcb->qid);
 
+    pthread_mutex_lock(&mutex_ready);
     if(qcb->estado == READY){
-    
-        list_remove_element(cola_ready, qcb);   
 
-        pthread_mutex_lock(&mutex_diccionario_querys);
-        dictionary_remove(diccionario_querys,qid_str);
-        pthread_mutex_unlock(&mutex_diccionario_querys);
-
-        cambiar_estado(qcb, EXIT);
+        list_remove_element(cola_ready, qcb);    
 
     } else if (qcb->estado == EXEC){
+
         char* wid_asociado_str = string_itoa(qcb->id_worker_asociado);
         pthread_mutex_lock(&mutex_diccionario_workers);
-        int* socket_worker_asociado = dictionary_get(diccionario_workers, wid_asociado_str);
+        int* socket_worker_asociado_ptr = dictionary_get(diccionario_workers, wid_asociado_str);
         pthread_mutex_unlock(&mutex_diccionario_workers);
-        
-        
-        //enviar_cod_op(&socket_worker_asociado, DESALOJAR);
+
+        pthread_mutex_lock(&mutex_diccionario_exec);
+        dictionary_remove(diccionario_exec, wid_asociado_str);
+        pthread_mutex_unlock(&mutex_diccionario_exec);
+
+
+        int socket_worker_asociado = *socket_worker_asociado_ptr;
+
+        enviar_cod_op(socket_worker_asociado, INTERRUPCION);
     }
+
+    cambiar_estado(qcb, EXIT);
+    pthread_mutex_unlock(&mutex_ready);
     
     log_info(logger, "## Se desconecta un Query Control. Se finaliza la Query <%d> con prioridad <%d>. Nivel multiprocesamiento <%d>", qcb->qid, qcb->prioridad, workers_conectados());
 
     free(qid_str);
 
-    //poner mutexs para desalojo en exec?
 }
 
 bool qcb_esta_en_cola_ready(void* arg, int socket_buscado){
@@ -279,14 +287,15 @@ void encolar_qcb(t_list *cola_ready, t_qcb *qcb){
     if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
     
         hacer_chequeo_desalojo(qcb);
-
+        pthread_mutex_lock(&mutex_ready);
         list_add_sorted(cola_ready, qcb, (void*)comparar_qcb_por_prioridad);
-
+        pthread_mutex_unlock(&mutex_ready);
         log_info(logger, "qcb de qid: %d encolado en READY con Prioridad: %d", qcb->qid, qcb->prioridad);
 
     } else{
-
+        pthread_mutex_lock(&mutex_ready);
         list_add(cola_ready, qcb);
+        pthread_mutex_unlock(&mutex_ready);
         log_info(logger, "qcb de qid: %d encolado en READY con FIFO.", qcb->qid);
     }
 
@@ -311,7 +320,7 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
 
     t_qcb* qcb_a_desalojar = NULL;
 
-    void buscar_candidato_desalojo(char* wid_str, void* qcb_exec_ptr){
+    void buscar_candidato_desalojo(char* wid_str, void* qcb_exec_ptr){ //tiene que estar esta funcion aca?
         t_qcb* qcb_exec = (t_qcb*)qcb_exec_ptr;
         
         if (qcb_a_desalojar == NULL || qcb_exec->prioridad > qcb_a_desalojar->prioridad) {
@@ -327,19 +336,19 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
     if(total_workers == querys_en_exec && total_workers > 0){
         
         dictionary_iterator(diccionario_exec, buscar_candidato_desalojo);
-
+        pthread_mutex_unlock(&mutex_diccionario_exec); //mutex cierra aca o area critica mas grande?
         if (qcb_a_desalojar != NULL){
 
             if(qcb_entrante->prioridad < qcb_a_desalojar->prioridad){
                 char *wid_str_asociado = string_itoa(qcb_a_desalojar->id_worker_asociado);
 
                 pthread_mutex_lock(&mutex_diccionario_workers);
-                int* socket_worker_asignado = dictionary_get(diccionario_workers, wid_str_asociado);
+                int* socket_worker_asignado_ptr = dictionary_get(diccionario_workers, wid_str_asociado);
                 pthread_mutex_unlock(&mutex_diccionario_workers);
 
-                // t_paquete paquete = crear_paquete();
-                // cambiar_opcode_paquete(paquete, DESALOJAR);
-                // enviar_paquete(paquete, socket_worker_asignado, logger);
+                int socket_worker_asignado = *socket_worker_asignado_ptr;
+
+                enviar_cod_op(socket_worker_asignado, INTERRUPCION); 
                 
 
                 log_info(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d> - Motivo: <PRIORIDAD>", qcb_entrante->qid, qcb_entrante->prioridad, qcb_entrante->id_worker_asociado);
