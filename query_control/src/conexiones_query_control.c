@@ -81,7 +81,12 @@ void recibir_mensajes_de_master(int socket){
                 break;
 
             case END: // END Query
-                char* motivo = recibir_mensaje(socket);
+                t_list* recibido = recibir_paquete(socket_worker);
+
+                char* motivo_r = (char*)list_get(recibido, 0);
+                char* motivo = strdup(motivo_r);
+                list_destroy_and_destroy_elements(recibido, free);
+                
                 log_info(logger, "## Query Finalizada - %s", motivo);
                 close(socket);
                 free(motivo);
