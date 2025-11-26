@@ -25,9 +25,9 @@ t_log* iniciar_logger(void){
     return nuevo_logger;
 }
 
-t_config* iniciar_config(void){
+t_config* iniciar_config(char* config){
     t_config* nueva_config;
-    nueva_config = config_create("storage.config");
+    nueva_config = config_create(config);
     if(config_has_property(nueva_config, "PUERTO_ESCUCHA"))
     {
         puerto_escucha = config_get_string_value(nueva_config, "PUERTO_ESCUCHA");
