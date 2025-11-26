@@ -79,7 +79,7 @@ int copiar_tag(int query_id, char *file_origen, char *tag_origen, char *file_des
     return 1;
 }
 
-int eliminar_tag(int query_id, char *file, char* tag)
+int eliminar_tag(int query_id, char *file, char* tag)    //// Falta eliminar hash de block hash index si tiene 1 solo HL
 {
     char* file_tag = concatenar_path(file, tag);
 
@@ -94,6 +94,7 @@ int eliminar_tag(int query_id, char *file, char* tag)
 
     lock_metadata(file_tag);
     char **blocks = config_get_array_value(meta, "BLOCKS");
+    char* estado_metadata = config_get_string_value(meta, "ESTADO");
     unlock_metadata(file_tag);
 
     int cantidad = 0;
@@ -103,6 +104,13 @@ int eliminar_tag(int query_id, char *file, char* tag)
     for(int i = 0; i < cantidad; i++)
     {
         char* bloque_logico = obtener_bloque_logico(file_tag, i);
+
+        if(strcmp(estado_metadata, "commited") == 0)
+        {
+            eliminar_de_block_hash_index(bloque_logico);
+        }
+
+
         eliminar_bloque_logico(query_id, file, tag, i);
         free(bloque_logico);
     }
@@ -119,6 +127,7 @@ int eliminar_tag(int query_id, char *file, char* tag)
     free(comando);
     free(file_tag);
     free(path_config);
+    free(estado_metadata);
 
     return 1;
 }
@@ -178,4 +187,20 @@ void dupear_hard_links(int query_id, char *file_origen, char *tag_origen, char *
     free(file_tag_destino);
     free(file_tag_origen);
     free(tamanio_str);
+}
+
+void eliminar_de_block_hash_index(char* bloque_logico)
+{
+    char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
+    char *md5 = obtener_hash_block(bloque_fisico);
+    int bloque_fisico_nro = obtener_numero_bloque(bloque_fisico);
+
+    if(obtener_referencias_bloque(bloque_fisico_nro) == 1)
+    {
+        config_remove_key(hash, md5);
+        config_save(hash);
+    }
+
+    free(md5);
+    free(bloque_fisico);
 }

@@ -3,7 +3,7 @@
 #include <utils/utils.h>
 #include <estructura_storage.h>
 
-t_config* iniciar_config();
+t_config* iniciar_config(char* config);
 t_log* iniciar_logger(void);
 t_config* iniciar_config_superblock();
 
