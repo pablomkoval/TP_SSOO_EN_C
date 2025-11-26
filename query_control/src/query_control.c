@@ -7,17 +7,17 @@ t_config* config;
 int socket_master;
 
 int main(int argc, char* argv[]) {
-    // if(argc < 4){
-    //     printf("Faltaron argumentos para iniciar el query control");
-    //     return EXIT_FAILURE;
-    // }
-    // char* archivo_config = argv[1];
-    // char* archivo_query = argv[2];
-    // int prioridad = atoi(argv[3]);
+     if(argc < 4){
+         printf("Faltaron argumentos para iniciar el query control");
+         return EXIT_FAILURE;
+     }
+     char* archivo_config = argv[1];
+     char* archivo_query = argv[2];
+     int prioridad = atoi(argv[3]);
 
-    char* archivo_config = "query.config";//hardcodeado para manu
-    char* archivo_query = "query1";
-    int prioridad = 0;//hardcodeado para manu
+    //char* archivo_config = "query.config";//hardcodeado para manu
+    //char* archivo_query = "query1";
+    //int prioridad = 0;//hardcodeado para manu
 
     config = iniciar_config(archivo_config);
     logger = iniciar_logger();

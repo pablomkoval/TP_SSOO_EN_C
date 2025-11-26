@@ -205,15 +205,38 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     if(recibir_opcode(socket_storage) != RESPUESTA_STORAGE) return;
 
     t_list* recibido = recibir_paquete(socket_storage);
+    if (!recibido || list_size(recibido) < 2) {
+        log_error(logger, "se recibio paquete NULL");
+        memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);//pongo la pagina en 0
+        return;
+    }
     int* resultado = (int*)list_get(recibido, 0);
 
-    if(*resultado != 1) log_error(logger, "Storage no me devolvio el contenido, resultado (%d)", *resultado);
+    if (!resultado || *resultado != 1) {
+        log_error(logger, "Fallo al leer pagina de storage");
+        list_destroy_and_destroy_elements(recibido, free);
+        return;
+    }
     
-    char* contenido = strdup(list_get(recibido, 1));  
+    char* contenido_raw = list_get(recibido, 1);
 
+    if(!contenido_raw){
+        log_error(logger, "Storage me mando contenido NULL");
+        list_destroy_and_destroy_elements(recibido, free);
+        memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);
+        return;
+    }
+    if(strlen(contenido_raw) < tam_pagina){
+        log_error(logger, "El contenido raw es menor a una pagina");
+        list_destroy_and_destroy_elements(recibido, free);
+        memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);
+        return;
+    }
+    char* contenido = strdup(contenido_raw); 
     //averiguar si el memset es correcto
+    log_error(logger, "El contenido a insertar en memoria es (%s)", contenido);
     memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
-    memcpy(memoria_interna + frame * tam_pagina, contenido, tam_pagina);
+    memcpy(memoria_interna + frame * tam_pagina, contenido, tam_pagina); 
     list_destroy_and_destroy_elements(recibido, free);
     return;
 }

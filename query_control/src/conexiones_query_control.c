@@ -81,7 +81,7 @@ void recibir_mensajes_de_master(int socket){
                 break;
 
             case END: // END Query
-                t_list* recibido = recibir_paquete(socket_worker);
+                t_list* recibido = recibir_paquete(socket);
 
                 char* motivo_r = (char*)list_get(recibido, 0);
                 char* motivo = strdup(motivo_r);

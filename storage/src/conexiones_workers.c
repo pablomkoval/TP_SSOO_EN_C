@@ -333,7 +333,9 @@ void mandar_read(int socket_worker, int resultado, char* contenido)
         agregar_a_paquete(paquete, contenido, strlen(contenido) + 1); 
     } else {
         char* vacio = "";
-        agregar_a_paquete(paquete, vacio, 1); 
+        // char* pagina_vacia = malloc(block_size);
+        // memset(pagina_vacia, 0, block_size);
+        agregar_a_paquete(paquete, vacio, strlen(vacio) + 1); 
     }
 
     enviar_paquete(paquete, socket_worker, logger);

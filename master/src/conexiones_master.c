@@ -287,15 +287,16 @@ void encolar_qcb(t_list *cola_ready, t_qcb *qcb){
     if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
     
         hacer_chequeo_desalojo(qcb);
-        pthread_mutex_lock(&mutex_ready);
+        //pthread_mutex_lock(&mutex_ready);
         list_add_sorted(cola_ready, qcb, (void*)comparar_qcb_por_prioridad);
-        pthread_mutex_unlock(&mutex_ready);
+        //pthread_mutex_unlock(&mutex_ready);
         log_info(logger, "qcb de qid: %d encolado en READY con Prioridad: %d", qcb->qid, qcb->prioridad);
 
     } else{
-        pthread_mutex_lock(&mutex_ready);
+        log_warning(logger, "## Va a encolar qcb con fifo");
+        //pthread_mutex_lock(&mutex_ready);
         list_add(cola_ready, qcb);
-        pthread_mutex_unlock(&mutex_ready);
+        //pthread_mutex_unlock(&mutex_ready);
         log_info(logger, "qcb de qid: %d encolado en READY con FIFO.", qcb->qid);
     }
 
