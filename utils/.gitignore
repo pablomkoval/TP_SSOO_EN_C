@@ -2,6 +2,7 @@
 lib/
 obj/
 *.log
+src/storage/raiz/*
 
 # Eclipse files
 .settings/
