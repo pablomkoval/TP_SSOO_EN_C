@@ -9,7 +9,7 @@ void *manejar_servidor_worker(void *arg){
     while (1){
         int op_code = recibir_opcode(socket_worker);
         char *worker_id_str = string_itoa(worker_id);
-
+        log_error(logger, "Llego opcode %d", op_code);
         switch (op_code){
             case -1:
                 hacer_desconexion_worker(worker_id);
@@ -18,17 +18,18 @@ void *manejar_servidor_worker(void *arg){
 
             case READ:
                 hacer_read_worker(socket_worker, worker_id_str);
-                break;
+                return NULL;
 
             case END:
+                log_trace(logger, "## Se recibe END de Worker (%d)", worker_id);
                 hacer_end_worker(worker_id_str, worker_id, socket_worker);
-                break;
+                return NULL;
 
             case 0:
                 break;
 
             default:
-                log_info(logger, "Error al recibir opcode, %d", op_code);
+                log_info(logger, "Error al recibir opcode (%d) de worker", op_code);
             break;
         }
         
@@ -56,9 +57,10 @@ void* manejar_servidor_querycontrol(void* arg){
             case PAQUETE:
                 qcb = hacer_qcb_nueva(socket_cliente);
                 break;
-
+            case 0:
+                break;
             default:
-                log_error(logger, "Error al recibir opcode, %d", op_code);
+                log_error(logger, "Error al recibir opcode (%d) de query control", op_code);
                 break;
         }
     }
@@ -86,12 +88,12 @@ void *funcion_main_escucha(void *socket_arg){
                 args->socket = socket_cliente;
                 args->id = worker_id;
 
-                char *worker_id_str = string_itoa(worker_id);
+                char* worker_id_str = string_itoa(worker_id);
                 int *socket_worker_ptr = malloc(sizeof(int));
                 *socket_worker_ptr = socket_cliente;
 
                 pthread_mutex_lock(&mutex_diccionario_workers);
-                dictionary_put(diccionario_workers, worker_id_str, (void *)socket_worker_ptr);
+                dictionary_put(diccionario_workers, worker_id_str, socket_worker_ptr);
                 pthread_mutex_unlock(&mutex_diccionario_workers);
 
 
@@ -195,6 +197,8 @@ void hacer_end_worker(char *worker_id_str, int worker_id, int socket_worker){
 
     log_info(logger, "## Se terminó la Query %d en el Worker %d", qcb->qid, worker_id);
 
+    cambiar_estado(qcb, EXIT);
+
     t_paquete *paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, END);
     agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
@@ -255,6 +259,7 @@ void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
     } else if (qcb->estado == EXEC){
 
         char* wid_asociado_str = string_itoa(qcb->id_worker_asociado);
+        log_trace(logger, "El Worker ID asociado a la query que va a terminar es: (%s)", wid_asociado_str);
         pthread_mutex_lock(&mutex_diccionario_workers);
         int* socket_worker_asociado_ptr = dictionary_get(diccionario_workers, wid_asociado_str);
         pthread_mutex_unlock(&mutex_diccionario_workers);
@@ -267,6 +272,7 @@ void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
         int socket_worker_asociado = *socket_worker_asociado_ptr;
 
         enviar_cod_op(socket_worker_asociado, INTERRUPCION);
+
     }
 
     cambiar_estado(qcb, EXIT);

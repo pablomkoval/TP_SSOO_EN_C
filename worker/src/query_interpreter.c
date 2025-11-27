@@ -2,6 +2,7 @@
 
 
 void* iniciar_query_interpreter(void* args){
+    //hacer un chequeo de que este hilo esta ejecutando antes de recibir una nueva solicitud
     t_args_query_interpreter* argumentos = (t_args_query_interpreter*) args;
     int pc = argumentos->pc;
     int qid = argumentos->qid;

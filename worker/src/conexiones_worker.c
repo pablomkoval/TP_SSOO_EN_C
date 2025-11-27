@@ -105,6 +105,7 @@ void* funcion_escucha_master(){
         {
         case SOLICITUD_NUEVA_QUERY:
             log_debug(logger, "Se recibio una solicitud de nueva query");
+            
             t_list* recibido = recibir_paquete(socket_master);
             t_args_query_interpreter* argumentos = malloc(sizeof(t_args_query_interpreter));
 
@@ -115,6 +116,7 @@ void* funcion_escucha_master(){
             argumentos->pc = pc;
             argumentos->qid = qid;
 
+            log_error(logger, "## SOLICITUD QID %d", qid);
             pthread_create(&thread_query_interpreter, NULL, iniciar_query_interpreter, (void*)argumentos);
             pthread_detach(thread_query_interpreter);
 
@@ -123,9 +125,9 @@ void* funcion_escucha_master(){
         
         case INTERRUPCION:
             log_debug(logger, "Se recibio una interrupcion");
-            pthread_mutex_unlock(&mutex_interrupcion);
-            hay_interrupcion = true;
             pthread_mutex_lock(&mutex_interrupcion);
+            hay_interrupcion = true;
+            pthread_mutex_unlock(&mutex_interrupcion);
             //abrir mutex y cambiar booleano interrumpido
             break;
         default:

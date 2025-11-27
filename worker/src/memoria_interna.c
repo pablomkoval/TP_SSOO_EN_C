@@ -202,12 +202,16 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
 
-    if(recibir_opcode(socket_storage) != RESPUESTA_STORAGE) return;
+    if(recibir_opcode(socket_storage) != RESPUESTA_STORAGE){
+        log_debug(logger, "No se recibio respuesta de storage");
+        return;
+    } 
 
     t_list* recibido = recibir_paquete(socket_storage);
     if (!recibido || list_size(recibido) < 2) {
-        log_error(logger, "se recibio paquete NULL");
+        log_error(logger, "Se recibieron menos de 2 cosas de storage Resultado(%d)", *(int*)list_get(recibido, 0));
         memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);//pongo la pagina en 0
+        list_destroy_and_destroy_elements(recibido, free);
         return;
     }
     int* resultado = (int*)list_get(recibido, 0);
@@ -227,7 +231,7 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
         return;
     }
     if(strlen(contenido_raw) < tam_pagina){
-        log_error(logger, "El contenido raw es menor a una pagina");
+        log_trace(logger, "El contenido raw es menor a una pagina");
         list_destroy_and_destroy_elements(recibido, free);
         memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);
         return;

@@ -30,11 +30,11 @@ void enviar_qcb_a_worker(t_qcb* qcb, int socket_worker){
 }
 
 int obtener_worker_libre(){
-    log_debug(logger, "##DEBUG: PRE-MUTEX");
+    //log_debug(logger, "##DEBUG: PRE-MUTEX");
     pthread_mutex_lock(&mutex_workers_libres);
-    log_debug(logger, "##DEBUG: POST-MUTEX");
+    //log_debug(logger, "##DEBUG: POST-MUTEX");
     int* worker_id_ptr = list_remove(workers_libres, 0);
-    log_debug(logger, "##DEBUG: POST-LIST_REMOVE");
+    //log_debug(logger, "##DEBUG: POST-LIST_REMOVE");
     pthread_mutex_unlock(&mutex_workers_libres);
 
     int worker_id = *worker_id_ptr;
@@ -76,6 +76,7 @@ void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id){
 
 
     enviar_qcb_a_worker(query_a_ejecutar, socket_worker_asignado);
+    query_a_ejecutar->id_worker_asociado = worker_asignado_id;
     //cambiar_estado(query_a_ejecutar, EXEC); movido a obtener_query_y_worker para evitar solapamiento con aging
 
     //sem_post(&sem_queries_ready); //y este maquina?
