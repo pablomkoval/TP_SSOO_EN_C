@@ -42,6 +42,7 @@ void ejecutar_write(char* file_tag, int direccion_base, char* contenido, int qid
         int pagina_logica = obtener_pagina_logica(direccion_actual);
         int offset = obtener_offset_pagina(direccion_actual);
 
+        log_error(logger, "Write -> file_tag:(%s)", file_tag);
         pagina_t* pag = obtener_pagina(file_tag, pagina_logica, qid);
 
         log_debug(logger, "##DEBUG: OBTUVO PAGINA");

@@ -60,6 +60,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         pag->bit_presencia = false;
         pag->bit_uso = false;
         pag->frame = -1;
+        pag->file_tag = strdup(file_tag);
         list_add(tabla->paginas, pag);
         log_debug(logger, "##DEBUG: cuando se creo la pagina");
     }
@@ -72,6 +73,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
     }
 
     if(pag->bit_presencia == false){
+        log_trace(logger, "File_tag: (%s), pag-file_tag: (%s)", file_tag, pag->file_tag);
         char** separado = separar_file_tag(file_tag);
         char* file = separado[0];
         char* tag = separado[1];
@@ -168,6 +170,7 @@ pagina_t* buscar_victima_reemplazo(){
         }
     }
 
+    log_error(logger, "El file tag de la victima seleccionada es: (%s)", victima->file_tag);
     return victima;
 }
 
@@ -178,6 +181,7 @@ int liberar_frame(pagina_t* victima, int qid){
     }
 
     if (victima->bit_modificado) {
+        log_trace(logger, "file tag: %s", victima->file_tag);
         char** separado = separar_file_tag(victima->file_tag);
         hacer_flush_de_pagina(separado[0], separado[1], victima->nro_pagina, victima->frame, qid);
         log_info(logger, "Query %d: Se libera el Marco: %d perteneciente al - File: %s - Tag: %s", qid, victima->frame, separado[0], separado[1]);

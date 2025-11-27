@@ -18,12 +18,12 @@ void *manejar_servidor_worker(void *arg){
 
             case READ:
                 hacer_read_worker(socket_worker, worker_id_str);
-                return NULL;
+                break;
 
             case END:
                 log_trace(logger, "## Se recibe END de Worker (%d)", worker_id);
                 hacer_end_worker(worker_id_str, worker_id, socket_worker);
-                return NULL;
+                break;
 
             case 0:
                 break;
@@ -205,7 +205,7 @@ void hacer_end_worker(char *worker_id_str, int worker_id, int socket_worker){
     enviar_paquete(paquete, qcb->socket, logger);
     borrar_paquete(paquete);
 
-    free(worker_id_str);
+    //free(worker_id_str);
 
     int *worker_id_ptr = malloc(sizeof(int));
     *worker_id_ptr = worker_id;

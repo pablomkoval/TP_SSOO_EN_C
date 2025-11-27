@@ -67,7 +67,7 @@ query_t* leer_query(char* nombre_archivo, int pc, char** instruccion){
     query_t* query = NULL;
 
     while(fgets(buffer, sizeof(buffer), archivo)){
-        //log_trace(logger, "linea actual (%d), pc (%d)", linea_actual, pc);
+        log_trace(logger, "linea actual (%d), pc (%d)", linea_actual, pc);
         if(linea_actual == pc){
             buffer[strcspn(buffer, "\n")] = 0; // eliminar \n
             query = parsear_query(buffer, instruccion);
@@ -76,7 +76,7 @@ query_t* leer_query(char* nombre_archivo, int pc, char** instruccion){
         }
         linea_actual++;
     }
-    
+    //log_error(logger, "PC=%d linea=(%s) len=%d", linea_actual, buffer, strlen(buffer));
     log_debug(logger, "No paso por la linea del pc %d", pc);
     fclose(archivo);
     return query;
