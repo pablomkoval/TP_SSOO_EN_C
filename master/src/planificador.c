@@ -85,6 +85,7 @@ void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id){
 }
 
 t_qcb* obtener_query_y_worker(int *worker_libre_id){
+    log_debug(logger, "consumo mutex plani:88");
     pthread_mutex_lock(&mutex_ready);
     t_qcb* query_a_ejecutar = list_remove(cola_ready, 0);
     cambiar_estado(query_a_ejecutar, EXEC);
@@ -120,13 +121,14 @@ void* hilo_aging_individual(void* arg){
     while(qcb->prioridad > 0){
         usleep(tiempo_aging_micro); //importante, controla aging y permite pthread_cancel
 
+        log_debug(logger, "consumo mutex ready en hilo aging");
         pthread_mutex_lock(&mutex_ready); 
         if (qcb->estado == READY){
 
             qcb->prioridad--;
             log_info(logger, "##<%d> Cambio de prioridad: <%d> - <%d>", qcb->qid, qcb->prioridad + 1, qcb->prioridad);
 
-            list_sort(cola_ready, (void*)comparar_qcb_por_prioridad);
+            //list_sort(cola_ready, (void*)comparar_qcb_por_prioridad);
 
             hacer_chequeo_desalojo(qcb); 
             
