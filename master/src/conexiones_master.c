@@ -18,6 +18,7 @@ void *manejar_servidor_worker(void *arg){
                 return NULL;
 
             case READ:
+                pthread_mutex_lock(&mutex_diccionario_exec);
                 hacer_read_worker(socket_worker, worker_id);
                 break;
 
@@ -28,13 +29,17 @@ void *manejar_servidor_worker(void *arg){
 
             case INTERRUPCION_RTA:
                 t_list* recibido = recibir_paquete(socket_worker);
-                int* qid_ptr = (int*)list_get(recibido, 0);
-                int* pc = (int*)list_get(recibido, 1);
+                //int* qid_ptr = (int*)list_get(recibido, 0);
+                int* pc = (int*)list_get(recibido, 0);
                 ///////////////
-                char* qid_str = string_itoa(*qid_ptr);
-                pthread_mutex_lock(&diccionario_querys);
-                t_qcb* qcb_a_reinsertar = dictionary_get(diccionario_querys, qid_str);
-                pthread_mutex_unlock(&diccionario_querys);
+                //char* qid_str = string_itoa(*qid_ptr);
+                // pthread_mutex_lock(&mutex_diccionario_querys);
+                // t_qcb* qcb_a_reinsertar = dictionary_get(diccionario_querys, qid_str);
+                // pthread_mutex_unlock(&mutex_diccionario_querys);
+                pthread_mutex_lock(&mutex_diccionario_exec);
+                t_qcb* qcb_a_reinsertar = dictionary_remove(diccionario_exec, worker_id_str);
+                pthread_mutex_unlock(&mutex_diccionario_exec);
+
                 qcb_a_reinsertar->pc = *pc;
                 encolar_qcb(qcb_a_reinsertar);
 
@@ -189,10 +194,12 @@ void hacer_read_worker(int socket_worker, int worker_id){
 
     char* worker_id_str = string_itoa(worker_id);
 
-    pthread_mutex_lock(&mutex_diccionario_exec);
+    //pthread_mutex_lock(&mutex_diccionario_exec);
+    
     t_qcb *qcb = dictionary_get(diccionario_exec, worker_id_str);
+    log_trace(logger, "socket qcb es %d", qcb->socket);
     pthread_mutex_unlock(&mutex_diccionario_exec);
-
+    
     if (qcb->socket > 0){
 
         
@@ -401,9 +408,9 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
 
                 char *wid_str_asociado = string_itoa(qcb_a_desalojar->id_worker_asociado);
 
-                pthread_mutex_lock(&mutex_diccionario_exec);
-                dictionary_remove(diccionario_exec, wid_str_asociado);
-                pthread_mutex_unlock(&mutex_diccionario_exec);
+                // pthread_mutex_lock(&mutex_diccionario_exec);
+                // dictionary_remove(diccionario_exec, wid_str_asociado);
+                // pthread_mutex_unlock(&mutex_diccionario_exec);
 
                 pthread_mutex_lock(&mutex_diccionario_workers);
                 int* socket_worker_asignado_ptr = dictionary_get(diccionario_workers, wid_str_asociado);
