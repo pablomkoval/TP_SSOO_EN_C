@@ -138,6 +138,6 @@ void* hilo_aging_individual(void* arg){
     }
     
     log_info(logger, "qid %d: Hilo de aging individual finalizo.", qcb->qid);
-    free(arg);
+    //free(arg);
     return NULL;
 }

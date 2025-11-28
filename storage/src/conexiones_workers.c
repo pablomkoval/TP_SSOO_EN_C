@@ -243,6 +243,7 @@ void manejar_write(int socket_worker)
     int* nro_bloque = list_get(datos, 3);
     char* contenido = list_get(datos, 4);
     
+    log_error(logger, "Write, contenido por escribir: %s", contenido);
     int resultado = escribir_bloque(*query_id, file, tag, *nro_bloque, contenido);
     usleep(retardo_acceso_bloque);
 
