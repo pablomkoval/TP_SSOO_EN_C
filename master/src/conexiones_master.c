@@ -36,6 +36,8 @@ void *manejar_servidor_worker(void *arg){
                 // pthread_mutex_lock(&mutex_diccionario_querys);
                 // t_qcb* qcb_a_reinsertar = dictionary_get(diccionario_querys, qid_str);
                 // pthread_mutex_unlock(&mutex_diccionario_querys);
+
+                char *worker_id_str = string_itoa(worker_id);
                 pthread_mutex_lock(&mutex_diccionario_exec);
                 t_qcb* qcb_a_reinsertar = dictionary_remove(diccionario_exec, worker_id_str);
                 pthread_mutex_unlock(&mutex_diccionario_exec);
@@ -195,7 +197,7 @@ void hacer_read_worker(int socket_worker, int worker_id){
     char* worker_id_str = string_itoa(worker_id);
 
     //pthread_mutex_lock(&mutex_diccionario_exec);
-    
+
     t_qcb *qcb = dictionary_get(diccionario_exec, worker_id_str);
     log_trace(logger, "socket qcb es %d", qcb->socket);
     pthread_mutex_unlock(&mutex_diccionario_exec);
