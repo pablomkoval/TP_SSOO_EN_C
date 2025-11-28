@@ -131,13 +131,15 @@ void hacer_desconexion_worker(int worker_id){
     
     char* wid_str = string_itoa(worker_id);
     
-    pthread_mutex_lock(&mutex_diccionario_exec);
-    t_qcb* qcb = dictionary_remove(diccionario_exec, wid_str);
-    pthread_mutex_unlock(&mutex_diccionario_exec);
-
     pthread_mutex_lock(&mutex_diccionario_workers);
     dictionary_remove(diccionario_workers, wid_str);
     pthread_mutex_unlock(&mutex_diccionario_workers);
+
+
+    pthread_mutex_lock(&mutex_ready);
+    pthread_mutex_lock(&mutex_diccionario_exec);
+    t_qcb* qcb = dictionary_remove(diccionario_exec, wid_str);
+    pthread_mutex_unlock(&mutex_diccionario_exec);
 
     if(qcb != NULL){
         t_paquete *paquete = crear_paquete();
@@ -146,10 +148,13 @@ void hacer_desconexion_worker(int worker_id){
         agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
         enviar_paquete(paquete, qcb->socket, logger);
         borrar_paquete(paquete);
+
+        
         cambiar_estado(qcb, EXIT);
 
         log_info(logger, "## Se desconecta el Worker <%d> - Se finaliza la Query <%d> - Cantidad total de Workers: <%d> ", worker_id, qcb->qid, workers_conectados());
     }
+    pthread_mutex_unlock(&mutex_ready);
 
     free(wid_str);
     log_info(logger, "## Se desconecta el Worker <%d> - Cantidad total de Workers: <%d> ", worker_id, workers_conectados());
