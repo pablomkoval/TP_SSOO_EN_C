@@ -17,8 +17,8 @@ bool qcb_esta_en_cola_ready(void* arg, int socket_buscado);
 void hacer_desconexion_query_control(int socket_cliente, t_qcb* qcb);
 
 void hacer_desconexion_worker(int worker_id);
-void hacer_read_worker(int socket_worker, char* worker_id_str);
-void hacer_end_worker(char* worker_id_str, int worker_id, int socket_worker);
+void hacer_read_worker(int socket_worker, int worker_id);
+void hacer_end_worker(int worker_id, int socket_worker);
 
 t_qcb* hacer_qcb_nueva(int socket_cliente);
 void encolar_qcb(t_qcb* qcb);

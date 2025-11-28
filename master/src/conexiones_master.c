@@ -8,23 +8,23 @@ void *manejar_servidor_worker(void *arg){
 
     while (1){
         int op_code = recibir_opcode(socket_worker);
-        char *worker_id_str = string_itoa(worker_id);
-        log_trace(logger, "Llego opcode de worker %d", op_code);
-        //log_trace(logger, "Llego opcode de worker: %s", obtener_nombre_opcode_simple(op_code));
+        //char *worker_id_str = string_itoa(worker_id);
+        //log_trace(logger, "Llego opcode de worker %d", op_code);
+        log_trace(logger, "Llego opcode de worker: %s", obtener_nombre_opcode_simple(op_code));
         switch (op_code){
             case -1:
                 hacer_desconexion_worker(worker_id);
-                free(worker_id_str);
+                //free(worker_id_str);
                 return NULL;
 
             case READ:
                 pthread_mutex_lock(&mutex_diccionario_exec);
-                hacer_read_worker(socket_worker, worker_id_str);
+                hacer_read_worker(socket_worker, worker_id);
                 break;
 
             case END:
                 log_trace(logger, "## Se recibe END de Worker (%d)", worker_id);
-                hacer_end_worker(worker_id_str, worker_id, socket_worker);
+                hacer_end_worker(worker_id, socket_worker);
                 break;
 
             case INTERRUPCION_RTA:
@@ -36,6 +36,8 @@ void *manejar_servidor_worker(void *arg){
                 // pthread_mutex_lock(&mutex_diccionario_querys);
                 // t_qcb* qcb_a_reinsertar = dictionary_get(diccionario_querys, qid_str);
                 // pthread_mutex_unlock(&mutex_diccionario_querys);
+
+                char *worker_id_str = string_itoa(worker_id);
                 pthread_mutex_lock(&mutex_diccionario_exec);
                 t_qcb* qcb_a_reinsertar = dictionary_remove(diccionario_exec, worker_id_str);
                 pthread_mutex_unlock(&mutex_diccionario_exec);
@@ -54,7 +56,7 @@ void *manejar_servidor_worker(void *arg){
             break;
         }
         
-        free(worker_id_str);
+        //free(worker_id_str);
     }
     return NULL;
 }
@@ -187,12 +189,15 @@ void hacer_desconexion_worker(int worker_id){
     log_info(logger, "## Se desconecta el Worker <%d> - Cantidad total de Workers: <%d> ", worker_id, workers_conectados());
 }
 
-void hacer_read_worker(int socket_worker, char *worker_id_str){
+void hacer_read_worker(int socket_worker, int worker_id){
     t_list *recibido = recibir_paquete(socket_worker);
     char* file_tag = list_get(recibido, 0);
     char *mensaje_worker = list_get(recibido, 1);
 
+    char* worker_id_str = string_itoa(worker_id);
+
     //pthread_mutex_lock(&mutex_diccionario_exec);
+
     t_qcb *qcb = dictionary_get(diccionario_exec, worker_id_str);
     log_trace(logger, "socket qcb es %d", qcb->socket);
     pthread_mutex_unlock(&mutex_diccionario_exec);
@@ -209,15 +214,17 @@ void hacer_read_worker(int socket_worker, char *worker_id_str){
 
         log_info(logger, "mensaje del worker a enviar: %s", mensaje_worker);
         log_info(logger, "## Se envía un mensaje de lectura de la Query <%d> en el Worker <%s> al Query Control", qcb->qid, worker_id_str);
-
+        
+        free(worker_id_str);
     }   else{
         log_error(logger, "No se encontro qcb asociado a un worker id: %s", worker_id_str);
+        free(worker_id_str);
     }
     
     list_destroy_and_destroy_elements(recibido, free);
 }
 
-void hacer_end_worker(char *worker_id_str, int worker_id, int socket_worker){
+void hacer_end_worker(int worker_id, int socket_worker){
 
     t_list* recibido = recibir_paquete(socket_worker);
 
@@ -226,9 +233,18 @@ void hacer_end_worker(char *worker_id_str, int worker_id, int socket_worker){
     list_destroy_and_destroy_elements(recibido, free);
     log_debug(logger, "## Query Finalizada - %s", motivo);
 
+    char *worker_id_str = string_itoa(worker_id);
+
     pthread_mutex_lock(&mutex_diccionario_exec);
     t_qcb *qcb = dictionary_remove(diccionario_exec, worker_id_str);
     pthread_mutex_unlock(&mutex_diccionario_exec);
+
+    if (qcb == NULL) {
+        log_warning(logger, "Worker %d envió END, pero la Query ya fue procesada o no existía.", worker_id);
+        free(worker_id_str); // Liberar la clave temporal antes de salir
+        free(motivo); // Liberar la cadena duplicada
+        return; 
+    }
 
     log_info(logger, "## Se terminó la Query %d en el Worker %d", qcb->qid, worker_id);
 
@@ -240,6 +256,7 @@ void hacer_end_worker(char *worker_id_str, int worker_id, int socket_worker){
     enviar_paquete(paquete, qcb->socket, logger);
     borrar_paquete(paquete);
 
+    free(motivo);
     //free(worker_id_str);
 
     int *worker_id_ptr = malloc(sizeof(int));
@@ -250,6 +267,8 @@ void hacer_end_worker(char *worker_id_str, int worker_id, int socket_worker){
     pthread_mutex_unlock(&mutex_workers_libres);
 
     sem_post(&sem_workers_libres);
+
+    free(worker_id_str);
 }
 
 t_qcb *hacer_qcb_nueva(int socket_cliente){

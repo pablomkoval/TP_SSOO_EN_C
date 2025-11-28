@@ -63,8 +63,6 @@ void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id){
     
     char* worker_asignado_id_ptr = string_itoa(worker_asignado_id); 
 
-    
-    
     pthread_mutex_lock(&mutex_diccionario_exec);
     dictionary_put(diccionario_exec, worker_asignado_id_ptr, query_a_ejecutar);
     pthread_mutex_unlock(&mutex_diccionario_exec);
