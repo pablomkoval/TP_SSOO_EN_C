@@ -92,6 +92,13 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
     pagina_t* pag_inicial = obtener_pagina(file_tag, pagina_logica_inicial, qid);
     int direccion_fisica_inicial = pag_inicial->frame * tam_pagina + offset_inicial;
 
+    log_debug(logger,
+        "READ(qid=%d) INICIO: base=%d tamanio=%d | pagina_log=%d offset=%d frame=%d dir_fisica_ini=%d",
+        qid, direccion_base, tamanio,
+        pagina_logica_inicial, offset_inicial,
+        pag_inicial->frame, direccion_fisica_inicial
+    );
+
     while(bytes_restantes > 0){
         int pagina_logica = obtener_pagina_logica(direccion_actual);
         int offset = obtener_offset_pagina(direccion_actual);
@@ -109,20 +116,46 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
 
         int direccion_fisica = pag->frame * tam_pagina + offset;
 
+        log_debug(logger,
+            "[READ paso] qid=%d | pagina=%d frame=%d offset=%d "
+            "| dir_fisica=%d cant_lectura=%d bytes_restantes=%d bytes_leidos=%d",
+            qid, pagina_logica, pag->frame, offset,
+            direccion_fisica, cant_lectura, bytes_restantes, bytes_leidos
+        );
+
         memcpy(buffer + bytes_leidos, memoria_interna + direccion_fisica, cant_lectura);
+
+        char parcial[bytes_leidos + cant_lectura + 1];
+        memcpy(parcial, buffer, bytes_leidos + cant_lectura);
+        parcial[bytes_leidos + cant_lectura] = '\0'; // Seguro para textos
+        log_debug(logger, "Contenido parcial (string-safe): %s", parcial);
+
 
         bytes_restantes -= cant_lectura;
         bytes_leidos += cant_lectura;
         direccion_actual += cant_lectura;
     }
-    buffer[bytes_leidos] = '\0';
-    log_info(logger, "Query %d: Acción: LEER - Dirección Física: %d - Valor: %s", qid, direccion_fisica_inicial, buffer);
+    // buffer[bytes_leidos] = '\0';
+    // log_info(logger, "Query %d: Acción: LEER - Dirección Física: %d - Valor: %s", qid, direccion_fisica_inicial, buffer);
+
+    char printable[bytes_leidos + 1];
+    memcpy(printable, buffer, bytes_leidos);
+    printable[bytes_leidos] = '\0';
+    log_debug(logger,
+        "READ(qid=%d) FIN: total_leido=%d | ValorFinal(string-safe): %s",
+        qid, bytes_leidos, printable
+    );
+
+    
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, READ);
     agregar_a_paquete(paquete, file_tag, strlen(file_tag) + 1);
-    agregar_a_paquete(paquete, buffer, strlen(buffer) + 1);
+    agregar_a_paquete(paquete, buffer, bytes_leidos);
     enviar_paquete(paquete, socket_master, logger);
+
+
+    
     borrar_paquete(paquete);
     free(buffer);
     return;

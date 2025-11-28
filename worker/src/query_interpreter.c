@@ -212,7 +212,7 @@ int check_interrupt(int qid, int pc){
 
         t_paquete* contestacion = crear_paquete();
         cambiar_opcode_paquete(contestacion, INTERRUPCION_RTA);
-        //agregar_a_paquete(contestacion, &qid, sizeof(int));
+        agregar_a_paquete(contestacion, &qid, sizeof(int));
         agregar_a_paquete(contestacion, &pc, sizeof(int));
         enviar_paquete(contestacion, socket_master, logger);
         borrar_paquete(contestacion);

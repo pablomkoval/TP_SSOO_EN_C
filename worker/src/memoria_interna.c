@@ -243,7 +243,7 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     char* contenido = strdup(contenido_raw); 
     //averiguar si el memset es correcto
     log_error(logger, "El contenido a insertar en memoria es (%s)", contenido);
-    memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
+    //memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
     memcpy(memoria_interna + frame * tam_pagina, contenido, tam_pagina); 
     list_destroy_and_destroy_elements(recibido, free);
     return;
@@ -261,6 +261,14 @@ void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int
     agregar_a_paquete(paquete, contenido, tam_pagina);
     //log_debug(logger, "##EL CONTENIDO ANTES DEL FLUSH ES: %s, pagina a escribir: %d", (char*)contenido, nro_pagina);
     //este log genera segfault ya que contenido es una porcion de memoria y no un char* legible
+    char* copia = malloc(tam_pagina + 1);
+    memcpy(copia, contenido, tam_pagina);
+    copia[tam_pagina] = '\0';  // asegurar terminación
+
+    log_debug(logger, "Contenido previo al flush:\n%s", copia);
+
+    free(copia);
+
 
     enviar_paquete(paquete, socket_storage,logger);
     borrar_paquete(paquete);
