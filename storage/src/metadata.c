@@ -257,7 +257,7 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
         char *bloque_fisico_nuevo = bloque_fisico_por_nro(nro_bloque);
         int nro_block_f = obtener_numero_bloque(bloque_fisico);
 
-        if (nro_bloque != -1) // si hay algún bloque fisico con el mismo contenido...
+        if (nro_bloque != -1 && nro_bloque != nro_block_f) // si hay algún bloque fisico con el mismo contenido...
         {
             lock_metadata(file_tag);
             cambiar_hard_link(bloque_logico, bloque_fisico_nuevo);
@@ -276,6 +276,10 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
                 bitarray_clean_bit(bitmap, nro_bloque);
                 pthread_mutex_unlock(&mutex_bitmap);
             }
+        }
+        if(nro_bloque == nro_block_f)
+        {
+            
         }
         else   //si no hay 
         {
