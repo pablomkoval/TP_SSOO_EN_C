@@ -206,6 +206,7 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
 
+    int opcode = recibir_opcode(socket_storage);
     if(recibir_opcode(socket_storage) != RESPUESTA_STORAGE){
         log_debug(logger, "No se recibio respuesta de storage");
         return;
@@ -215,6 +216,8 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     if (!recibido || list_size(recibido) < 2) {
         log_error(logger, "Se recibieron menos de 2 cosas de storage Resultado(%d)", *(int*)list_get(recibido, 0));
         memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);//pongo la pagina en 0
+        int resultado = *((int*)list_get(recibido, 0));
+        manejar_respuesta(resultado);
         list_destroy_and_destroy_elements(recibido, free);
         return;
     }

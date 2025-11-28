@@ -208,6 +208,7 @@ int check_interrupt(int qid, int pc){
     pthread_mutex_lock(&mutex_interrupcion);
     if(hay_interrupcion){
         log_info(logger, "## Query %d: Desalojada por pedido del Master", qid);
+        hay_interrupcion = false;
         pthread_mutex_unlock(&mutex_interrupcion);
 
         t_paquete* contestacion = crear_paquete();
