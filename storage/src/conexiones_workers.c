@@ -16,37 +16,39 @@ void* manejar_conexion_worker(void* arg) {
 
         switch(codigo_operacion) {
             case CREATE:
-                log_debug(logger, "Llego un create");
+                log_debug(logger, "Llego un CREATE");
                 //lo agrego el chad de blito
                 manejar_create(*socket_worker);
                 break;
 
             case TRUNCATE:
+                log_debug(logger, "Llego un TRUNCATE");
 
                 manejar_truncate(*socket_worker);
                 break; 
 
             case TAG:
-
+                log_debug(logger, "Llego un TAG");
                 manejar_tag(*socket_worker);
                 break;
 
             case COMMIT:
-
+                log_debug(logger, "Llego un COMMIT");
                 manejar_commit(*socket_worker);
                 break;
 
             case WRITE:
-
+                log_debug(logger, "Llego un WRITE");
                 manejar_write(*socket_worker);
                 break;
 
             case READ:
-
+                log_debug(logger, "Llego un READ");
                 manejar_read(*socket_worker);
                 break;
 
             case DELETE:
+                log_debug(logger, "Llego un DELETE");
                 manejar_delete(*socket_worker);
                 break;
 
@@ -191,6 +193,8 @@ void manejar_commit(int socket_worker)
     int* query_id = list_get(datos, 0);
     char* file = list_get(datos, 1);
     char* tag = list_get(datos, 2);
+
+    log_debug(logger, "ABRO EL PAQUETE");
 
     int resultado = commmit_file(*query_id, file, tag);
 

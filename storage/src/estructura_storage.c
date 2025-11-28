@@ -22,8 +22,10 @@ void crear_directorios_y_archivos()
         truncar_archivo(0, block_size,"initial_file","BASE");
         asignar_bloque(0);
         log_info(logger, "##<> - Bloque Físico Reservado - Número de Bloque: <%i>", 0);
-        crear_archivo_hash_bloques();
+        
     }
+
+    crear_archivo_hash_bloques();
     
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
 

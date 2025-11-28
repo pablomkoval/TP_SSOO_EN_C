@@ -266,7 +266,7 @@ char* obtener_nombre_opcode_simple(int opcode){
         case INTERRUPCION:
             return "INTERRUPCION";
         case -1:
-            return "DESCONEXION SOCKET"
+            return "DESCONEXION SOCKET";
         default:
             return "OPCODE DESCONOCIDO";
     }
