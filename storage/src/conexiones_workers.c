@@ -69,17 +69,20 @@ void* manejar_conexiones_storage(void* socket_ptr)
     if (recibir_opcode(*socket_cliente) == HANDSHAKE) {
 
         t_list* recibido = recibir_paquete(*socket_cliente);
-        int* worker_id = list_get(recibido, 0);
+        int worker_id = *(int*)list_get(recibido, 0);
         char* socket_key = string_itoa(*socket_cliente);
+
+        int* worker_id_ptr = malloc(sizeof(int));
+        *worker_id_ptr = worker_id; 
         
         pthread_mutex_lock(&mutex_worker_id);
-        dictionary_put(worker_id_por_socket, socket_key, worker_id);
+        dictionary_put(worker_id_por_socket, socket_key, worker_id_ptr);
         int cantidad_workers = dictionary_size (worker_id_por_socket);
         pthread_mutex_unlock(&mutex_worker_id);
 
         free(socket_key);
 
-        log_info(logger, "##Se conecta el Worker <%i> - Cantidad de Workers: <%d>", *worker_id, cantidad_workers);
+        log_info(logger, "##Se conecta el Worker <%i> - Cantidad de Workers: <%d>", worker_id, cantidad_workers);
 
         //ACA MANU TENES WORKER_ID Y SOCKET_CLIENTE, SOLO TENES QUE HACER UN DICCIONARIO
 
@@ -304,13 +307,23 @@ void manejar_desconexion(int* socket_worker)
         char* socket_key = string_itoa(*socket_worker);
 
         pthread_mutex_lock(&mutex_worker_id);
-        int* worker_id = dictionary_remove(worker_id_por_socket, socket_key);
-        int cantidad_workers = dictionary_size (worker_id_por_socket);
+        int* worker_id_ptr = dictionary_remove(worker_id_por_socket, socket_key);
+    
+        if (worker_id_ptr == NULL) {
+            pthread_mutex_unlock(&mutex_worker_id);
+            log_error(logger, "Intento de desconectar socket %d que no está registrado", *socket_worker);
+            free(socket_key);
+            return;
+        }
+
+        int worker_id = *worker_id_ptr;
+        free(worker_id_ptr);                    
+        int cantidad_workers = dictionary_size(worker_id_por_socket);
         pthread_mutex_unlock(&mutex_worker_id);
 
+        log_info(logger, "##Se desconecta el Worker <%i> - Cantidad de Workers: <%d>", worker_id, cantidad_workers);
+        
         free(socket_key);
-
-        log_info(logger, "##Se desconecta el Worker <%i> - Cantidad de Workers: <%d>", *worker_id, cantidad_workers);
 
 }
 
