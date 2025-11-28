@@ -32,7 +32,7 @@ typedef struct
 } t_args_query_interpreter;
 
 
-int check_interrupt(int qid);
+int check_interrupt(int qid, int pc);
 query_t* parsear_query(char* query_raw, char** instruccion);
 query_t* leer_query();
 int ejecutar_query(query_t* query, int qid);

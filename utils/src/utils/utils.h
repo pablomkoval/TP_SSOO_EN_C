@@ -45,7 +45,8 @@ typedef enum
     END,
     SOLICITUD_NUEVA_QUERY,
     RESPUESTA_STORAGE,
-    INTERRUPCION
+    INTERRUPCION,
+    INTERRUPCION_RTA
 } op_code;
 
 typedef enum 

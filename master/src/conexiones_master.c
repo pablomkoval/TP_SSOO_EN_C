@@ -26,6 +26,21 @@ void *manejar_servidor_worker(void *arg){
                 hacer_end_worker(worker_id_str, worker_id, socket_worker);
                 break;
 
+            case INTERRUPCION_RTA:
+                t_list* recibido = recibir_paquete(socket_worker);
+                int* qid_ptr = (int*)list_get(recibido, 0);
+                int* pc = (int*)list_get(recibido, 1);
+                ///////////////
+                char* qid_str = string_itoa(*qid_ptr);
+                pthread_mutex_lock(&diccionario_querys);
+                t_qcb* qcb_a_reinsertar = dictionary_get(diccionario_querys, qid_str);
+                pthread_mutex_unlock(&diccionario_querys);
+                qcb_a_reinsertar->pc = *pc;
+                encolar_qcb(qcb_a_reinsertar);
+
+                list_destroy_and_destroy_elements(recibido, free);
+                break;
+
             case 0:
                 break;
 
@@ -240,17 +255,17 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
 
     t_qcb *qcb = crear_qcb(path_query, prioridad_query, socket_cliente);
     char *qid_str = string_itoa(qcb->qid);
+    encolar_qcb(qcb);
 
     pthread_mutex_lock(&mutex_diccionario_querys);
     dictionary_put(diccionario_querys, qid_str, qcb);
     pthread_mutex_unlock(&mutex_diccionario_querys);
     log_debug(logger, "abc");
 
-    pthread_mutex_lock(&mutex_ready);
+    //pthread_mutex_lock(&mutex_ready);
     log_debug(logger, "defg");
-    encolar_qcb(cola_ready, qcb);
-    cambiar_estado(qcb, READY);
-    pthread_mutex_unlock(&mutex_ready);
+    //cambiar_estado(qcb, READY);
+    //pthread_mutex_unlock(&mutex_ready);
 
     free(qid_str);
 
@@ -267,6 +282,7 @@ void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
 
     char* qid_str = string_itoa(qcb->qid);
 
+    log_debug(logger, "Lockeo mutex ready en linea 269 cm");
     pthread_mutex_lock(&mutex_ready);
     if(qcb->estado == READY){
 
@@ -305,20 +321,23 @@ bool qcb_esta_en_cola_ready(void* arg, int socket_buscado){
     return qcb->socket == socket_buscado;
 }
 
-void encolar_qcb(t_list *cola_ready, t_qcb *qcb){
+void encolar_qcb(t_qcb *qcb){
+    log_debug(logger, "consumo mutex ready en encolar_qcb");
     if (strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
     
+        pthread_mutex_lock(&mutex_ready);
         hacer_chequeo_desalojo(qcb);
-        //pthread_mutex_lock(&mutex_ready);
         list_add_sorted(cola_ready, qcb, (void*)comparar_qcb_por_prioridad);
-        //pthread_mutex_unlock(&mutex_ready);
+        cambiar_estado(qcb, READY);
+        pthread_mutex_unlock(&mutex_ready);
         log_info(logger, "qcb de qid: %d encolado en READY con Prioridad: %d", qcb->qid, qcb->prioridad);
 
     } else{
         log_warning(logger, "## Va a encolar qcb con fifo");
-        //pthread_mutex_lock(&mutex_ready);
+        pthread_mutex_lock(&mutex_ready);
         list_add(cola_ready, qcb);
-        //pthread_mutex_unlock(&mutex_ready);
+        cambiar_estado(qcb, READY);
+        pthread_mutex_unlock(&mutex_ready);
         log_info(logger, "qcb de qid: %d encolado en READY con FIFO.", qcb->qid);
     }
 
@@ -343,8 +362,7 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
 
     t_qcb* qcb_a_desalojar = NULL;
 
-    void buscar_candidato_desalojo(char* wid_str, void* qcb_exec_ptr){ //tiene que estar esta funcion aca?
-        t_qcb* qcb_exec = (t_qcb*)qcb_exec_ptr;
+    void buscar_candidato_desalojo(char* wid_str, t_qcb* qcb_exec){ //tiene que estar esta funcion aca?
         
         if (qcb_a_desalojar == NULL || qcb_exec->prioridad > qcb_a_desalojar->prioridad) {
             qcb_a_desalojar = qcb_exec;
@@ -356,6 +374,7 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
     pthread_mutex_lock(&mutex_diccionario_exec);
     int querys_en_exec = dictionary_size(diccionario_exec);
 
+
     if(total_workers == querys_en_exec && total_workers > 0){
         
         dictionary_iterator(diccionario_exec, buscar_candidato_desalojo);
@@ -363,21 +382,27 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
         if (qcb_a_desalojar != NULL){
 
             if(qcb_entrante->prioridad < qcb_a_desalojar->prioridad){
+
                 char *wid_str_asociado = string_itoa(qcb_a_desalojar->id_worker_asociado);
+
+                pthread_mutex_lock(&mutex_diccionario_exec);
+                dictionary_remove(diccionario_exec, wid_str_asociado);
+                pthread_mutex_unlock(&mutex_diccionario_exec);
 
                 pthread_mutex_lock(&mutex_diccionario_workers);
                 int* socket_worker_asignado_ptr = dictionary_get(diccionario_workers, wid_str_asociado);
-                pthread_mutex_unlock(&mutex_diccionario_workers);
-
+                
                 int socket_worker_asignado = *socket_worker_asignado_ptr;
 
                 enviar_cod_op(socket_worker_asignado, INTERRUPCION); 
                 
-
-                log_info(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d> - Motivo: <PRIORIDAD>", qcb_entrante->qid, qcb_entrante->prioridad, qcb_entrante->id_worker_asociado);
-
+                log_info(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d> - Motivo: <PRIORIDAD>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
+                
+                pthread_mutex_unlock(&mutex_diccionario_workers);
                 free(wid_str_asociado);
             }
         }
+    }else{
+        pthread_mutex_unlock(&mutex_diccionario_exec);
     }
 }

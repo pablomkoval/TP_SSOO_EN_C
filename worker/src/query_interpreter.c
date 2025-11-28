@@ -48,7 +48,7 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
         }
         
         
-        resultado_ejecucion = check_interrupt(qid);
+        resultado_ejecucion = check_interrupt(qid, pc);
         //verifica si llego una interrupción
         pc++;
     }
@@ -203,12 +203,20 @@ int ejecutar_query(query_t* query, int qid){
 }
 
 
-int check_interrupt(int qid){
+int check_interrupt(int qid, int pc){
     log_trace(logger, "Intento abrir mutex interrupcion");
     pthread_mutex_lock(&mutex_interrupcion);
     if(hay_interrupcion){
         log_info(logger, "## Query %d: Desalojada por pedido del Master", qid);
         pthread_mutex_unlock(&mutex_interrupcion);
+
+        t_paquete* contestacion = crear_paquete();
+        cambiar_opcode_paquete(contestacion, INTERRUPCION_RTA);
+        agregar_a_paquete(contestacion, &qid, sizeof(int));
+        agregar_a_paquete(contestacion, &pc, sizeof(int));
+        enviar_paquete(contestacion, socket_master, logger);
+        borrar_paquete(contestacion);
+
         return -1;
     } else {
         log_debug(logger, "Caso else en check interrupt");
