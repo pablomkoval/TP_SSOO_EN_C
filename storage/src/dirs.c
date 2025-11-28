@@ -127,7 +127,6 @@ int eliminar_tag(int query_id, char *file, char* tag)    //// Falta eliminar has
     free(comando);
     free(file_tag);
     free(path_config);
-    free(estado_metadata);
 
     return 1;
 }

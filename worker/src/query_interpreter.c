@@ -34,13 +34,17 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
 
 
         //aguardar respuesta siempre, todas las instrucciones son bloqueantes
+        log_debug(logger, "Resultado ejecucion = %d", resultado_ejecucion);
         if(resultado_ejecucion == 1){
-            if(recibir_opcode(socket_storage) == RESPUESTA_STORAGE){
+            int opcode = recibir_opcode(socket_storage);
+            if(opcode == RESPUESTA_STORAGE){
                 t_list* recibido = recibir_paquete(socket_storage);
                 int respuesta = *((int*)list_get(recibido, 0));
                 resultado_ejecucion = manejar_respuesta(respuesta);
                 list_destroy_and_destroy_elements(recibido, free);
-            } else return;
+            } else{
+                log_error(logger, "Opcode: %d", opcode);
+            }
         }
         
         

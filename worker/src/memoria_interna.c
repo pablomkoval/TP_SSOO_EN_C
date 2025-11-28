@@ -263,6 +263,15 @@ void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int
 
     enviar_paquete(paquete, socket_storage,logger);
     borrar_paquete(paquete);
+    int opcode = recibir_opcode(socket_storage);
+    if(opcode == RESPUESTA_STORAGE){
+        t_list* recibido = recibir_paquete(socket_storage);
+        int respuesta = *((int*)list_get(recibido, 0));
+        resultado_ejecucion = manejar_respuesta(respuesta);
+        list_destroy_and_destroy_elements(recibido, free);
+    }else{
+        log_error(logger, "En vez de una RESPUESTA STORAGE se obtuvo el opcode: %d", opcode);
+    }
     return;
 }
 

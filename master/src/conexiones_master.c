@@ -9,7 +9,7 @@ void *manejar_servidor_worker(void *arg){
     while (1){
         int op_code = recibir_opcode(socket_worker);
         char *worker_id_str = string_itoa(worker_id);
-        log_error(logger, "Llego opcode %d", op_code);
+        log_trace(logger, "Llego opcode de worker %d", op_code);
         switch (op_code){
             case -1:
                 hacer_desconexion_worker(worker_id);
@@ -60,7 +60,7 @@ void* manejar_servidor_querycontrol(void* arg){
             case 0:
                 break;
             default:
-                log_error(logger, "Error al recibir opcode (%d) de query control", op_code);
+                log_trace(logger, "Error al recibir opcode (%d) de query control", op_code);
                 break;
         }
     }
@@ -131,26 +131,27 @@ void hacer_desconexion_worker(int worker_id){
     
     char* wid_str = string_itoa(worker_id);
     
-
     pthread_mutex_lock(&mutex_diccionario_exec);
-    t_qcb * qcb = dictionary_remove(diccionario_exec, wid_str);
+    t_qcb* qcb = dictionary_remove(diccionario_exec, wid_str);
     pthread_mutex_unlock(&mutex_diccionario_exec);
-
-    t_paquete *paquete = crear_paquete();
-    cambiar_opcode_paquete(paquete, END);
-    char *motivo = "Desconexion de Worker.";
-    agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
-    enviar_paquete(paquete, qcb->socket, logger);
-    borrar_paquete(paquete);
 
     pthread_mutex_lock(&mutex_diccionario_workers);
     dictionary_remove(diccionario_workers, wid_str);
     pthread_mutex_unlock(&mutex_diccionario_workers);
 
+    if(qcb != NULL){
+        t_paquete *paquete = crear_paquete();
+        cambiar_opcode_paquete(paquete, END);
+        char *motivo = "Desconexion de Worker.";
+        agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
+        enviar_paquete(paquete, qcb->socket, logger);
+        borrar_paquete(paquete);
+
+        log_info(logger, "## Se desconecta el Worker <%d> - Se finaliza la Query <%d> - Cantidad total de Workers: <%d> ", worker_id, qcb->qid, workers_conectados());
+    }
+
     free(wid_str);
-
-    log_info(logger, "## Se desconecta el Worker <%d> - Se finaliza la Query <%d> - Cantidad total de Workers: <%d> ", worker_id, qcb->qid, workers_conectados());
-
+    log_info(logger, "## Se desconecta el Worker <%d> - Cantidad total de Workers: <%d> ", worker_id, workers_conectados());
 }
 
 void hacer_read_worker(int socket_worker, char *worker_id_str){
