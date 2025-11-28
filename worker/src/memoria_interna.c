@@ -188,6 +188,11 @@ int liberar_frame(pagina_t* victima, int qid){
         string_array_destroy(separado);
         victima->bit_modificado = false;
     }
+
+    void* direccion_frame = memoria_interna + (victima->frame * tam_pagina);
+    memset(direccion_frame, 0, tam_pagina);
+    log_debug(logger, "Frame %d limpiado (%d bytes en 0)", victima->frame, tam_pagina);
+
     bitarray_clean_bit(bitmap_frames, victima->frame);
     victima->bit_presencia = false;
     list_remove_element(paginas_en_memoria, victima);
@@ -206,7 +211,6 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
 
-    int opcode = recibir_opcode(socket_storage);
     if(recibir_opcode(socket_storage) != RESPUESTA_STORAGE){
         log_debug(logger, "No se recibio respuesta de storage");
         return;
