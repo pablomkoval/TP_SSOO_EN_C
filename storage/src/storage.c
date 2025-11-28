@@ -7,7 +7,7 @@ t_config *config_superblock;
 int main(int argc, char *argv[])
 {
     if(argc < 2){
-    printf("Faltaron argumentos para iniciar el worker");
+    printf("Faltaron argumentos para iniciar el storage");
     return EXIT_FAILURE;
     }
     char* config_name = argv[1];
