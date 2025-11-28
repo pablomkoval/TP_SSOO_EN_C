@@ -186,6 +186,7 @@ int ejecutar_query(query_t* query, int qid){
         case FLUSH_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un FLUSH");
             ejecutar_flush(file, tag, query->file_tag, qid);
+            return 2;
             break;
 
         case DELETE_Q:

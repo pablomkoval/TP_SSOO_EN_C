@@ -146,6 +146,7 @@ void hacer_desconexion_worker(int worker_id){
         agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
         enviar_paquete(paquete, qcb->socket, logger);
         borrar_paquete(paquete);
+        cambiar_estado(qcb, EXIT);
 
         log_info(logger, "## Se desconecta el Worker <%d> - Se finaliza la Query <%d> - Cantidad total de Workers: <%d> ", worker_id, qcb->qid, workers_conectados());
     }
