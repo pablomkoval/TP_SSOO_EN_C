@@ -222,3 +222,50 @@ void borrar_paquete(t_paquete* paquete){
     free(paquete->buffer);
     free(paquete);
 }
+
+char* obtener_nombre_opcode_simple(int opcode){
+    switch (opcode) {
+        case CERRADO:
+            return "CONEXION_CERRADA";
+        case HANDSHAKE:
+            return "HANDSHAKE";
+        case HANDSHAKE_WORKER:
+            return "HANDSHAKE_WORKER";
+        case HANDSHAKE_QUERY_CONTROL:
+            return "HANDSHAKE_QUERY_CONTROL";
+        case PAQUETE:
+            return "PAQUETE";
+        case MENSAJE:
+            return "MENSAJE";
+        case OK:
+            return "OK";
+        case ERROR:
+            return "ERROR";
+        case CREATE:
+            return "CREATE";
+        case TRUNCATE:
+            return "TRUNCATE"; 
+        case TAG:
+            return "TAG";
+        case COMMIT:
+            return "COMMIT";
+        case WRITE:
+            return "WRITE";
+        case READ:
+            return "READ";
+        case DELETE:
+            return "DELETE";
+        case FLUSH:
+            return "FLUSH";
+        case END:
+            return "END";
+        case SOLICITUD_NUEVA_QUERY:
+            return "SOLICITUD_NUEVA_QUERY";
+        case RESPUESTA_STORAGE:
+            return "RESPUESTA_STORAGE";
+        case INTERRUPCION:
+            return "INTERRUPCION";
+        default:
+            return "OPCODE DESCONOCIDO";
+    }
+}

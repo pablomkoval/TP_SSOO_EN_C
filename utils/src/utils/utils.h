@@ -97,5 +97,6 @@ void enviar_mensaje(int socket, char* mensaje);
 void enviar_cod_op(int socket, int opcode);
 char* recibir_mensaje(int socket);
 
+char* obtener_nombre_opcode_simple(int opcode);
 
 #endif
