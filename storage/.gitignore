@@ -2,7 +2,10 @@
 bin/
 obj/
 *.log
-raiz/*
+raiz/files/*
+raiz/physical_blocks/*
+raiz/blocks_hash_index.config
+raiz/bitmap.bin
 
 # Eclipse files
 .settings/
