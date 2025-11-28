@@ -308,9 +308,9 @@ void manejar_desconexion(int* socket_worker)
         int cantidad_workers = dictionary_size (worker_id_por_socket);
         pthread_mutex_unlock(&mutex_worker_id);
 
-        free(socket_key);
-
         log_info(logger, "##Se desconecta el Worker <%i> - Cantidad de Workers: <%d>", *worker_id, cantidad_workers);
+        
+        free(socket_key);
 
 }
 
