@@ -79,6 +79,7 @@ void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id){
 
     //sem_post(&sem_queries_ready); //y este maquina?
 
+    free(worker_asignado_id_ptr);
     log_info(logger, "## Se envía la Query <%d> (<%d>) al Worker <%d>", query_a_ejecutar->qid, query_a_ejecutar->prioridad, worker_asignado_id);
 }
 

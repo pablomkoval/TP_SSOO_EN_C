@@ -115,14 +115,19 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
         bytes_leidos += cant_lectura;
         direccion_actual += cant_lectura;
     }
-    buffer[bytes_leidos] = '\0';
-    log_info(logger, "Query %d: Acción: LEER - Dirección Física: %d - Valor: %s", qid, direccion_fisica_inicial, buffer);
+    // buffer[bytes_leidos] = '\0';
+    // log_info(logger, "Query %d: Acción: LEER - Dirección Física: %d - Valor: %s", qid, direccion_fisica_inicial, buffer);
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, READ);
     agregar_a_paquete(paquete, file_tag, strlen(file_tag) + 1);
-    agregar_a_paquete(paquete, buffer, strlen(buffer) + 1);
+    agregar_a_paquete(paquete, buffer, bytes_leidos);
     enviar_paquete(paquete, socket_master, logger);
+
+
+    buffer[bytes_leidos] = '\0';
+    log_info(logger, "Query %d: Acción: LEER - Dirección Física: %d - Valor: %s", qid, direccion_fisica_inicial, buffer);
+
     borrar_paquete(paquete);
     free(buffer);
     return;

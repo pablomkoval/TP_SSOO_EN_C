@@ -28,6 +28,7 @@ void *manejar_servidor_worker(void *arg){
                 break;
 
             case INTERRUPCION_RTA:
+                log_warning(logger, "Recibi respuesta interrupcion de worker");
                 t_list* recibido = recibir_paquete(socket_worker);
                 //int* qid_ptr = (int*)list_get(recibido, 0);
                 int* pc = (int*)list_get(recibido, 0);
@@ -429,5 +430,6 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
         }
     }else{
         pthread_mutex_unlock(&mutex_diccionario_exec);
+        log_warning(logger, "Hice chequeo desalojo pero no interrumpi");
     }
 }
