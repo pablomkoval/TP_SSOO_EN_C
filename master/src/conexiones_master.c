@@ -10,6 +10,7 @@ void *manejar_servidor_worker(void *arg){
         int op_code = recibir_opcode(socket_worker);
         char *worker_id_str = string_itoa(worker_id);
         log_trace(logger, "Llego opcode de worker %d", op_code);
+        //log_trace(logger, "Llego opcode de worker: %s", obtener_nombre_opcode_simple(op_code));
         switch (op_code){
             case -1:
                 hacer_desconexion_worker(worker_id);

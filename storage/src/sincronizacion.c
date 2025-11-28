@@ -21,6 +21,8 @@ static pthread_mutex_t* obtener_mutex(t_dictionary* dict, char* path)
 
     if (mutex == NULL) {
 
+        log_error(logger, "lO QUE BUSCO");
+
         pthread_mutex_t* nuevo = malloc(sizeof(pthread_mutex_t));
         pthread_mutex_init(nuevo, NULL);
 

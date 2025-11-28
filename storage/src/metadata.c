@@ -232,9 +232,13 @@ int cant_bloques_logicos(char *path)   //si aparece hay que lockear metadata
 int commmit_file(int query_id, char *file, char *tag)  //sincronizada
 {
     char *file_tag = concatenar_path(file, tag);
+    
 
     if (!file_tag_existe(file_tag))
+    {
+        log_debug(logger, "FILE_TAG_INEXISTENTE");
         return -2;
+    }
     
     lock_metadata(file_tag);
 
@@ -256,6 +260,7 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
         int nro_bloque = obtener_bloque_por_hash(md5);                              // me fijo si hay otro bloque fisico con el mismo contenido
         char *bloque_fisico_nuevo = bloque_fisico_por_nro(nro_bloque);
         int nro_block_f = obtener_numero_bloque(bloque_fisico);
+        
 
         if (nro_bloque != -1 && nro_bloque != nro_block_f) // si hay algún bloque fisico con el mismo contenido...
         {
