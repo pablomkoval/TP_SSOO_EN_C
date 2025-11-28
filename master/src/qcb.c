@@ -35,6 +35,6 @@ void cambiar_estado(t_qcb* qcb, int nuevo_estado){
 
 void comenzar_aging_query(t_qcb* qcb){
     //qcb->tiempo_aging = temporal_create();
-    pthread_create(&qcb->hilo_aging_id, NULL, hilo_aging_individual, (void*)qcb);
+    pthread_create(&(qcb->hilo_aging_id), NULL, hilo_aging_individual, (void*)qcb);
     pthread_detach(qcb->hilo_aging_id);
 }

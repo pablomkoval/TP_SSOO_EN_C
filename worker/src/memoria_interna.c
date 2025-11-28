@@ -259,7 +259,8 @@ void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int
 
     void* contenido = memoria_interna + frame * tam_pagina;
     agregar_a_paquete(paquete, contenido, tam_pagina);
-    log_debug(logger, "##EL CONTENIDO ANTES DEL FLUSH ES: %s, pagina a escribir: %d", (char*)contenido, nro_pagina);
+    //log_debug(logger, "##EL CONTENIDO ANTES DEL FLUSH ES: %s, pagina a escribir: %d", (char*)contenido, nro_pagina);
+    //este log genera segfault ya que contenido es una porcion de memoria y no un char* legible
 
     enviar_paquete(paquete, socket_storage,logger);
     borrar_paquete(paquete);
