@@ -242,10 +242,10 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     }
     char* contenido = strdup(contenido_raw); 
     //averiguar si el memset es correcto
-    log_error(logger, "El contenido a insertar en memoria es (%s)", contenido);
-    memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
-    memcpy(memoria_interna + frame * tam_pagina, contenido, tam_pagina); 
-    list_destroy_and_destroy_elements(recibido, free);
+    log_error(logger, "El contenido a insertar en memoria es (%s)", contenido_raw);
+    //memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
+    memcpy(memoria_interna + frame * tam_pagina, contenido_raw, tam_pagina); 
+    //list_destroy_and_destroy_elements(recibido, free);
     return;
 }
 
