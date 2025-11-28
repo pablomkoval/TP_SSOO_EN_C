@@ -21,12 +21,13 @@ t_qcb* crear_qcb(char* query_entrante, int prioridad_query, int socket){
 }
 
 void cambiar_estado(t_qcb* qcb, int nuevo_estado){
+    int estado_actual = qcb->estado;
     qcb->estado = nuevo_estado;
     
     if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
         if(nuevo_estado == READY && qcb->prioridad > 0){
             comenzar_aging_query(qcb);
-        }else if(nuevo_estado != READY){
+        }else if(nuevo_estado != READY && estado_actual != EXEC){
             pthread_cancel(qcb->hilo_aging_id);
             pthread_join(qcb->hilo_aging_id, NULL);
         }
