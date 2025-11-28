@@ -144,12 +144,16 @@ char *leer_archivo(char *path) //sincro cuando se usa
 int escribir_archivo(char *path, char *contenido) //sincro cuando se usa
 {
     FILE *f = fopen(path, "r+");
+    if (f == NULL) {
+        log_error(logger, "No se pudo abrir el bloque físico: %s", path);
+        return -1;
+    }
 
-
-    fwrite(contenido, 1, strlen(contenido), f);
+    // ¡NUNCA uses strlen(contenido)! El contenido puede no tener \0
+    // El tamaño del bloque físico siempre es tam_pagina (definido en config)
+    fwrite(contenido, 1, block_size, f);
 
     fclose(f);
-
     return 0;
 }
 
