@@ -10,7 +10,7 @@ void *manejar_servidor_worker(void *arg){
         int op_code = recibir_opcode(socket_worker);
         //char *worker_id_str = string_itoa(worker_id);
         //log_trace(logger, "Llego opcode de worker %d", op_code);
-        log_trace(logger, "Llego opcode de worker: %s", obtener_nombre_opcode_simple(op_code));
+        log_trace(logger, "Llego opcode del worker [%d]: %s (%d)", worker_id ,obtener_nombre_opcode_simple(op_code), op_code);
         switch (op_code){
             case -1:
                 hacer_desconexion_worker(worker_id);
@@ -30,21 +30,31 @@ void *manejar_servidor_worker(void *arg){
             case INTERRUPCION_RTA:
                 log_warning(logger, "Recibi respuesta interrupcion de worker");
                 t_list* recibido = recibir_paquete(socket_worker);
-                //int* qid_ptr = (int*)list_get(recibido, 0);
-                int* pc = (int*)list_get(recibido, 0);
-                ///////////////
-                //char* qid_str = string_itoa(*qid_ptr);
-                // pthread_mutex_lock(&mutex_diccionario_querys);
-                // t_qcb* qcb_a_reinsertar = dictionary_get(diccionario_querys, qid_str);
-                // pthread_mutex_unlock(&mutex_diccionario_querys);
 
-                char *worker_id_str = string_itoa(worker_id);
-                pthread_mutex_lock(&mutex_diccionario_exec);
-                t_qcb* qcb_a_reinsertar = dictionary_remove(diccionario_exec, worker_id_str);
-                pthread_mutex_unlock(&mutex_diccionario_exec);
+                sumar_worker_libre(worker_id);
+                
 
-                qcb_a_reinsertar->pc = *pc;
-                encolar_qcb(qcb_a_reinsertar);
+                int* qid_ptr = (int*)list_get(recibido, 0);
+                int* pc = (int*)list_get(recibido, 1);
+                
+                char* qid_str = string_itoa(*qid_ptr);
+
+                pthread_mutex_lock(&mutex_diccionario_querys);
+                t_qcb* qcb_desalojada = dictionary_get(diccionario_querys, qid_str);
+                pthread_mutex_unlock(&mutex_diccionario_querys);
+                
+                
+                if (qcb_desalojada->estado != EXIT){ // qcb desalojada NO por desconexion de query control
+                    char *worker_id_str = string_itoa(worker_id);
+
+                    pthread_mutex_lock(&mutex_diccionario_exec);
+                    dictionary_remove(diccionario_exec, worker_id_str);
+                    log_trace(logger, "Quito de d_exec query [%d]", qcb_desalojada->qid);
+                    pthread_mutex_unlock(&mutex_diccionario_exec);
+
+                    qcb_desalojada->pc = *pc;
+                    encolar_qcb(qcb_desalojada);
+                }
 
                 list_destroy_and_destroy_elements(recibido, free);
                 break;
@@ -124,13 +134,7 @@ void *funcion_main_escucha(void *socket_arg){
 
                 log_info(logger, "## Se conecta el Worker <%d> - Cantidad total de Workers: <%d>", worker_id, workers_conectados());
 
-                int *worker_id_ptr = malloc(sizeof(int));
-                *worker_id_ptr = worker_id;
-
-                pthread_mutex_lock(&mutex_workers_libres);
-                list_add(workers_libres, worker_id_ptr);
-                pthread_mutex_unlock(&mutex_workers_libres);
-                sem_post(&sem_workers_libres);
+                sumar_worker_libre(worker_id);
                 
                 pthread_create(&hilo_cliente, NULL, manejar_servidor_worker, (void *)args);
                 pthread_detach(hilo_cliente);
@@ -172,6 +176,7 @@ void hacer_desconexion_worker(int worker_id){
     pthread_mutex_unlock(&mutex_diccionario_workers);
     //free(socket_worker_ptr);
     if(qcb != NULL){
+        log_trace(logger, "Quito de d_exec query [%d]", qcb->qid);
         t_paquete *paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, END);
         char *motivo = "Desconexion de Worker.";
@@ -200,12 +205,20 @@ void hacer_read_worker(int socket_worker, int worker_id){
     //pthread_mutex_lock(&mutex_diccionario_exec);
 
     t_qcb *qcb = dictionary_get(diccionario_exec, worker_id_str);
-    log_trace(logger, "socket qcb es %d", qcb->socket);
+    
+    
     pthread_mutex_unlock(&mutex_diccionario_exec);
     
+    if(qcb == NULL){
+        log_error(logger, "Quise hacer un read pero fallo el diccionario exec");
+        free(worker_id_str); 
+        list_destroy_and_destroy_elements(recibido, free);
+        return;
+    }    
+
     if (qcb->socket > 0){
 
-        
+        log_trace(logger, "socket qcb es %d", qcb->socket);        
         t_paquete *paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, READ);
         agregar_a_paquete(paquete, file_tag, strlen(file_tag) + 1);
@@ -216,12 +229,10 @@ void hacer_read_worker(int socket_worker, int worker_id){
         log_info(logger, "mensaje del worker a enviar: %s", mensaje_worker);
         log_info(logger, "## Se envía un mensaje de lectura de la Query <%d> en el Worker <%s> al Query Control", qcb->qid, worker_id_str);
         
-        free(worker_id_str);
-    }   else{
-        log_error(logger, "No se encontro qcb asociado a un worker id: %s", worker_id_str);
-        free(worker_id_str);
+    } else {
+        log_error(logger, "Socket de query inexistente");
     }
-    
+    free(worker_id_str);
     list_destroy_and_destroy_elements(recibido, free);
 }
 
@@ -238,6 +249,7 @@ void hacer_end_worker(int worker_id, int socket_worker){
 
     pthread_mutex_lock(&mutex_diccionario_exec);
     t_qcb *qcb = dictionary_remove(diccionario_exec, worker_id_str);
+    log_trace(logger, "Quito de d_exec query [%d]", qcb->qid);
     pthread_mutex_unlock(&mutex_diccionario_exec);
 
     if (qcb == NULL) {
@@ -260,14 +272,7 @@ void hacer_end_worker(int worker_id, int socket_worker){
     free(motivo);
     //free(worker_id_str);
 
-    int *worker_id_ptr = malloc(sizeof(int));
-    *worker_id_ptr = worker_id;
-
-    pthread_mutex_lock(&mutex_workers_libres);
-    list_add(workers_libres, worker_id_ptr);
-    pthread_mutex_unlock(&mutex_workers_libres);
-
-    sem_post(&sem_workers_libres);
+    sumar_worker_libre(worker_id);
 
     free(worker_id_str);
 }
@@ -286,10 +291,9 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
     pthread_mutex_lock(&mutex_diccionario_querys);
     dictionary_put(diccionario_querys, qid_str, qcb);
     pthread_mutex_unlock(&mutex_diccionario_querys);
-    log_debug(logger, "abc");
+    log_debug(logger, "Llego query, aniadida a diccionario");
 
     //pthread_mutex_lock(&mutex_ready);
-    log_debug(logger, "defg");
     //cambiar_estado(qcb, READY);
     //pthread_mutex_unlock(&mutex_ready);
 
@@ -324,6 +328,7 @@ void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
 
         pthread_mutex_lock(&mutex_diccionario_exec);
         dictionary_remove(diccionario_exec, wid_asociado_str);
+        log_trace(logger, "Quito de d_exec query [%d]", qcb->qid);
         pthread_mutex_unlock(&mutex_diccionario_exec);
 
 
@@ -423,7 +428,7 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
                 enviar_cod_op(socket_worker_asignado, INTERRUPCION); 
                 
                 log_info(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d> - Motivo: <PRIORIDAD>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
-                
+                log_debug(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
                 pthread_mutex_unlock(&mutex_diccionario_workers);
                 free(wid_str_asociado);
             }
@@ -432,4 +437,18 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
         pthread_mutex_unlock(&mutex_diccionario_exec);
         log_warning(logger, "Hice chequeo desalojo pero no interrumpi");
     }
+}
+
+
+void sumar_worker_libre(int worker_id){
+    
+    int *worker_id_ptr = malloc(sizeof(int));
+    *worker_id_ptr = worker_id;
+    
+    pthread_mutex_lock(&mutex_workers_libres);
+    list_add(workers_libres, worker_id_ptr);
+    pthread_mutex_unlock(&mutex_workers_libres);
+
+    sem_post(&sem_workers_libres);
+
 }
