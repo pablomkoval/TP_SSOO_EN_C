@@ -112,8 +112,6 @@ t_qcb* obtener_query_y_worker(int *worker_libre_id){
 
 void* hilo_aging_individual(void* arg){
     t_qcb* qcb = (t_qcb*)arg;
-    free(arg);
-
 
     int tiempo_aging_micro = tiempo_aging * 1000;
 
@@ -140,6 +138,6 @@ void* hilo_aging_individual(void* arg){
     }
     
     log_info(logger, "qid %d: Hilo de aging individual finalizo.", qcb->qid);
-
+    free(arg);
     return NULL;
 }

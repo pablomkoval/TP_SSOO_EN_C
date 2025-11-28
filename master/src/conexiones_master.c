@@ -96,6 +96,7 @@ void *funcion_main_escucha(void *socket_arg){
                 dictionary_put(diccionario_workers, worker_id_str, socket_worker_ptr);
                 pthread_mutex_unlock(&mutex_diccionario_workers);
 
+                free(worker_id_str);
 
                 log_info(logger, "## Se conecta el Worker <%d> - Cantidad total de Workers: <%d>", worker_id, workers_conectados());
 
@@ -136,9 +137,10 @@ void hacer_desconexion_worker(int worker_id){
     pthread_mutex_unlock(&mutex_diccionario_exec);
 
     pthread_mutex_lock(&mutex_diccionario_workers);
-    dictionary_remove(diccionario_workers, wid_str);
+    dictionary_remove_and_destroy(diccionario_workers, wid_str, free);
+    // int* socket_worker_ptr = dictionary_remove(diccionario_workers, wid_str);
     pthread_mutex_unlock(&mutex_diccionario_workers);
-
+    //free(socket_worker_ptr);
     if(qcb != NULL){
         t_paquete *paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, END);
@@ -232,8 +234,10 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
     pthread_mutex_lock(&mutex_diccionario_querys);
     dictionary_put(diccionario_querys, qid_str, qcb);
     pthread_mutex_unlock(&mutex_diccionario_querys);
+    log_debug(logger, "abc");
 
     pthread_mutex_lock(&mutex_ready);
+    log_debug(logger, "defg");
     encolar_qcb(cola_ready, qcb);
     cambiar_estado(qcb, READY);
     pthread_mutex_unlock(&mutex_ready);

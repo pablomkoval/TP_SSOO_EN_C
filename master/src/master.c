@@ -57,4 +57,5 @@ void inicializar_diccionarios_y_semaforos(){
     pthread_mutex_init(&mutex_diccionario_workers, NULL);
     pthread_mutex_init(&mutex_diccionario_exec, NULL);
     pthread_mutex_init(&mutex_diccionario_querys, NULL);
+    pthread_mutex_init(&mutex_qid_global, NULL);
 }
