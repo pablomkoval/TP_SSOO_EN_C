@@ -34,8 +34,12 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
         if(resultado_ejecucion == -2) return; // caso para errores extraordinarios 
         log_info(logger, "## Query %d: - Instrucción realizada: %s", qid, instruccion);
 
-        if(resultado_ejecucion == -1) return; // caso para el END
-
+        if(resultado_ejecucion == -1) {
+            pthread_mutex_lock(&mutex_interpreter);
+            interpreter_ocupado = false;
+            pthread_mutex_unlock(&mutex_interpreter);
+            return; // caso para el END
+        }
 
         //aguardar respuesta siempre, todas las instrucciones son bloqueantes
         log_debug(logger, "Resultado ejecucion = %d", resultado_ejecucion);
