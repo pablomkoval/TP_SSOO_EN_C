@@ -15,6 +15,7 @@ t_qcb* crear_qcb(char* query_entrante, int prioridad_query, int socket){
     qcb->id_worker_asociado = -1;
     qcb->estado = READY;
     qcb->pc = 0;
+    qcb->aging_activo = false;
     //qcb->tiempo_aging = NULL;
     log_trace(logger, "Se creo la qcb con qid %d", qcb->qid);
     return qcb;
@@ -32,7 +33,6 @@ void cambiar_estado(t_qcb* qcb, int nuevo_estado){
 
             if(!qcb->aging_activo && tiempo_aging != 0){
                 comenzar_aging_query(qcb);
-                qcb->aging_activo = true
             }
 
         }else if(qcb->aging_activo){
@@ -47,5 +47,6 @@ void cambiar_estado(t_qcb* qcb, int nuevo_estado){
 void comenzar_aging_query(t_qcb* qcb){
     //qcb->tiempo_aging = temporal_create();
     pthread_create(&(qcb->hilo_aging_id), NULL, hilo_aging_individual, (void*)qcb);
+    qcb->aging_activo = true;
     pthread_detach(qcb->hilo_aging_id);
 }

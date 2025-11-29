@@ -129,7 +129,7 @@ void* funcion_escucha_master(){
             argumentos->pc = pc;
             argumentos->qid = qid;
 
-            log_error(logger, "## SOLICITUD QID %d", qid);
+            log_trace(logger, "## SOLICITUD QID %d", qid);
             pthread_create(&thread_query_interpreter, NULL, iniciar_query_interpreter, (void*)argumentos);
             pthread_detach(thread_query_interpreter);
 

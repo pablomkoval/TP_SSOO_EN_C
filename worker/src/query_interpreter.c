@@ -275,6 +275,11 @@ int manejar_respuesta(int respuesta){
     if(respuesta != 1){
         log_warning(logger, "## Storage responde con un error, %d", respuesta);
         char* motivo = parsear_errores(respuesta);
+
+        pthread_mutex_lock(&mutex_interpreter);
+        interpreter_ocupado = false;
+        pthread_mutex_unlock(&mutex_interpreter);
+
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, END);
         agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
