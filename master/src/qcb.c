@@ -29,10 +29,17 @@ void cambiar_estado(t_qcb* qcb, int nuevo_estado){
 
     if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
         if(nuevo_estado == READY && qcb->prioridad > 0){
-            comenzar_aging_query(qcb);
-        }else if(nuevo_estado != READY && estado_actual != EXEC){
+
+            if(!qcb->aging_activo && tiempo_aging != 0){
+                comenzar_aging_query(qcb);
+                qcb->aging_activo = true
+            }
+
+        }else if(qcb->aging_activo){
+            log_error(logger, "entra al else if cambiar estado");
             pthread_cancel(qcb->hilo_aging_id);
             pthread_join(qcb->hilo_aging_id, NULL);
+            qcb->aging_activo = false;
         }
     }
 }

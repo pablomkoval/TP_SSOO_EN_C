@@ -20,6 +20,7 @@ typedef struct{
     estados_query estado;
     //t_temporal* tiempo_aging;
     pthread_t hilo_aging_id;
+    bool aging_activo;
 } t_qcb;
 
 extern int qid_global;
