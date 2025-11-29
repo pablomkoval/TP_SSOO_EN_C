@@ -41,8 +41,9 @@ void handshake_storage(int socket, int worker_id){
     if(respuesta == OK){
         log_trace(logger, "Recibi el OK de Storage");
         t_list* recibido = recibir_paquete(socket);
-        int tam_bloque = *((int*)list_get(recibido, 0));
-        tam_pagina = tam_bloque;
+        int* tam_bloque = (int*)list_get(recibido, 0);
+        tam_pagina = *tam_bloque;
+        list_destroy_and_destroy_elements(recibido, free);
         return;
     }else {
         log_error(logger, "Fallo en el handshake con Storage, recibí %d", respuesta);

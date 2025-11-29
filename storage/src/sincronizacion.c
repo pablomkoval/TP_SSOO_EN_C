@@ -21,7 +21,7 @@ static pthread_mutex_t* obtener_mutex(t_dictionary* dict, char* path)
 
     if (mutex == NULL) {
 
-        log_error(logger, "lO QUE BUSCO");
+        //log_error(logger, "lO QUE BUSCO");
 
         pthread_mutex_t* nuevo = malloc(sizeof(pthread_mutex_t));
         pthread_mutex_init(nuevo, NULL);
@@ -58,7 +58,7 @@ void unlock_metadata(char* path) {
 }
 
 void lock_bloque_fisico(char* path) {
-    log_error(logger, "el path del mutex es : %s", path);
+    //log_error(logger, "el path del mutex es : %s", path);
     pthread_mutex_t* m = obtener_mutex_bloque_fisico(path);
     pthread_mutex_lock(m);
 }

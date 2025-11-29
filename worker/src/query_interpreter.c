@@ -7,12 +7,14 @@ void* iniciar_query_interpreter(void* args){
     int pc = argumentos->pc;
     int qid = argumentos->qid;
     char* nombre_archivo = strdup(argumentos->archivo);
+    free(argumentos->archivo);
     free(args);
     //en vez de un while 1 simplemente se llama a esta funcion cuando llega una solicitud nueva query de master al hilo de conexiones!!!!
     
 
     log_info(logger, "## Query %d: Se recibe la Query. El path de operaciones es: %s", qid, nombre_archivo);
     ciclo_ejecucion(nombre_archivo, pc, qid);
+    free(nombre_archivo);
     
     // pthread_mutex_lock(&mutex_interpreter);
     // interpreter_ocupado = false;
@@ -33,6 +35,10 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
         resultado_ejecucion = ejecutar_query(query_a_ejecutar, qid);
         if(resultado_ejecucion == -2) return; // caso para errores extraordinarios 
         log_info(logger, "## Query %d: - Instrucción realizada: %s", qid, instruccion);
+        free(instruccion);
+        //free(query_a_ejecutar->file_tag);
+        free(query_a_ejecutar);
+        
 
         if(resultado_ejecucion == -1) return; 
             //{
@@ -171,39 +177,58 @@ int ejecutar_query(query_t* query, int qid){
         
             log_debug(logger, "##DEBUG: Se esta por ejecutar un TRUNCATE");
             ejecutar_truncate(file, tag, atoi(query->param1), qid);
+            free(query->param1);
+            free(query->file_tag);
             break;
         
         case WRITE_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un WRITE");
             ejecutar_write(query->file_tag, atoi(query->param1), query->param2, qid);
+            // free(query->param1);
+            // free(query->file_tag);
+            // free(query->param2);
+            // free(file);
+            // free(tag);
             return 2;
             break;
 
         case READ_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un READ");
             ejecutar_read(query->file_tag, atoi(query->param1), atoi(query->param2), qid);
+            free(query->param1);
+            free(query->param2);
+            free(query->file_tag);
+            free(file);
+            free(tag);
             return 2;
             break;
 
         case TAG_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un TAG");
             ejecutar_tag(file, tag, query->param1, qid);
+            free(query->param1);
+            free(query->file_tag);
             break;
             
         case COMMIT_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un COMMIT");
             ejecutar_commit(file, tag, query->file_tag, qid);
+            free(query->file_tag);
             break;
 
         case FLUSH_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un FLUSH");
             ejecutar_flush(file, tag, query->file_tag, qid);
+            free(query->file_tag);
+            free(file);
+            free(tag);
             return 2;
             break;
 
         case DELETE_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un DELETE");
             ejecutar_delete(file, tag, qid);
+            free(query->file_tag);
             break;
         
         default:
@@ -211,6 +236,8 @@ int ejecutar_query(query_t* query, int qid){
             return -2;
             break;
     }
+    free(file);
+    free(tag);
     return 1;
 }
 

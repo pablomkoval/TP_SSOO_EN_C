@@ -178,6 +178,8 @@ void ejecutar_tag(char* file_origen, char* tag_origen, char* file_tag_destino, i
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
     string_array_destroy(partes);
+    free(file_destino);
+    free(tag_destino);
     return;
 }
 
