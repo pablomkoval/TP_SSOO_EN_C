@@ -36,7 +36,6 @@ void cambiar_estado(t_qcb* qcb, int nuevo_estado){
             }
 
         }else if(qcb->aging_activo){
-            log_error(logger, "entra al else if cambiar estado");
             pthread_cancel(qcb->hilo_aging_id);
             pthread_join(qcb->hilo_aging_id, NULL);
             qcb->aging_activo = false;

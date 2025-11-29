@@ -28,7 +28,7 @@ void *manejar_servidor_worker(void *arg){
                 break;
 
             case INTERRUPCION_RTA:
-                log_warning(logger, "Recibi respuesta interrupcion de worker");
+                //log_warning(logger, "Recibi respuesta interrupcion de worker");
                 t_list* recibido = recibir_paquete(socket_worker);
 
 
@@ -364,7 +364,7 @@ void encolar_qcb(t_qcb *qcb){
         log_info(logger, "qcb de qid: %d encolado en READY con Prioridad: %d", qcb->qid, qcb->prioridad);
 
     } else{
-        log_warning(logger, "## Va a encolar qcb con fifo");
+        //log_warning(logger, "## Va a encolar qcb con fifo");
         pthread_mutex_lock(&mutex_ready);
         list_add(cola_ready, qcb);
         cambiar_estado(qcb, READY);
@@ -436,7 +436,7 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
             pthread_mutex_unlock(&mutex_diccionario_workers);
             free(wid_str_asociado);
         } else{
-            log_warning(logger, "Hice chequeo desalojo pero no interrumpi");
+            //log_warning(logger, "Hice chequeo desalojo pero no interrumpi");
             pthread_mutex_unlock(&mutex_diccionario_exec);
             sem_post(&sem_permiso_desalojo);
             log_debug(logger, "Libero semaforo desalojo");
@@ -445,7 +445,7 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
         //}
         
     }else{
-        log_warning(logger, "Quise chequear desalojo pero habian workers libres");
+        //log_warning(logger, "Quise chequear desalojo pero habian workers libres");
         pthread_mutex_unlock(&mutex_diccionario_exec);
         sem_post(&sem_permiso_desalojo);
         log_debug(logger, "Libero semaforo desalojo");
