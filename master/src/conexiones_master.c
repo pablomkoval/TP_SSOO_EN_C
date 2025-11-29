@@ -31,8 +31,6 @@ void *manejar_servidor_worker(void *arg){
                 log_warning(logger, "Recibi respuesta interrupcion de worker");
                 t_list* recibido = recibir_paquete(socket_worker);
 
-                sumar_worker_libre(worker_id);
-                
 
                 int* qid_ptr = (int*)list_get(recibido, 0);
                 int* pc = (int*)list_get(recibido, 1);
@@ -53,10 +51,11 @@ void *manejar_servidor_worker(void *arg){
                     pthread_mutex_unlock(&mutex_diccionario_exec);
 
                     sem_post(&sem_permiso_desalojo);
-
+                    log_debug(logger, "Libero semaforo desalojo");
                     qcb_desalojada->pc = *pc;
                     encolar_qcb(qcb_desalojada);
                 }
+                sumar_worker_libre(worker_id);
 
                 list_destroy_and_destroy_elements(recibido, free);
                 break;
@@ -373,7 +372,7 @@ void encolar_qcb(t_qcb *qcb){
         pthread_mutex_unlock(&mutex_ready);
         log_info(logger, "qcb de qid: %d encolado en READY con FIFO.", qcb->qid);
     }
-
+    log_debug(logger, "libero mutex ready en encolar_qcb");
     sem_post(&sem_queries_ready);
 }
 
@@ -414,34 +413,43 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
         
         dictionary_iterator(diccionario_exec, buscar_candidato_desalojo);
         pthread_mutex_unlock(&mutex_diccionario_exec); //mutex cierra aca o area critica mas grande?
-        if (qcb_a_desalojar != NULL){
+        //if (qcb_a_desalojar != NULL){
 
-            if(qcb_entrante->prioridad < qcb_a_desalojar->prioridad){
+        if(qcb_entrante->prioridad < qcb_a_desalojar->prioridad){
 
-                char *wid_str_asociado = string_itoa(qcb_a_desalojar->id_worker_asociado);
+            char *wid_str_asociado = string_itoa(qcb_a_desalojar->id_worker_asociado);
 
-                //pthread_mutex_lock(&mutex_diccionario_exec);
-                //dictionary_remove(diccionario_exec, wid_str_asociado);
-                //pthread_mutex_unlock(&mutex_diccionario_exec);
+            //pthread_mutex_lock(&mutex_diccionario_exec);
+            //dictionary_remove(diccionario_exec, wid_str_asociado);
+            //pthread_mutex_unlock(&mutex_diccionario_exec);
 
-                
+            
 
-                pthread_mutex_lock(&mutex_diccionario_workers);
-                int* socket_worker_asignado_ptr = dictionary_get(diccionario_workers, wid_str_asociado);
-                
-                int socket_worker_asignado = *socket_worker_asignado_ptr;
+            pthread_mutex_lock(&mutex_diccionario_workers);
+            int* socket_worker_asignado_ptr = dictionary_get(diccionario_workers, wid_str_asociado);
+            
+            int socket_worker_asignado = *socket_worker_asignado_ptr;
 
-                enviar_cod_op(socket_worker_asignado, INTERRUPCION); 
-                
-                log_info(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d> - Motivo: <PRIORIDAD>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
-                log_debug(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
-                pthread_mutex_unlock(&mutex_diccionario_workers);
-                free(wid_str_asociado);
-            }
+            enviar_cod_op(socket_worker_asignado, INTERRUPCION); 
+            
+            log_info(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d> - Motivo: <PRIORIDAD>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
+            log_debug(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
+            pthread_mutex_unlock(&mutex_diccionario_workers);
+            free(wid_str_asociado);
+        } else{
+            log_warning(logger, "Hice chequeo desalojo pero no interrumpi");
+            pthread_mutex_unlock(&mutex_diccionario_exec);
+            sem_post(&sem_permiso_desalojo);
+            log_debug(logger, "Libero semaforo desalojo");
+
         }
+        //}
+        
     }else{
-        log_warning(logger, "Hice chequeo desalojo pero no interrumpi");
+        log_warning(logger, "Quise chequear desalojo pero habian workers libres");
+        pthread_mutex_unlock(&mutex_diccionario_exec);
         sem_post(&sem_permiso_desalojo);
+        log_debug(logger, "Libero semaforo desalojo");
     }
     
 
