@@ -24,7 +24,7 @@ t_qcb* hacer_qcb_nueva(int socket_cliente);
 void encolar_qcb(t_qcb* qcb);
 bool comparar_qcb_por_prioridad(void* qcb1, void* qcb2);
 int workers_conectados();
-
+void sumar_worker_libre(int worker_id);
 void hacer_chequeo_desalojo(t_qcb* qcb_entrante);
 
 #endif
