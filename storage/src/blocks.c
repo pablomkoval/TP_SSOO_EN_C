@@ -277,7 +277,7 @@ int truncar_archivo(int query_id, int nuevo_tamanio, char *file, char *tag)
     }
     else
     {
-        for (int i = bloques_previos - 1; i >= bloques_nuevos - 1; i--)
+        for (int i = bloques_previos - 1; i >= bloques_nuevos; i--)
         {
             log_debug(logger, "Bloque logico %d", i);
             eliminar_bloque_logico(query_id, file, tag, i);
