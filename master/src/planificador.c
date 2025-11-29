@@ -5,6 +5,7 @@ t_list* workers_libres;
 
 sem_t sem_queries_ready;
 sem_t sem_workers_libres;
+sem_t sem_permiso_desalojo;
 
 pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_workers_libres;
@@ -15,6 +16,7 @@ void inicializar_planificador(){
 
     sem_init(&sem_queries_ready, 0, 0);
     sem_init(&sem_workers_libres, 0, 0);
+    sem_init(&sem_permiso_desalojo, 0, 1);
     pthread_mutex_init(&mutex_ready, NULL);
     pthread_mutex_init(&mutex_workers_libres, NULL);
 }

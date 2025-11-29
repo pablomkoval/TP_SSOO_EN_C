@@ -52,6 +52,8 @@ void *manejar_servidor_worker(void *arg){
                     log_trace(logger, "Quito de d_exec query [%d]", qcb_desalojada->qid);
                     pthread_mutex_unlock(&mutex_diccionario_exec);
 
+                    sem_post(&sem_permiso_desalojo);
+
                     qcb_desalojada->pc = *pc;
                     encolar_qcb(qcb_desalojada);
                 }
@@ -402,9 +404,11 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
 
     int total_workers = workers_conectados();
 
+    sem_wait(&sem_permiso_desalojo);
+    log_debug(logger, "Query %d obtuvo permiso para verificar desalojo", qcb_entrante->qid);
+
     pthread_mutex_lock(&mutex_diccionario_exec);
     int querys_en_exec = dictionary_size(diccionario_exec);
-
 
     if(total_workers == querys_en_exec && total_workers > 0){
         
@@ -416,9 +420,11 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
 
                 char *wid_str_asociado = string_itoa(qcb_a_desalojar->id_worker_asociado);
 
-                // pthread_mutex_lock(&mutex_diccionario_exec);
-                // dictionary_remove(diccionario_exec, wid_str_asociado);
-                // pthread_mutex_unlock(&mutex_diccionario_exec);
+                //pthread_mutex_lock(&mutex_diccionario_exec);
+                //dictionary_remove(diccionario_exec, wid_str_asociado);
+                //pthread_mutex_unlock(&mutex_diccionario_exec);
+
+                
 
                 pthread_mutex_lock(&mutex_diccionario_workers);
                 int* socket_worker_asignado_ptr = dictionary_get(diccionario_workers, wid_str_asociado);
@@ -434,9 +440,12 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
             }
         }
     }else{
-        pthread_mutex_unlock(&mutex_diccionario_exec);
         log_warning(logger, "Hice chequeo desalojo pero no interrumpi");
+        sem_post(&sem_permiso_desalojo);
     }
+    
+
+    
 }
 
 
