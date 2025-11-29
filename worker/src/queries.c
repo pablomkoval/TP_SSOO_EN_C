@@ -227,6 +227,10 @@ void ejecutar_delete(char* nombre_file, char* tag, int qid){
 void ejecutar_end(){
     //finalizar query
     //provocar interrupcion(mediante una variable quizas(?))
+    pthread_mutex_lock(&mutex_interpreter);
+    interpreter_ocupado = false;
+    pthread_mutex_unlock(&mutex_interpreter);
+    
     char* motivo = "FIN";
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, END);
