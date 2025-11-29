@@ -51,6 +51,9 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
                 int respuesta = *((int*)list_get(recibido, 0));
                 resultado_ejecucion = manejar_respuesta(respuesta);
                 list_destroy_and_destroy_elements(recibido, free);
+                if(resultado_ejecucion < 0){
+                    return;
+                }
             } else{
                 log_error(logger, "Opcode: %d", opcode);
             }
@@ -65,7 +68,7 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
 query_t* leer_query(char* nombre_archivo, int pc, char** instruccion){
     
     char* path_completo = string_from_format("%s%s", path_queries, nombre_archivo);
-    log_debug(logger, "El Archivo queda (%s)", path_completo);
+    //log_debug(logger, "El Archivo queda (%s)", path_completo);
     FILE* archivo = fopen( path_completo, "r");
     free(path_completo);
 
@@ -270,7 +273,7 @@ char* parsear_errores(int error){
 int manejar_respuesta(int respuesta){
     
     if(respuesta != 1){
-
+        log_warning(logger, "## Storage responde con un error, %d", respuesta);
         char* motivo = parsear_errores(respuesta);
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, END);

@@ -52,6 +52,9 @@ void* manejar_conexion_worker(void* arg) {
                 manejar_delete(*socket_worker);
                 break;
 
+            case 0:
+                break;
+                
             default:
                 log_error(logger, "Operación worker desconocida: %d", codigo_operacion);
                 break;
