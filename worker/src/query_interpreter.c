@@ -14,9 +14,9 @@ void* iniciar_query_interpreter(void* args){
     log_info(logger, "## Query %d: Se recibe la Query. El path de operaciones es: %s", qid, nombre_archivo);
     ciclo_ejecucion(nombre_archivo, pc, qid);
     
-    pthread_mutex_lock(&mutex_interpreter);
-    interpreter_ocupado = false;
-    pthread_mutex_unlock(&mutex_interpreter);
+    // pthread_mutex_lock(&mutex_interpreter);
+    // interpreter_ocupado = false;
+    // pthread_mutex_unlock(&mutex_interpreter);
 
     return NULL;
 }
@@ -214,6 +214,10 @@ int check_interrupt(int qid, int pc){
         log_info(logger, "## Query %d: Desalojada por pedido del Master", qid);
         hay_interrupcion = false;
         pthread_mutex_unlock(&mutex_interrupcion);
+
+        pthread_mutex_lock(&mutex_interpreter);
+        interpreter_ocupado = false;
+        pthread_mutex_unlock(&mutex_interpreter);
 
         t_paquete* contestacion = crear_paquete();
         cambiar_opcode_paquete(contestacion, INTERRUPCION_RTA);
