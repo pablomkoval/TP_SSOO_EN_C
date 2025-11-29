@@ -14,6 +14,10 @@ void* iniciar_query_interpreter(void* args){
     log_info(logger, "## Query %d: Se recibe la Query. El path de operaciones es: %s", qid, nombre_archivo);
     ciclo_ejecucion(nombre_archivo, pc, qid);
     
+    pthread_mutex_lock(&mutex_interpreter);
+    interpreter_ocupado = false;
+    pthread_mutex_unlock(&mutex_interpreter);
+
     return NULL;
 }
 
@@ -71,7 +75,7 @@ query_t* leer_query(char* nombre_archivo, int pc, char** instruccion){
     query_t* query = NULL;
 
     while(fgets(buffer, sizeof(buffer), archivo)){
-        log_trace(logger, "linea actual (%d), pc (%d)", linea_actual, pc);
+        //log_trace(logger, "linea actual (%d), pc (%d)", linea_actual, pc);
         if(linea_actual == pc){
             buffer[strcspn(buffer, "\n")] = 0; // eliminar \n
             query = parsear_query(buffer, instruccion);

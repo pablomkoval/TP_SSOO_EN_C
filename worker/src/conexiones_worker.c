@@ -1,5 +1,7 @@
 #include <conexiones_worker.h>
 
+bool interpreter_ocupado = false;
+pthread_mutex_t mutex_interpreter = PTHREAD_MUTEX_INITIALIZER;
 
 void handshake_master(int socket, int worker_id){
     enviar_handshake(socket, HANDSHAKE_WORKER);
@@ -104,6 +106,17 @@ void* funcion_escucha_master(){
         switch (op_code)
         {
         case SOLICITUD_NUEVA_QUERY:
+
+            pthread_mutex_lock(&mutex_interpreter);
+            if (interpreter_ocupado) {
+                log_error(logger, "Se recibio nueva query pero el worker ya está ejecutando otra. Se ignora.");
+                pthread_mutex_unlock(&mutex_interpreter);
+                break;
+            }
+            interpreter_ocupado = true;  
+            pthread_mutex_unlock(&mutex_interpreter);
+
+
             log_debug(logger, "Se recibio una solicitud de nueva query");
             
             t_list* recibido = recibir_paquete(socket_master);
