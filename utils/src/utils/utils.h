@@ -55,7 +55,8 @@ typedef enum
     FILE_TAG_INEXISTENTE = -2,
     ESPACIO_INSUFICIENTE = -3,
     ESCRITURA_NO_PERMITIDA = -4,
-    LECTURA_O_ESCRITURA_FUERA_DE_RANGO = -5
+    LECTURA_O_ESCRITURA_FUERA_DE_RANGO = -5,
+    PAGINA_VACIA = 2
 } errores_storage;
 
 typedef enum

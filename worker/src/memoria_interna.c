@@ -66,6 +66,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
     }
 
     if(pag && pag->bit_presencia){
+        log_warning(logger, "pagina presente en memoria interna del worker");
         usleep(retardo_memoria * 1000);
         pag->bit_uso = true;
         pag->timestamp = contador_lru++;
@@ -73,6 +74,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
     }
 
     if(pag->bit_presencia == false){
+        log_warning(logger, "La pagina no esta presente en memoria interna, se va a pedir a storage");
         log_trace(logger, "File_tag: (%s), pag-file_tag: (%s)", file_tag, pag->file_tag);
         char** separado = separar_file_tag(file_tag);
         char* file = separado[0];
@@ -84,18 +86,22 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
             log_debug(logger, "##DEBUG: antes de usar algoritmo de reemplazo");
             pagina_t* victima = buscar_victima_reemplazo();
             frame = liberar_frame(victima, qid);
+            bitarray_set_bit(bitmap_frames, frame);
+            victima->frame = -1;
             log_info(logger, "## Query %d: Se reemplaza la página %s/%d por la %s/%d", qid, victima->file_tag, victima->nro_pagina, pag->file_tag, pag->nro_pagina);
         }
         
         cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid);
         log_info(logger, "Query %d: - Memoria Add - File: %s - Tag: %s - Pagina: %d - Marco: %d", qid, file, tag, nro_pagina, frame);
-        log_debug(logger, "##DEBUG: despues de cargar pagina de storage");
+        if (!pag->bit_presencia) {
+            list_add(paginas_en_memoria, pag);
+        }
+        
         pag->bit_presencia = true;
         pag->bit_uso = true;
         pag->timestamp = contador_lru++;
         pag->frame = frame;
         pag->bit_modificado = false;
-        list_add(paginas_en_memoria, pag);
         
         log_info(logger, "Query %d: Se asigna el Marco: %d a la Página: %d perteneciente al - File: %s - Tag: %s", qid, frame, nro_pagina, file, tag);
         string_array_destroy(separado);
@@ -108,6 +114,7 @@ int buscar_frame_libre(){
     for(int i = 0; i < cant_frames; i++){
         if(!bitarray_test_bit(bitmap_frames, i)){
             bitarray_set_bit(bitmap_frames, i);
+            log_debug(logger, "Encontre el frame libre: %d", i);
             return i;
         }
     }
@@ -129,9 +136,10 @@ pagina_t* buscar_victima_reemplazo(){
          victima->frame, victima->nro_pagina);
 
     } else if(strcmp(algoritmo_reemplazo, "CLOCK-M") == 0){
-        int cant_pags = list_size(paginas_en_memoria);
+        int cant_pags;
 
         while(1){
+            cant_pags = list_size(paginas_en_memoria);
             for(int vuelta = 0; vuelta < 2; vuelta++){
 
                 for(int i = 0; i < cant_pags; i++){
@@ -170,11 +178,12 @@ pagina_t* buscar_victima_reemplazo(){
         }
     }
 
-    log_error(logger, "El file tag de la victima seleccionada es: (%s)", victima->file_tag);
+    log_trace(logger, "El file tag de la victima seleccionada es: (%s)", victima->file_tag);
     return victima;
 }
 
 int liberar_frame(pagina_t* victima, int qid){
+    log_debug(logger, "intenta liberar frame");
     if (victima == NULL) {
         log_error(logger, "Intento de reemplazo con víctima NULL");
         return -1;
@@ -191,17 +200,26 @@ int liberar_frame(pagina_t* victima, int qid){
 
     void* direccion_frame = memoria_interna + (victima->frame * tam_pagina);
     memset(direccion_frame, 0, tam_pagina);
-    log_debug(logger, "Frame %d limpiado (%d bytes en 0)", victima->frame, tam_pagina);
+    log_warning(logger, "Frame %d limpiado (%d bytes en 0)", victima->frame, tam_pagina);
+    int frame_liberado = victima->frame;
 
+    victima->frame = -1;
     bitarray_clean_bit(bitmap_frames, victima->frame);
     victima->bit_presencia = false;
+    victima->bit_uso = false;
+    victima->bit_modificado = false;
     list_remove_element(paginas_en_memoria, victima);
 
-    return victima->frame;
+    if (puntero_clock >= list_size(paginas_en_memoria)) {
+        puntero_clock = 0;
+    }
+
+    return frame_liberado;
 }
 
 void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pagina, int frame, int qid){
     log_debug(logger, "qid: %d file: %s, tag: %s", qid, file, tag);
+    log_warning(logger, "voy a cargar de storage la pagina %d, al frame %d", nro_pagina, frame);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, READ);
     agregar_a_paquete(paquete, &qid, sizeof(int));
@@ -217,19 +235,27 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     } 
 
     t_list* recibido = recibir_paquete(socket_storage);
-    if (!recibido || list_size(recibido) < 2) {
-        log_error(logger, "Se recibieron menos de 2 cosas de storage Resultado(%d)", *(int*)list_get(recibido, 0));
-        memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);//pongo la pagina en 0
-        int resultado = *((int*)list_get(recibido, 0));
-        manejar_respuesta(resultado);
+    if(!recibido) return;
+
+    int resultado = *((int*)list_get(recibido, 0));
+    if (list_size(recibido) < 2) {
+        log_trace(logger, "Se recibieron menos de 2 cosas de storage Resultado(%d)", *(int*)list_get(recibido, 0));
+        memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);//pongo la pagina en 0    
+        
+        if(resultado < 0){
+            manejar_respuesta(resultado);
+        }else if(resultado == PAGINA_VACIA){
+            manejar_respuesta(1);
+        }
         list_destroy_and_destroy_elements(recibido, free);
         return;
     }
-    int* resultado = (int*)list_get(recibido, 0);
+    //int* resultado = (int*)list_get(recibido, 0);
 
-    if (!resultado || *resultado != 1) {
+    if (resultado != 1) {
         log_error(logger, "Fallo al leer pagina de storage");
         list_destroy_and_destroy_elements(recibido, free);
+        manejar_respuesta(resultado);
         return;
     }
     
@@ -241,15 +267,17 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
         memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);
         return;
     }
+
     if(strlen(contenido_raw) < tam_pagina){
         log_trace(logger, "El contenido raw es menor a una pagina");
-        list_destroy_and_destroy_elements(recibido, free);
         memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);
+        memcpy(memoria_interna + frame * tam_pagina, contenido_raw, strlen(contenido_raw)); //capaz va un +1
+        list_destroy_and_destroy_elements(recibido, free);
         return;
     }
     char* contenido = strdup(contenido_raw); 
     //averiguar si el memset es correcto
-    log_error(logger, "El contenido a insertar en memoria es (%s)", contenido);
+    log_trace(logger, "El contenido a insertar en memoria es (%s)", contenido);
     //memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
     memcpy(memoria_interna + frame * tam_pagina, contenido, tam_pagina); 
     list_destroy_and_destroy_elements(recibido, free);

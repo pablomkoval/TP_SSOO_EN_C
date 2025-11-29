@@ -345,15 +345,17 @@ void mandar_read(int socket_worker, int resultado, char* contenido)
 {
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, RESPUESTA_STORAGE);
-    agregar_a_paquete(paquete, &resultado, sizeof(int));
     
     if (contenido != NULL) {
+        agregar_a_paquete(paquete, &resultado, sizeof(int));
         agregar_a_paquete(paquete, contenido, strlen(contenido) + 1); 
     } else {
-        char* vacio = "";
+        //char* vacio = "";
         // char* pagina_vacia = malloc(block_size);
         // memset(pagina_vacia, 0, block_size);
-        agregar_a_paquete(paquete, vacio, strlen(vacio) + 1); 
+        //agregar_a_paquete(paquete, vacio, strlen(vacio) + 1);
+        resultado = PAGINA_VACIA;
+        agregar_a_paquete(paquete, &resultado, sizeof(int)); 
     }
 
     enviar_paquete(paquete, socket_worker, logger);
