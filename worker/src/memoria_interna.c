@@ -62,11 +62,10 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         pag->frame = -1;
         pag->file_tag = strdup(file_tag);
         list_add(tabla->paginas, pag);
-        log_debug(logger, "##DEBUG: cuando se creo la pagina");
     }
 
     if(pag && pag->bit_presencia){
-        log_warning(logger, "pagina presente en memoria interna del worker");
+        //log_warning(logger, "pagina presente en memoria interna del worker");
         usleep(retardo_memoria * 1000);
         pag->bit_uso = true;
         pag->timestamp = contador_lru++;
@@ -74,7 +73,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
     }
 
     if(pag->bit_presencia == false){
-        log_warning(logger, "La pagina no esta presente en memoria interna, se va a pedir a storage");
+        //log_warning(logger, "La pagina no esta presente en memoria interna, se va a pedir a storage");
         log_trace(logger, "File_tag: (%s), pag-file_tag: (%s)", file_tag, pag->file_tag);
         char** separado = separar_file_tag(file_tag);
         char* file = separado[0];
@@ -83,7 +82,6 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         log_info(logger, "Query %d: - Memoria Miss - File: %s - Tag: %s - Pagina: %d", qid, file, tag, nro_pagina);
         int frame = buscar_frame_libre();
         if(frame == -1){
-            log_debug(logger, "##DEBUG: antes de usar algoritmo de reemplazo");
             pagina_t* victima = buscar_victima_reemplazo();
             frame = liberar_frame(victima, qid);
             bitarray_set_bit(bitmap_frames, frame);
@@ -114,7 +112,6 @@ int buscar_frame_libre(){
     for(int i = 0; i < cant_frames; i++){
         if(!bitarray_test_bit(bitmap_frames, i)){
             bitarray_set_bit(bitmap_frames, i);
-            log_debug(logger, "Encontre el frame libre: %d", i);
             return i;
         }
     }
@@ -145,7 +142,7 @@ pagina_t* buscar_victima_reemplazo(){
                 for(int i = 0; i < cant_pags; i++){
                     pagina_t* pag = list_get(paginas_en_memoria, puntero_clock);
 
-                    log_trace(logger, "Evaluando frame %d: U=%d, M=%d (vuelta %d)",
+                    log_debug(logger, "Evaluando frame %d: U=%d, M=%d (vuelta %d)",
                      pag->frame, pag->bit_uso, pag->bit_modificado, vuelta);
 
                     if (vuelta == 0) {
@@ -178,7 +175,7 @@ pagina_t* buscar_victima_reemplazo(){
         }
     }
 
-    log_trace(logger, "El file tag de la victima seleccionada es: (%s)", victima->file_tag);
+    log_debug(logger, "El file tag de la victima seleccionada es: (%s)", victima->file_tag);
     return victima;
 }
 
@@ -200,7 +197,7 @@ int liberar_frame(pagina_t* victima, int qid){
 
     void* direccion_frame = memoria_interna + (victima->frame * tam_pagina);
     memset(direccion_frame, 0, tam_pagina);
-    log_warning(logger, "Frame %d limpiado (%d bytes en 0)", victima->frame, tam_pagina);
+    //log_warning(logger, "Frame %d limpiado (%d bytes en 0)", victima->frame, tam_pagina);
     int frame_liberado = victima->frame;
 
     victima->frame = -1;
@@ -219,7 +216,7 @@ int liberar_frame(pagina_t* victima, int qid){
 
 void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pagina, int frame, int qid){
     log_debug(logger, "qid: %d file: %s, tag: %s", qid, file, tag);
-    log_warning(logger, "voy a cargar de storage la pagina %d, al frame %d", nro_pagina, frame);
+    //log_warning(logger, "voy a cargar de storage la pagina %d, al frame %d", nro_pagina, frame);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, READ);
     agregar_a_paquete(paquete, &qid, sizeof(int));
