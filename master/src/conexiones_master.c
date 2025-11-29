@@ -395,7 +395,7 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
 
     t_qcb* qcb_a_desalojar = NULL;
 
-    void buscar_candidato_desalojo(char* wid_str, t_qcb* qcb_exec){ //tiene que estar esta funcion aca?
+    void* buscar_candidato_desalojo(char* wid_str, t_qcb* qcb_exec){ //tiene que estar esta funcion aca?
         
         if (qcb_a_desalojar == NULL || qcb_exec->prioridad > qcb_a_desalojar->prioridad) {
             qcb_a_desalojar = qcb_exec;

@@ -142,5 +142,10 @@ void* hilo_aging_individual(void* arg){
     
     log_info(logger, "qid %d: Hilo de aging individual finalizo.", qcb->qid);
     //free(arg);
+
+    pthread_mutex_lock(&mutex_aging);
+    qcb->aging_activo = false;
+    pthread_mutex_unlock(&mutex_aging);
+
     return NULL;
 }

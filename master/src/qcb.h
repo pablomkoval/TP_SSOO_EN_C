@@ -25,6 +25,7 @@ typedef struct{
 
 extern int qid_global;
 extern pthread_mutex_t mutex_qid_global;
+extern pthread_mutex_t mutex_aging;
 
 t_qcb* crear_qcb (char* query_entrante, int prioridad_query, int socket);
 void cambiar_estado(t_qcb* qcb, int nuevo_estado);
