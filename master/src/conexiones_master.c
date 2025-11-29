@@ -318,7 +318,7 @@ void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
     if(qcb->estado == READY){
 
         list_remove_element(cola_ready, qcb);    
-
+        cambiar_estado(qcb, EXIT);
     } else if (qcb->estado == EXEC){
 
         char* wid_asociado_str = string_itoa(qcb->id_worker_asociado);
@@ -336,10 +336,8 @@ void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
         int socket_worker_asociado = *socket_worker_asociado_ptr;
 
         enviar_cod_op(socket_worker_asociado, INTERRUPCION);
-
+        cambiar_estado(qcb, EXIT);
     }
-
-    cambiar_estado(qcb, EXIT);
     pthread_mutex_unlock(&mutex_ready);
     
     log_info(logger, "## Se desconecta un Query Control. Se finaliza la Query <%d> con prioridad <%d>. Nivel multiprocesamiento <%d>", qcb->qid, qcb->prioridad, workers_conectados());
