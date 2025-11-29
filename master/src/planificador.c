@@ -89,7 +89,7 @@ void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id){
 t_qcb* obtener_query_y_worker(int *worker_libre_id){
     pthread_mutex_lock(&mutex_ready);
     t_qcb* query_a_ejecutar = list_remove(cola_ready, 0);
-    log_debug(logger, "Querty a ejecutar: %d", query_a_ejecutar->qid);
+    log_debug(logger, "Query a ejecutar: %d", query_a_ejecutar->qid);
     cambiar_estado(query_a_ejecutar, EXEC);
     pthread_mutex_unlock(&mutex_ready);
     
