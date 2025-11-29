@@ -74,8 +74,8 @@ void *manejar_servidor_worker(void *arg){
 }
 
 void* manejar_servidor_querycontrol(void* arg){
-    int socket_cliente = *((int*)arg);
-
+    //int socket_cliente = *((int*)arg);
+    int socket_cliente = (int)(intptr_t)arg;
     t_qcb* qcb = NULL;
 
     while (1){
@@ -99,7 +99,7 @@ void* manejar_servidor_querycontrol(void* arg){
                 break;
         }
     }
-    free(arg);
+    //free(arg);
     return NULL;
 }
 
@@ -144,10 +144,11 @@ void *funcion_main_escucha(void *socket_arg){
 
             case QUERY_CONTROL:
                 log_trace(logger, "Recibi handshake de un query control");
-                int* socket_query_ptr = malloc(sizeof(int));
-                *socket_query_ptr = socket_cliente;
+                // int* socket_query_ptr = malloc(sizeof(int));
+                // *socket_query_ptr = socket_cliente;
 
-                pthread_create(&hilo_cliente, NULL, manejar_servidor_querycontrol, socket_query_ptr);
+                //pthread_create(&hilo_cliente, NULL, manejar_servidor_querycontrol, socket_query_ptr);
+                pthread_create(&hilo_cliente, NULL, manejar_servidor_querycontrol, (void*)(intptr_t)socket_cliente);
                 pthread_detach(hilo_cliente);
                 break;
 
