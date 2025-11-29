@@ -61,6 +61,8 @@ void *manejar_servidor_worker(void *arg){
                 break;
 
             case 0:
+                //hacer_desconexion_worker(worker_id);
+                //return NULL;
                 break;
 
             default:
