@@ -58,8 +58,11 @@ int copiar_tag(int query_id, char *file_origen, char *tag_origen, char *file_des
 
     char* file_tag_destino = concatenar_path(file_destino, tag_destino);
 
-    if (file_tag_existe(path_destino))
+    if (file_tag_existe(file_tag_destino)){
+        log_error(logger, "File tag preexistente");
         return -1;
+    }
+       
 
     crear_file(file_destino, tag_destino);
 
