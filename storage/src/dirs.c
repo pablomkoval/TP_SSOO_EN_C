@@ -7,21 +7,24 @@ void crear_directorio(const char *path)
 
 int crear_file(char *file, char *tag)
 {
+    char* file_tag = concatenar_path(file, tag);
     char *path = concatenar_path("files", file);
     char *path_tag = string_from_format("files/%s/%s", file, tag);
     char *chequeo = string_from_format("%s/files/%s", punto_montaje, file);
 
-    if (file_tag_existe(chequeo))
+    if (file_tag_existe(file_tag))
+    {
+        log_error(logger, "File/Tag preexistente");
         return -1;
-
+    }
+        
     crear_directorio(path);
     crear_tag(path_tag);
 
     free(path);
     free(path_tag);
     free(chequeo);
-
-    
+    free(file_tag);
 
     return 1;
 }
@@ -85,6 +88,7 @@ int eliminar_tag(int query_id, char *file, char* tag)    //// Falta eliminar has
 
     if(!file_tag_existe(file_tag)) 
     {
+        log_error(logger, "File/Tag inexistente");
         free(file_tag);
         return -2; 
     }
@@ -137,17 +141,11 @@ bool file_tag_existe(char *file_tag)
 {
     char* path = string_from_format("%s/files/%s", punto_montaje, file_tag);
 
-    if (access(path, F_OK) == 0)
-    {
-        free(path);
-        return 1;
-    }
-    else
-    {
-        free(path);
-        return 0;
-    }
-        
+    bool existe = (access(path, F_OK) == 0);
+
+    free(path);
+
+    return existe;
 }
 
 void dupear_hard_links(int query_id, char *file_origen, char *tag_origen, char *file_destino, char *tag_destino)

@@ -94,6 +94,7 @@ void asociar_hash_block(char *bloque_fisico)
 
 int obtener_numero_bloque(char *path) //no hace falta sincro
 {
+
     const char *nombre = strrchr(path, '/');
 
     if (!nombre)
@@ -385,9 +386,17 @@ int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buff
     log_debug(logger, "File/tag: %s", file_tag);
 
     if (!file_tag_existe(file_tag))
+    {
+        log_error(logger, "file/tag inexistente");
         return FILE_TAG_INEXISTENTE;
+    }
+        
     if (operacion_fuera_de_rango(nro_bloque, file_tag))
+    {
+        log_error(logger, "operacion fuera de rango");
         return LECTURA_O_ESCRITURA_FUERA_DE_RANGO;
+    }
+        
 
     //int nro_bloque = offset / block_size;
     //int offset_interno = offset - (nro_bloque * block_size);
@@ -415,12 +424,20 @@ bool operacion_fuera_de_rango(int nro_bloque, char *path)
     t_config *meta = config_create(path_meta);
     int tamanio_tag = config_get_int_value(meta, "TAMAÑO");
 
-    free(path_meta);
-    config_destroy(meta);
+    log_info(logger, "path %s", path_meta);
+
+    int tam = (nro_bloque * block_size) + block_size;
+    log_info(logger, "tamanio tag = %d  tamanio intentado = %d", tamanio_tag, tam );
 
     if ((nro_bloque * block_size + block_size) > tamanio_tag)
+    {
+        free(path_meta);
+        config_destroy(meta);
         return true;
+    }
 
+    free(path_meta);
+    config_destroy(meta);
     return false;
     
     
