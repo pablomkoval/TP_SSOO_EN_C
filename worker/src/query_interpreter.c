@@ -33,17 +33,21 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
         
         //decode + execute
         resultado_ejecucion = ejecutar_query(query_a_ejecutar, qid);
-        if(resultado_ejecucion == -2) return; // caso para errores extraordinarios 
-        log_info(logger, "## Query %d: - Instrucción realizada: %s", qid, instruccion);
-        free(instruccion);
-        //free(query_a_ejecutar->file_tag);
-        free(query_a_ejecutar);
-        
 
-        if(resultado_ejecucion == -1){
-            log_warning(logger, "## Query %d: Desalojada por error en storage", qid);
-            return;
-        } 
+        if(resultado_ejecucion == -2){
+            log_warning(logger, "## Query %d: - Desalojada por error en storage al ejecutar: %s", qid, instruccion);
+            free(query_a_ejecutar);
+            free(instruccion);
+            return; // caso para errores
+        }
+
+        //free(query_a_ejecutar->file_tag);
+        
+        if(resultado_ejecucion == -1) {
+            free(instruccion);
+            free(query_a_ejecutar);
+            return; // caso para END 
+        }
 
         //aguardar respuesta siempre, todas las instrucciones son bloqueantes
         log_debug(logger, "Resultado ejecucion = %d", resultado_ejecucion);
@@ -55,10 +59,19 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
                 resultado_ejecucion = manejar_respuesta(respuesta);
                 list_destroy_and_destroy_elements(recibido, free);
                 if(resultado_ejecucion < 0){
+                    log_warning(logger, "## Query %d: - Desalojada por error en storage al ejecutar: %s", qid, instruccion);
+                    free(instruccion);
+                    free(query_a_ejecutar);
                     return;
+                }else{
+                    log_info(logger, "## Query %d: - Instrucción realizada: %s", qid, instruccion);
+                    free(instruccion);
+                    free(query_a_ejecutar);
                 }
             } else{
                 log_error(logger, "Opcode: %d", opcode);
+                free(instruccion);
+                free(query_a_ejecutar);
             }
         }
         
@@ -181,24 +194,24 @@ int ejecutar_query(query_t* query, int qid){
         
         case WRITE_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un WRITE");
-            ejecutar_write(query->file_tag, atoi(query->param1), query->param2, qid);
+            resultado = ejecutar_write(query->file_tag, atoi(query->param1), query->param2, qid);
             free(query->param1);
             free(query->file_tag);
             free(query->param2);
             free(file);
             free(tag);
-            return 2;
+            return resultado;
             break;
 
         case READ_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un READ");
-            ejecutar_read(query->file_tag, atoi(query->param1), atoi(query->param2), qid);
+            resultado = ejecutar_read(query->file_tag, atoi(query->param1), atoi(query->param2), qid);
             free(query->param1);
             free(query->param2);
             free(query->file_tag);
             free(file);
             free(tag);
-            return 2;
+            return resultado;
             break;
 
         case TAG_Q:

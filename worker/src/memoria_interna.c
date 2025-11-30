@@ -90,7 +90,9 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
             log_info(logger, "## Query %d: Se reemplaza la página %s/%d por la %s/%d", qid, victima->file_tag, victima->nro_pagina, pag->file_tag, pag->nro_pagina);
         }
         
-        cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid);
+        if(cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid) < 0){
+            return NULL;
+        }
         log_info(logger, "Query %d: - Memoria Add - File: %s - Tag: %s - Pagina: %d - Marco: %d", qid, file, tag, nro_pagina, frame);
         if (!pag->bit_presencia) {
             pthread_mutex_lock(&mutex_paginas_en_memoria);
@@ -226,7 +228,7 @@ int liberar_frame(pagina_t* victima, int qid){
     return frame_liberado;
 }
 
-void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pagina, int frame, int qid){
+int cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pagina, int frame, int qid){
     log_debug(logger, "qid: %d file: %s, tag: %s", qid, file, tag);
     //log_warning(logger, "voy a cargar de storage la pagina %d, al frame %d", nro_pagina, frame);
     t_paquete* paquete = crear_paquete();
@@ -240,11 +242,11 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
 
     if(recibir_opcode(socket_storage) != RESPUESTA_STORAGE){
         log_debug(logger, "No se recibio respuesta de storage");
-        return;
+        return 1;
     } 
 
     t_list* recibido = recibir_paquete(socket_storage);
-    if(!recibido) return;
+    if(!recibido) return 1;
 
     int resultado = *((int*)list_get(recibido, 0));
     if (list_size(recibido) < 2) {
@@ -253,11 +255,12 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
         
         if(resultado < 0){
             manejar_respuesta(resultado);
+            return -1;
         }else if(resultado == PAGINA_VACIA){
             manejar_respuesta(1);
         }
         list_destroy_and_destroy_elements(recibido, free);
-        return;
+        return 1;
     }
     //int* resultado = (int*)list_get(recibido, 0);
 
@@ -265,7 +268,7 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
         log_error(logger, "Fallo al leer pagina de storage");
         list_destroy_and_destroy_elements(recibido, free);
         manejar_respuesta(resultado);
-        return;
+        return -1;
     }
     
     char* contenido_raw = list_get(recibido, 1);
@@ -274,7 +277,7 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
         log_error(logger, "Storage me mando contenido NULL");
         list_destroy_and_destroy_elements(recibido, free);
         memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);
-        return;
+        return 1;
     }
 
     if(strlen(contenido_raw) < tam_pagina){
@@ -282,7 +285,7 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
         memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);
         memcpy(memoria_interna + frame * tam_pagina, contenido_raw, strlen(contenido_raw)); //capaz va un +1
         list_destroy_and_destroy_elements(recibido, free);
-        return;
+        return 1;
     }
     char* contenido = strdup(contenido_raw); 
     //averiguar si el memset es correcto
@@ -290,7 +293,7 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     //memset(memoria_interna + frame * tam_pagina, 0, tam_pagina);// limpio la pagina vieja antes de traer el contenido nuevo
     memcpy(memoria_interna + frame * tam_pagina, contenido, tam_pagina); 
     list_destroy_and_destroy_elements(recibido, free);
-    return;
+    return 1;
 }
 
 int hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int qid){

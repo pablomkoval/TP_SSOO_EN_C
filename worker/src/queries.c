@@ -25,7 +25,7 @@ void ejecutar_truncate(char* file, char* tag, int tamanio, int qid){
     borrar_paquete(paquete);
 }
 
-void ejecutar_write(char* file_tag, int direccion_base, char* contenido, int qid){
+int ejecutar_write(char* file_tag, int direccion_base, char* contenido, int qid){
     int bytes_restantes = strlen(contenido);
     int direccion_actual = direccion_base;
     int bytes_escritos = 0;
@@ -34,6 +34,7 @@ void ejecutar_write(char* file_tag, int direccion_base, char* contenido, int qid
     int offset_inicial = obtener_offset_pagina(direccion_base);
 
     pagina_t* pag_inicial = obtener_pagina(file_tag, pagina_logica_inicial, qid);
+    if(pag_inicial == NULL) return -2;
     int direccion_fisica_inicial = pag_inicial->frame * tam_pagina + offset_inicial;
 
     char* escrito = malloc(bytes_restantes + 1);
@@ -44,6 +45,7 @@ void ejecutar_write(char* file_tag, int direccion_base, char* contenido, int qid
 
         log_trace(logger, "Write -> file_tag:(%s)", file_tag);
         pagina_t* pag = obtener_pagina(file_tag, pagina_logica, qid);
+        if(pag == NULL) return -2;
 
         log_debug(logger, "##DEBUG: OBTUVO PAGINA");
 
@@ -77,11 +79,11 @@ void ejecutar_write(char* file_tag, int direccion_base, char* contenido, int qid
     log_info(logger, "Query %d: Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", qid, direccion_fisica_inicial, escrito);
 
     free(escrito);
-    return;
+    return 2;
 }
 
 
-void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
+int ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
     int bytes_restantes = tamanio;
     char* buffer = malloc(tamanio + 1);
     int direccion_actual = direccion_base;
@@ -90,6 +92,7 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
     int pagina_logica_inicial = obtener_pagina_logica(direccion_base);
     int offset_inicial = obtener_offset_pagina(direccion_base);
     pagina_t* pag_inicial = obtener_pagina(file_tag, pagina_logica_inicial, qid);
+    if(pag_inicial == NULL) return -2;
     int direccion_fisica_inicial = pag_inicial->frame * tam_pagina + offset_inicial;
 
     log_debug(logger,
@@ -104,6 +107,7 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
         int offset = obtener_offset_pagina(direccion_actual);
 
         pagina_t* pag = obtener_pagina(file_tag, pagina_logica, qid);
+        if(pag == NULL) return -2;
 
         int faltante_pagina = tam_pagina - offset;
 
@@ -158,7 +162,7 @@ void ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
     
     borrar_paquete(paquete);
     free(buffer);
-    return;
+    return 2;
 }
 
 void ejecutar_tag(char* file_origen, char* tag_origen, char* file_tag_destino, int qid){
@@ -187,14 +191,14 @@ int ejecutar_flush(char* file, char* tag, char* file_tag, int qid){
     tabla_paginas_t* tabla = obtener_tabla(file_tag);
     //falta agregarlo antes de realizar el desalojo del query del worker
 
-    if(!tabla) return -1;
+    if(!tabla) return -2;
 
     for(int i=0; i < list_size(tabla->paginas); i++){
         pagina_t* pag = list_get(tabla->paginas, i);
 
         if(pag->bit_presencia && pag->bit_modificado){
             int rta = hacer_flush_de_pagina(file, tag, pag->nro_pagina, pag->frame, qid);
-            if(rta < 0) return -1;
+            if(rta < 0) return -2;
             pag->bit_modificado = false;
         }
     }
@@ -204,7 +208,7 @@ int ejecutar_flush(char* file, char* tag, char* file_tag, int qid){
 int ejecutar_commit(char* file, char* tag, char* file_tag, int qid){
 
     if (ejecutar_flush(file, tag, file_tag, qid) < 0){
-        return -1;
+        return -2;
     }
 
     t_paquete* paquete = crear_paquete();
