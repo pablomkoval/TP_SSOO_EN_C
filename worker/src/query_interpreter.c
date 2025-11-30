@@ -40,13 +40,10 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
         free(query_a_ejecutar);
         
 
-        if(resultado_ejecucion == -1) return; 
-            //{
-            // pthread_mutex_lock(&mutex_interpreter);
-            // interpreter_ocupado = false;
-            // pthread_mutex_unlock(&mutex_interpreter);
-            //    return; // caso para el END
-            //}
+        if(resultado_ejecucion == -1){
+            log_warning(logger, "## Query %d: Desalojada por error en storage", qid);
+            return;
+        } 
 
         //aguardar respuesta siempre, todas las instrucciones son bloqueantes
         log_debug(logger, "Resultado ejecucion = %d", resultado_ejecucion);
@@ -161,6 +158,7 @@ int ejecutar_query(query_t* query, int qid){
     char* file = strdup(partes[0]);
     char* tag = strdup(partes[1]);
     string_array_destroy(partes);
+    int resultado;
 
     switch(query->identificador){
         case -1:
@@ -184,11 +182,11 @@ int ejecutar_query(query_t* query, int qid){
         case WRITE_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un WRITE");
             ejecutar_write(query->file_tag, atoi(query->param1), query->param2, qid);
-            // free(query->param1);
-            // free(query->file_tag);
-            // free(query->param2);
-            // free(file);
-            // free(tag);
+            free(query->param1);
+            free(query->file_tag);
+            free(query->param2);
+            free(file);
+            free(tag);
             return 2;
             break;
 
@@ -212,17 +210,20 @@ int ejecutar_query(query_t* query, int qid){
             
         case COMMIT_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un COMMIT");
-            ejecutar_commit(file, tag, query->file_tag, qid);
+            resultado = ejecutar_commit(file, tag, query->file_tag, qid);
             free(query->file_tag);
+            free(file);
+            free(tag);
+            return resultado;
             break;
 
         case FLUSH_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un FLUSH");
-            ejecutar_flush(file, tag, query->file_tag, qid);
+            resultado = ejecutar_flush(file, tag, query->file_tag, qid);
             free(query->file_tag);
             free(file);
             free(tag);
-            return 2;
+            return resultado;
             break;
 
         case DELETE_Q:
@@ -255,15 +256,17 @@ int check_interrupt(int qid, int pc){
         for(int i = 0; i < list_size(paginas_en_memoria); i++){
             pagina_t* pag = list_get(paginas_en_memoria, i);
             
-            char** partes = separar_file_tag(pag->file_tag);
-            char* file = strdup(partes[0]);
-            char* tag = strdup(partes[1]);
-            string_array_destroy(partes);
+            if(pag->bit_modificado){
+                char** partes = separar_file_tag(pag->file_tag);
+                char* file = strdup(partes[0]);
+                char* tag = strdup(partes[1]);
+                string_array_destroy(partes);
             
-            hacer_flush_de_pagina(file, tag, pag->nro_pagina, pag->frame, qid);
-            pag->bit_modificado = false;
-            free(file);
-            free(tag);
+                hacer_flush_de_pagina(file, tag, pag->nro_pagina, pag->frame, qid);
+                pag->bit_modificado = false;
+                free(file);
+                free(tag);
+            }
         }
         pthread_mutex_unlock(&mutex_paginas_en_memoria);
 

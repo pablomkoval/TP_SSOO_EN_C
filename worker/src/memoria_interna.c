@@ -293,7 +293,7 @@ void cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pag
     return;
 }
 
-void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int qid){
+int hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int qid){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, WRITE);
     agregar_a_paquete(paquete, &qid, sizeof(int));
@@ -320,12 +320,13 @@ void hacer_flush_de_pagina(char* file, char* tag, int nro_pagina, int frame, int
     if(opcode == RESPUESTA_STORAGE){
         t_list* recibido = recibir_paquete(socket_storage);
         int respuesta = *((int*)list_get(recibido, 0));
-        manejar_respuesta(respuesta);
+        int resultado = manejar_respuesta(respuesta);
         list_destroy_and_destroy_elements(recibido, free);
+        return resultado;
     }else{
         log_error(logger, "En vez de una RESPUESTA STORAGE se obtuvo el opcode: %d", opcode);
     }
-    return;
+    return 1;
 }
 
 int obtener_pagina_logica(int direccion_logica){

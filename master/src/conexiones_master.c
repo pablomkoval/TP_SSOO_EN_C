@@ -253,7 +253,7 @@ void hacer_end_worker(int worker_id, int socket_worker){
 
     pthread_mutex_lock(&mutex_diccionario_exec);
     t_qcb *qcb = dictionary_remove(diccionario_exec, worker_id_str);
-    log_trace(logger, "Quito de d_exec query [%d]", qcb->qid);
+    
     pthread_mutex_unlock(&mutex_diccionario_exec);
 
     if (qcb == NULL) {
@@ -262,6 +262,8 @@ void hacer_end_worker(int worker_id, int socket_worker){
         free(motivo); // Liberar la cadena duplicada
         return; 
     }
+
+    log_trace(logger, "Quito de d_exec query [%d]", qcb->qid);
 
     log_info(logger, "## Se terminó la Query %d en el Worker %d", qcb->qid, worker_id);
 
@@ -400,6 +402,7 @@ void hacer_chequeo_desalojo(t_qcb* qcb_entrante){
         if (qcb_a_desalojar == NULL || qcb_exec->prioridad > qcb_a_desalojar->prioridad) {
             qcb_a_desalojar = qcb_exec;
         }
+        return NULL;
     }
 
     int total_workers = workers_conectados();

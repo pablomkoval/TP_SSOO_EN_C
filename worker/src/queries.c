@@ -183,25 +183,29 @@ void ejecutar_tag(char* file_origen, char* tag_origen, char* file_tag_destino, i
     return;
 }
 
-void ejecutar_flush(char* file, char* tag, char* file_tag, int qid){
+int ejecutar_flush(char* file, char* tag, char* file_tag, int qid){
     tabla_paginas_t* tabla = obtener_tabla(file_tag);
     //falta agregarlo antes de realizar el desalojo del query del worker
 
-    if(!tabla) return;
+    if(!tabla) return -1;
 
     for(int i=0; i < list_size(tabla->paginas); i++){
         pagina_t* pag = list_get(tabla->paginas, i);
 
         if(pag->bit_presencia && pag->bit_modificado){
-            hacer_flush_de_pagina(file, tag, pag->nro_pagina, pag->frame, qid);
+            int rta = hacer_flush_de_pagina(file, tag, pag->nro_pagina, pag->frame, qid);
+            if(rta < 0) return -1;
             pag->bit_modificado = false;
         }
     }
+    return 2;
 }
 
-void ejecutar_commit(char* file, char* tag, char* file_tag, int qid){
+int ejecutar_commit(char* file, char* tag, char* file_tag, int qid){
 
-    ejecutar_flush(file, tag, file_tag, qid);
+    if (ejecutar_flush(file, tag, file_tag, qid) < 0){
+        return -1;
+    }
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, COMMIT);
@@ -212,6 +216,7 @@ void ejecutar_commit(char* file, char* tag, char* file_tag, int qid){
 
     enviar_paquete(paquete, socket_storage, logger);
     borrar_paquete(paquete);
+    return 1;
 }
 
 void ejecutar_delete(char* nombre_file, char* tag, int qid){

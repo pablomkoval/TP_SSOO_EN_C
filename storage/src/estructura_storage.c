@@ -10,7 +10,7 @@ void crear_directorios_y_archivos()
 {
     fd = open(punto_montaje, O_RDONLY | O_DIRECTORY);
 
-    void *mapeo = inicializar_bitmap();
+    inicializar_bitmap();
     
     crear_archivo_hash_bloques();
 
