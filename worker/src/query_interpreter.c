@@ -261,6 +261,7 @@ int check_interrupt(int qid, int pc){
             string_array_destroy(partes);
             
             hacer_flush_de_pagina(file, tag, pag->nro_pagina, pag->frame, qid);
+            pag->bit_modificado = false;
             free(file);
             free(tag);
         }
