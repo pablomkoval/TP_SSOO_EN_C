@@ -92,7 +92,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid);
         log_info(logger, "Query %d: - Memoria Add - File: %s - Tag: %s - Pagina: %d - Marco: %d", qid, file, tag, nro_pagina, frame);
         if (!pag->bit_presencia) {
-            list_add(paginas_en_memoria, pag);
+            list_add_in_index(paginas_en_memoria, frame , pag);
         }
         
         pag->bit_presencia = true;
