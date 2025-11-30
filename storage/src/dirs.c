@@ -8,15 +8,20 @@ void crear_directorio(const char *path)
 int crear_file(char *file, char *tag)
 {
     char* file_tag = concatenar_path(file, tag);
-    char *path = concatenar_path("files", file);
-    char *path_tag = string_from_format("files/%s/%s", file, tag);
-    char *chequeo = string_from_format("%s/files/%s", punto_montaje, file);
+
 
     if (file_tag_existe(file_tag))
     {
         log_error(logger, "File/Tag preexistente");
+
+        free(file_tag);
+
         return -1;
-    }
+    }    
+    
+    char *path = concatenar_path("files", file);
+    char *path_tag = string_from_format("files/%s/%s", file, tag);
+    char *chequeo = string_from_format("%s/files/%s", punto_montaje, file);
         
     crear_directorio(path);
     crear_tag(path_tag);
@@ -51,18 +56,29 @@ char *concatenar_path(char *path, char *suma)
 
 int copiar_tag(int query_id, char *file_origen, char *tag_origen, char *file_destino, char *tag_destino)
 {
-
-    char *path_origen = string_from_format("%s/files/%s/%s", punto_montaje, file_origen, tag_origen);
-
-    char *path_destino = string_from_format("%s/files/%s/%s", punto_montaje, file_destino, tag_destino);
-
     char* file_tag_destino = concatenar_path(file_destino, tag_destino);
+    char* file_tag_origen = concatenar_path(file_origen, tag_origen);
+
+    if (!file_tag_existe(file_tag_origen)){
+        log_debug(logger, "FILE-TAG INEXISTENTE");
+
+        free(file_tag_destino);
+        free(file_tag_origen);
+
+        return -2;
+    }
 
     if (file_tag_existe(file_tag_destino)){
-        log_error(logger, "File tag preexistente");
+        log_error(logger, "FILE/TAG PREEXISTENTE");
+
+        free(file_tag_destino);
+        free(file_tag_origen);
+
         return -1;
     }
-       
+
+    char *path_origen = string_from_format("%s/files/%s/%s", punto_montaje, file_origen, tag_origen);
+    char *path_destino = string_from_format("%s/files/%s/%s", punto_montaje, file_destino, tag_destino);
 
     crear_file(file_destino, tag_destino);
 
@@ -81,6 +97,7 @@ int copiar_tag(int query_id, char *file_origen, char *tag_origen, char *file_des
     free(file_tag_destino);
     free(path_origen);
     free(path_destino);
+    free(file_tag_origen);
 
     return 1;
 }

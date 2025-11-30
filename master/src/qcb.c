@@ -16,20 +16,22 @@ t_qcb* crear_qcb(char* query_entrante, int prioridad_query, int socket){
     qcb->id_worker_asociado = -1;
     qcb->estado = READY;
     qcb->pc = 0;
-    qcb->aging_activo = false;
+    qcb->tiempo_aging_qcb = 0;
+    //qcb->aging_activo = false;
     //qcb->tiempo_aging = NULL;
+
     log_trace(logger, "Se creo la qcb con qid %d", qcb->qid);
     return qcb;
 }
 
 void cambiar_estado(t_qcb* qcb, int nuevo_estado){
     
-    int estado_actual = qcb->estado;
+    int estado_actual = qcb->estado; //comentable si se saca el log_debug
     qcb->estado = nuevo_estado;
     
     log_debug(logger, "Se cambia estado de query %d de %d -> %d", qcb->qid, estado_actual, nuevo_estado);
 
-    if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
+    /* if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
 
         pthread_mutex_lock(&mutex_aging);
 
@@ -50,9 +52,10 @@ void cambiar_estado(t_qcb* qcb, int nuevo_estado){
         }else{
             pthread_mutex_unlock(&mutex_aging);
         }
-    }
+    } */
 }
 
+/* 
 void comenzar_aging_query(t_qcb* qcb){
     //qcb->tiempo_aging = temporal_create();
     // pthread_mutex_lock(&mutex_aging);
@@ -69,4 +72,4 @@ void comenzar_aging_query(t_qcb* qcb){
     qcb->aging_activo = true;
     // pthread_mutex_unlock(&mutex_aging);
     return;
-}
+} */

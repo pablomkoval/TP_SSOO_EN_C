@@ -236,7 +236,7 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
 
     if (!file_tag_existe(file_tag))
     {
-        log_debug(logger, "FILE_TAG_INEXISTENTE");
+        log_error(logger, "FILE_TAG_INEXISTENTE");
         return -2;
     }
     
