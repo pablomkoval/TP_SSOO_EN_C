@@ -254,7 +254,7 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
 
     for (int i = 0; i < cant; i++)   //por cada bloque logico
     {
-        char *bloque_logico = obtener_bloque_logico(file_tag, i);   
+        char *bloque_logico = obtener_bloque_logico(file_tag, i);    //path bloque logico
         char *md5 = obtener_hash_block(bloque_logico);                             // veo su contenido md5
         char *bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);       // consigo su bloque fisico
         int nro_bloque = obtener_bloque_por_hash(md5);                              // me fijo si hay otro bloque fisico con el mismo contenido
@@ -282,9 +282,9 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
                 pthread_mutex_unlock(&mutex_bitmap);
             }
         }
-        if(nro_bloque == nro_block_f)
+        else if(nro_bloque == nro_block_f)
         {
-            
+            break;
         }
         else   //si no hay 
         {
