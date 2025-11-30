@@ -250,6 +250,22 @@ int check_interrupt(int qid, int pc){
         hay_interrupcion = false;
         pthread_mutex_unlock(&mutex_interrupcion);
 
+        //flushear todas las paginas en memoria
+        pthread_mutex_lock(&mutex_paginas_en_memoria);
+        for(int i = 0; i < list_size(paginas_en_memoria); i++){
+            pagina_t* pag = list_get(paginas_en_memoria, i);
+            
+            char** partes = separar_file_tag(pag->file_tag);
+            char* file = strdup(partes[0]);
+            char* tag = strdup(partes[1]);
+            string_array_destroy(partes);
+            
+            hacer_flush_de_pagina(file, tag, pag->nro_pagina, pag->frame, qid);
+            free(file);
+            free(tag);
+        }
+        pthread_mutex_unlock(&mutex_paginas_en_memoria);
+
         pthread_mutex_lock(&mutex_interpreter);
         interpreter_ocupado = false;
         pthread_mutex_unlock(&mutex_interpreter);

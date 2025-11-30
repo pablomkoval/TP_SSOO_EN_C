@@ -7,6 +7,7 @@ t_dictionary* tablas_de_paginas;
 int contador_lru = 0;
 int puntero_clock = 0;
 t_list* paginas_en_memoria;
+pthread_mutex_t mutex_paginas_en_memoria = PTHREAD_MUTEX_INITIALIZER;
 
 void inicializar_memoria_interna (){
     memoria_interna = malloc(tam_memoria);
@@ -92,7 +93,9 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid);
         log_info(logger, "Query %d: - Memoria Add - File: %s - Tag: %s - Pagina: %d - Marco: %d", qid, file, tag, nro_pagina, frame);
         if (!pag->bit_presencia) {
+            pthread_mutex_lock(&mutex_paginas_en_memoria);
             list_add_in_index(paginas_en_memoria, frame , pag);
+            pthread_mutex_unlock(&mutex_paginas_en_memoria);
         }
         
         pag->bit_presencia = true;
@@ -122,12 +125,13 @@ pagina_t* buscar_victima_reemplazo(){
     pagina_t * victima = NULL;
 
     if(strcmp(algoritmo_reemplazo, "LRU") == 0){
-
+        pthread_mutex_lock(&mutex_paginas_en_memoria);
         for(int i = 0; i < list_size(paginas_en_memoria); i++){
             pagina_t* pag = list_get(paginas_en_memoria, i);
 
             if(victima == NULL || pag->timestamp < victima->timestamp) victima = pag;
         }
+        pthread_mutex_unlock(&mutex_paginas_en_memoria);
         if(victima) 
         log_debug(logger, "Reemplazo LRU eligio frame %d (pagina %d)",
          victima->frame, victima->nro_pagina);
@@ -136,6 +140,7 @@ pagina_t* buscar_victima_reemplazo(){
         int cant_pags;
 
         while(1){
+            pthread_mutex_lock(&mutex_paginas_en_memoria);
             cant_pags = list_size(paginas_en_memoria);
             for(int vuelta = 0; vuelta < 2; vuelta++){
 
@@ -152,6 +157,7 @@ pagina_t* buscar_victima_reemplazo(){
                             log_debug(logger, "CLOCK-M eligió frame %d (página %d) [U=0,M=0]",
                              pag->frame, pag->nro_pagina);
                             puntero_clock = (puntero_clock + 1) % cant_pags;
+                            pthread_mutex_unlock(&mutex_paginas_en_memoria);
                             return victima;
                         }
                     } else {
@@ -164,6 +170,7 @@ pagina_t* buscar_victima_reemplazo(){
                             puntero_clock = (puntero_clock + 1) % cant_pags;
                             log_debug(logger, "Despues del calculo, puntero clock es %d", puntero_clock);
 
+                            pthread_mutex_unlock(&mutex_paginas_en_memoria);
                             return victima;
                         }
                         pag->bit_uso = false;
@@ -172,7 +179,7 @@ pagina_t* buscar_victima_reemplazo(){
                 }
             }
             log_debug(logger, "CLOCK-M no encontro victima en 2 vueltas, repitiendo bucle");
-
+            pthread_mutex_unlock(&mutex_paginas_en_memoria);
         }
     }
 
@@ -206,12 +213,15 @@ int liberar_frame(pagina_t* victima, int qid){
     victima->bit_presencia = false;
     victima->bit_uso = false;
     victima->bit_modificado = false;
+    
+    pthread_mutex_lock(&mutex_paginas_en_memoria);
     list_remove_element(paginas_en_memoria, victima);
 
     if (puntero_clock > list_size(paginas_en_memoria)) {
         log_warning(logger, "El puntero se paso de la cantidad de paginas");
         puntero_clock = 0;
     }
+    pthread_mutex_unlock(&mutex_paginas_en_memoria);
 
     return frame_liberado;
 }

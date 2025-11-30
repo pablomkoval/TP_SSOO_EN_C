@@ -24,6 +24,8 @@ typedef struct
 extern int contador_lru;
 extern t_dictionary* tablas_de_paginas;
 extern void* memoria_interna;
+extern t_list* paginas_en_memoria;
+extern pthread_mutex_t mutex_paginas_en_memoria;
 
 void inicializar_memoria_interna();
 tabla_paginas_t* obtener_tabla(char* file_tag);
