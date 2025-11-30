@@ -37,7 +37,6 @@ int buscar_bloque_libre()
     {
         if (!bitarray_test_bit(bitmap, i))
         { 
-            log_error(logger, "lo esta");
             return i;
         }
     }
