@@ -255,7 +255,11 @@ int truncar_archivo(int query_id, int nuevo_tamanio, char *file, char *tag)
     char *file_tag = concatenar_path(file, tag);
 
     if (!file_tag_existe(file_tag))
+    {
+        log_error(logger, "file/tag INEXISTENTE");
         return -2;
+    }
+        
 
     char *nuevo_tamanio_str = string_itoa(nuevo_tamanio);
 
@@ -383,7 +387,6 @@ int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque, char *c
 int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buffer )
 {
     char *file_tag = concatenar_path(file, tag);
-    log_debug(logger, "File/tag: %s", file_tag);
 
     if (!file_tag_existe(file_tag))
     {
