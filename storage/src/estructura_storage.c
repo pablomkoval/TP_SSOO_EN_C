@@ -10,9 +10,10 @@ void crear_directorios_y_archivos()
 {
     fd = open(punto_montaje, O_RDONLY | O_DIRECTORY);
 
-    void *mapeo = inicializar_bitmap();
+    inicializar_bitmap();
     
     crear_archivo_hash_bloques();
+    log_info(logger, "## Storage se ha inicializado correctamente (creemos)");
 
     if(fresh_start)
     {
@@ -28,10 +29,6 @@ void crear_directorios_y_archivos()
         
     }
 
-    
-    
-    log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
-
   /// pruebas 
   
     // char* bloque_fisico = concatenar_path(punto_montaje,"physical_blocks/bloque0000.dat" );
@@ -42,7 +39,7 @@ void crear_directorios_y_archivos()
 
     // truncar_archivo(0, 384, "materias", "sistemas");
 
-    // int a = escribir_bloque(0, "materias","sistemas",130, "manu lindo" );
+    // int a = escribir_bloque(0, "materias","sistemas",130, "manu" );
 
     // copiar_tag(0, "initial_file", "BASE", "jose", "hola");
 

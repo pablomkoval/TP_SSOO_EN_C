@@ -29,6 +29,11 @@ int main(int argc, char* argv[]){
      //hardcodeado para manu
 
     config_master = iniciar_config(archivo_config);
+
+    if(config_master == NULL)
+    {
+        return 0;
+    }
     logger = iniciar_logger();
     log_debug(logger, "se iniciaron logger y config");
     inicializar_planificador();

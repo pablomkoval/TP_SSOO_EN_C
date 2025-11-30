@@ -9,7 +9,7 @@ t_config* iniciar_config(char* nombre_config){
     t_config* nueva_config = config_create(nombre_config);
 
     if(nueva_config == NULL){
-        printf("No se encontro el archivo de config");
+        printf("No se encontro el archivo de config '%s'\n", nombre_config);
         return NULL;
     }
     if(config_has_property(nueva_config, "PUERTO_ESCUCHA")){
