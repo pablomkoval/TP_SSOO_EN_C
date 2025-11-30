@@ -245,6 +245,7 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
     char* estado = estado_metadata(file_tag);
     if (strcmp(estado, "COMMITED") == 0)
     {
+        log_error(logger, "el estado del tag ya estaba en COMMITED");
         return 1;
     }
     cambiar_estado_metadata(file_tag, "COMMITED");
@@ -255,30 +256,33 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
     for (int i = 0; i < cant; i++)   //por cada bloque logico
     {
         char *bloque_logico = obtener_bloque_logico(file_tag, i);    //path bloque logico
-        char *md5 = obtener_hash_block(bloque_logico);                             // veo su contenido md5
-        char *bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);       // consigo su bloque fisico
+        char *md5 = obtener_hash_block(bloque_logico);  // veo su contenido md5
+                                   
+        char *bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);  // consigo su bloque fisico
+        int nro_block_f = obtener_numero_bloque(bloque_fisico);    
+
         int nro_bloque = obtener_bloque_por_hash(md5);                              // me fijo si hay otro bloque fisico con el mismo contenido
         char *bloque_fisico_nuevo = bloque_fisico_por_nro(nro_bloque);
-        int nro_block_f = obtener_numero_bloque(bloque_fisico);
+        
         
 
-        if (nro_bloque != -1 && nro_bloque != nro_block_f) // si hay algún bloque fisico con el mismo contenido...
+        if (nro_bloque != -1 && (nro_bloque != nro_block_f)) // si hay algún bloque fisico con el mismo contenido...
         {
             lock_metadata(file_tag);
             cambiar_hard_link(bloque_logico, bloque_fisico_nuevo);
-            cambiar_bloque_metadata(file_tag, nro_block_f, i);
+            cambiar_bloque_metadata(file_tag, nro_bloque, i);
             unlock_metadata(file_tag);
 
-            log_info(logger, "##<%i> - <%s>:<%s> Se eliminó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, i, nro_bloque);
-            log_info(logger, "##<%i> - <%s>:<%s> Se agregó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, i, nro_block_f);
+            log_info(logger, "##<%i> - <%s>:<%s> Se eliminó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, i, nro_block_f);
+            log_info(logger, "##<%i> - <%s>:<%s> Se agregó el hard link del bloque lógico <%d> al bloque físico <%d>", query_id, file, tag, i, nro_bloque);
             
 
-            log_info(logger, "##<%d> - Bloque Lógico <%i> se reasigna de <%i> a <%i>", query_id, i, nro_bloque, nro_block_f);
+            log_info(logger, "##<%d> - Bloque Lógico <%i> se reasigna de <%i> a <%i>", query_id, i, nro_block_f, nro_bloque);
 
-            if (obtener_referencias_bloque(nro_bloque) <= 1)
+            if (obtener_referencias_bloque(nro_block_f) <= 1)
             {
                 pthread_mutex_lock(&mutex_bitmap);
-                bitarray_clean_bit(bitmap, nro_bloque);
+                bitarray_clean_bit(bitmap, nro_block_f);
                 pthread_mutex_unlock(&mutex_bitmap);
             }
         }

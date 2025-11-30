@@ -11,6 +11,8 @@ void crear_directorios_y_archivos()
     fd = open(punto_montaje, O_RDONLY | O_DIRECTORY);
 
     void *mapeo = inicializar_bitmap();
+    
+    crear_archivo_hash_bloques();
 
     if(fresh_start)
     {
@@ -21,11 +23,12 @@ void crear_directorios_y_archivos()
         crear_file("initial_file", "BASE");
         truncar_archivo(0, block_size,"initial_file","BASE");
         asignar_bloque(0);
+        commmit_file(0, "initial_file", "BASE");
         log_info(logger, "##<> - Bloque Físico Reservado - Número de Bloque: <%i>", 0);
         
     }
 
-    crear_archivo_hash_bloques();
+    
     
     log_trace(logger, "se terminaron de crear todos los archivos y directorios necesarios");
 

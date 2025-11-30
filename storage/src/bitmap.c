@@ -22,7 +22,7 @@ void *inicializar_bitmap()
     int fildes = fileno(archivo);
     ftruncate(fildes, tamanio);
     void *mapeo = mmap(0, tamanio, PROT_WRITE | PROT_READ, MAP_SHARED, fildes, 0);
-    bitmap = bitarray_create_with_mode(mapeo, tamanio, LSB_FIRST);
+    bitmap = bitarray_create_with_mode(mapeo, tamanio, MSB_FIRST);
 
     log_trace(logger, "Se inicializó correctamente el BITMAP");
 
@@ -36,7 +36,8 @@ int buscar_bloque_libre()
     for (int i = 0; i < cant_blocks; i++)
     {
         if (!bitarray_test_bit(bitmap, i))
-        {
+        { 
+            log_error(logger, "lo esta");
             return i;
         }
     }
