@@ -20,6 +20,12 @@ int main(int argc, char* argv[]) {
     //int prioridad = 0;//hardcodeado para manu
 
     config = iniciar_config(archivo_config);
+
+    if(config == NULL)
+    {
+        return 0;
+    }
+    
     logger = iniciar_logger();
        
     socket_master = conectar_master();

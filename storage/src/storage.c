@@ -15,6 +15,12 @@ int main(int argc, char *argv[])
     worker_id_por_socket = dictionary_create();
     inicializar_mutexes();
     config = iniciar_config(config_name);
+
+    if(config == NULL)
+    {
+        return 0;
+    }
+    
     logger = iniciar_logger();
     config_superblock = iniciar_config_superblock();
 

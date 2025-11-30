@@ -14,8 +14,13 @@ t_log* iniciar_logger(void){
 }
 
 t_config* iniciar_config(char* nombre_archivo){
-    t_config* nueva_config;
-    nueva_config = config_create(nombre_archivo);
+    t_config* nueva_config = config_create(nombre_archivo);
+
+    if(nueva_config == NULL) {
+        printf("No se pudo leer la config '%s'\n", nombre_archivo);
+        return NULL;
+    }
+
     if(config_has_property(nueva_config, "IP_MASTER")){
         ip_master = config_get_string_value(nueva_config, "IP_MASTER");
         puerto_master = config_get_string_value(nueva_config, "PUERTO_MASTER");

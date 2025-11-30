@@ -35,6 +35,12 @@ int main(int argc, char** argv) {
     // char* nombre_archivo = "worker.config";
     // worker_id = 1;
     config_worker = iniciar_config(nombre_archivo);
+
+    if(config_worker == NULL)
+    {
+        return 0;
+    }
+
     logger = iniciar_logger(worker_id);
 
     log_debug(logger, "se iniciaron logger y config");
@@ -59,7 +65,7 @@ t_config* iniciar_config(char* archivo_config){
     t_config* nueva_config = config_create(archivo_config);
 
     if(nueva_config == NULL){
-        printf("No se encontro el archivo de config");
+        printf("No se encontro el archivo de config '%s'\n", archivo_config);
         return NULL;
     }
     if(config_has_property(nueva_config, "IP_MASTER")){

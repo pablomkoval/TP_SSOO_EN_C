@@ -26,8 +26,13 @@ t_log* iniciar_logger(void){
 }
 
 t_config* iniciar_config(char* config){
-    t_config* nueva_config;
-    nueva_config = config_create(config);
+    t_config* nueva_config = config_create(config);
+
+    if(nueva_config == NULL) {
+        printf("No se pudo leer la config '%s'\n", config);
+        return NULL;
+    }
+    
     if(config_has_property(nueva_config, "PUERTO_ESCUCHA"))
     {
         puerto_escucha = config_get_string_value(nueva_config, "PUERTO_ESCUCHA");
