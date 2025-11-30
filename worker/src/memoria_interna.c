@@ -158,10 +158,11 @@ pagina_t* buscar_victima_reemplazo(){
                         // Segunda vuelta: buscamos (U=0, M=1)
                         if (!pag->bit_uso && pag->bit_modificado) {
                             victima = pag;
-                            log_debug(logger, "CLOCK-M eligio frame %d (página %d) [U=0,M=1]",
-                             pag->frame, pag->nro_pagina);
+                            log_debug(logger, "CLOCK-M eligio frame %d (página %d) [U=0,M=1], puntero clock %d",
+                             pag->frame, pag->nro_pagina, puntero_clock);
 
                             puntero_clock = (puntero_clock + 1) % cant_pags;
+                            log_debug(logger, "Despues del calculo, puntero clock es %d", puntero_clock);
 
                             return victima;
                         }
@@ -207,7 +208,8 @@ int liberar_frame(pagina_t* victima, int qid){
     victima->bit_modificado = false;
     list_remove_element(paginas_en_memoria, victima);
 
-    if (puntero_clock >= list_size(paginas_en_memoria)) {
+    if (puntero_clock > list_size(paginas_en_memoria)) {
+        log_warning(logger, "El puntero se paso de la cantidad de paginas");
         puntero_clock = 0;
     }
 
