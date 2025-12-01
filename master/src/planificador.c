@@ -151,6 +151,7 @@ void evaluar_aging_individual(void* arg){
     if(qcb->tiempo_aging_qcb >= tiempo_aging){
         qcb->prioridad--;
         se_aplico_aging = true;
+        qcb->tiempo_aging_qcb = 0;
         log_info(logger, "##<%d> Cambio de prioridad: <%d> - <%d>", qcb->qid, qcb->prioridad + 1, qcb->prioridad);
         log_debug(logger, "Se debe chequear desalojo");
     }else{
