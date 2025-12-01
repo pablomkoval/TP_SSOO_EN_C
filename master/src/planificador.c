@@ -123,12 +123,21 @@ void* hilo_aging(){
 
         list_iterate(cola_ready, *evaluar_aging_individual);
 
+        t_qcb* qcb_cabeza = list_get(cola_ready, 0);
+
         if(se_aplico_aging){
             log_debug(logger, "Se aplico aging");
             se_aplico_aging = false;
             log_debug(logger, "Ya no deberia hacer chequeo");
             list_sort(cola_ready, (void*)comparar_qcb_por_prioridad);
-            hacer_chequeo_desalojo();
+            t_qcb* nueva_qcb_cabeza = list_get(cola_ready, 0);
+
+            if(qcb_cabeza != nueva_qcb_cabeza){ //cambio la qcb de mayor prioridad
+                log_trace(logger, "Se debe chequear desalojo");
+                nueva_qcb_cabeza->chequeo_desalojo_pendiente = true;
+                hacer_chequeo_desalojo();
+            }
+            
         }
         pthread_mutex_unlock(&mutex_ready);
     }
@@ -153,11 +162,12 @@ void evaluar_aging_individual(void* arg){
         se_aplico_aging = true;
         qcb->tiempo_aging_qcb = 0;
         log_info(logger, "##<%d> Cambio de prioridad: <%d> - <%d>", qcb->qid, qcb->prioridad + 1, qcb->prioridad);
-        log_debug(logger, "Se debe chequear desalojo");
-        qcb->chequeo_desalojo_pendiente = true;
     }else if(qcb->tiempo_aging_qcb < tiempo_aging && !qcb->chequeo_desalojo_pendiente){
         qcb->tiempo_aging_qcb += tiempo_chequeo_aging;
     }
+
+
+
     return;
 }
 
@@ -217,7 +227,9 @@ void hacer_chequeo_desalojo(/* t_qcb* qcb_entrante */){
         } else{
             log_warning(logger, "Hice chequeo desalojo pero no interrumpi");
             pthread_mutex_unlock(&mutex_diccionario_exec);
-            satisfacer_chequeos_desalojo();
+            query_de_mayor_prioridad->chequeo_desalojo_pendiente = false;
+            
+            //satisfacer_chequeos_desalojo();
             //sem_post(&sem_permiso_desalojo);
             //log_debug(logger, "Libero semaforo desalojo");
         }
@@ -225,7 +237,8 @@ void hacer_chequeo_desalojo(/* t_qcb* qcb_entrante */){
     }else{
         log_warning(logger, "Quise chequear desalojo pero habian workers libres");
         pthread_mutex_unlock(&mutex_diccionario_exec);
-        satisfacer_chequeos_desalojo();
+        query_de_mayor_prioridad->chequeo_desalojo_pendiente = false;
+        //satisfacer_chequeos_desalojo();
         //sem_post(&sem_permiso_desalojo);
         //log_debug(logger, "Libero semaforo desalojo");
     }
@@ -233,14 +246,14 @@ void hacer_chequeo_desalojo(/* t_qcb* qcb_entrante */){
     
 }
 
-void satisfacer_chequeos_desalojo(){
+/* void satisfacer_chequeos_desalojo(){
     list_iterate(cola_ready, *satisfacer_chequeo_qcb);
 }
 
 void satisfacer_chequeo_qcb(void* arg){
     t_qcb* qcb = (t_qcb*)arg;
     qcb->chequeo_desalojo_pendiente = false;
-}
+} */
 
 
 
