@@ -59,7 +59,7 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
                 resultado_ejecucion = manejar_respuesta(respuesta);
                 list_destroy_and_destroy_elements(recibido, free);
                 if(resultado_ejecucion < 0){
-                    log_warning(logger, "## Query %d: - Desalojada por error en storage al ejecutar: %s", qid, instruccion);
+                    log_error(logger, "## Query %d: - Desalojada por error en storage al ejecutar: %s", qid, instruccion);
                     free(instruccion);
                     free(query_a_ejecutar);
                     return;
