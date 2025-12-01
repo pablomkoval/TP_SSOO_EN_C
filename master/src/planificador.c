@@ -192,6 +192,7 @@ void hacer_chequeo_desalojo(/* t_qcb* qcb_entrante */){
 
     pthread_mutex_lock(&mutex_diccionario_exec);
     int querys_en_exec = dictionary_size(diccionario_exec);
+    t_qcb* query_de_mayor_prioridad = list_get(cola_ready, 0);
 
     if(total_workers == querys_en_exec && total_workers > 0){
         
@@ -199,7 +200,7 @@ void hacer_chequeo_desalojo(/* t_qcb* qcb_entrante */){
         pthread_mutex_unlock(&mutex_diccionario_exec); //mutex cierra aca o area critica mas grande?
         
         //no necesita mutex, chequeo desalojo siempre se hace en un mutex ready
-        t_qcb* query_de_mayor_prioridad = list_get(cola_ready, 0);
+        
 
         log_debug(logger, "Prioridad maxima en lista: %d", query_de_mayor_prioridad->prioridad);
 
