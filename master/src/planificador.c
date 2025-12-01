@@ -148,13 +148,14 @@ void evaluar_aging_individual(void* arg){
         return;                 // es mejor diferenciar el de arriba con el log_error
     }
 
-    if(qcb->tiempo_aging_qcb >= tiempo_aging){
+    if(qcb->tiempo_aging_qcb >= tiempo_aging && !qcb->chequeo_desalojo_pendiente){
         qcb->prioridad--;
         se_aplico_aging = true;
         qcb->tiempo_aging_qcb = 0;
         log_info(logger, "##<%d> Cambio de prioridad: <%d> - <%d>", qcb->qid, qcb->prioridad + 1, qcb->prioridad);
         log_debug(logger, "Se debe chequear desalojo");
-    }else{
+        qcb->chequeo_desalojo_pendiente = true;
+    }else if(qcb->tiempo_aging_qcb < tiempo_aging && !qcb->chequeo_desalojo_pendiente){
         qcb->tiempo_aging_qcb += tiempo_chequeo_aging;
     }
     return;
@@ -210,11 +211,13 @@ void hacer_chequeo_desalojo(/* t_qcb* qcb_entrante */){
             log_info(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d> - Motivo: <PRIORIDAD>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
             log_debug(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
             pthread_mutex_unlock(&mutex_diccionario_workers);
+            //query_de_mayor_prioridad->
             free(wid_str_asociado);
 
         } else{
             log_warning(logger, "Hice chequeo desalojo pero no interrumpi");
             pthread_mutex_unlock(&mutex_diccionario_exec);
+            satisfacer_chequeos_desalojo();
             //sem_post(&sem_permiso_desalojo);
             //log_debug(logger, "Libero semaforo desalojo");
         }
@@ -222,12 +225,23 @@ void hacer_chequeo_desalojo(/* t_qcb* qcb_entrante */){
     }else{
         log_warning(logger, "Quise chequear desalojo pero habian workers libres");
         pthread_mutex_unlock(&mutex_diccionario_exec);
+        satisfacer_chequeos_desalojo();
         //sem_post(&sem_permiso_desalojo);
         //log_debug(logger, "Libero semaforo desalojo");
     }
 
     
 }
+
+void satisfacer_chequeos_desalojo(){
+    list_iterate(cola_ready, *satisfacer_chequeo_qcb);
+}
+
+void satisfacer_chequeo_qcb(void* arg){
+    t_qcb* qcb = (t_qcb*)arg;
+    qcb->chequeo_desalojo_pendiente = false;
+}
+
 
 
 /* bool chequear_y_hacer_aging(t_qcb* qcb){

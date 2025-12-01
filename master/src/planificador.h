@@ -19,6 +19,9 @@ void hacer_chequeo_desalojo();
 void evaluar_aging_individual(void* arg);
 void* hilo_aging_individual(void* arg);
 void* hilo_aging();
+void satisfacer_chequeos_desalojo();
+void satisfacer_chequeo_qcb(void* arg);
+
 
 extern t_list* cola_ready;
 extern t_list* workers_libres;

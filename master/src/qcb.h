@@ -19,6 +19,8 @@ typedef struct{
     int id_worker_asociado;
     estados_query estado;
     int tiempo_aging_qcb;
+    bool chequeo_desalojo_pendiente;
+    //pthread_mutex_t semaforo_mutex;
     //t_temporal* tiempo_aging;
     //pthread_t hilo_aging_id;
     //bool aging_activo;

@@ -17,6 +17,9 @@ t_qcb* crear_qcb(char* query_entrante, int prioridad_query, int socket){
     qcb->estado = READY;
     qcb->pc = 0;
     qcb->tiempo_aging_qcb = 0;
+    qcb->chequeo_desalojo_pendiente = false;
+    //qcb->semaforo_mutex = PTHREAD_MUTEX_INITIALIZER;
+
     //qcb->aging_activo = false;
     //qcb->tiempo_aging = NULL;
 

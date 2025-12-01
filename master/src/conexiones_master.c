@@ -57,6 +57,10 @@ void *manejar_servidor_worker(void *arg){
                 }
                 sumar_worker_libre(worker_id);
 
+                pthread_mutex_lock(&mutex_ready);
+                satisfacer_chequeos_desalojo();
+                pthread_mutex_lock(&mutex_ready);
+
                 list_destroy_and_destroy_elements(recibido, free);
                 break;
 
