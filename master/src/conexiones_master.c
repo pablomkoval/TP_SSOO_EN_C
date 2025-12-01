@@ -61,7 +61,7 @@ void *manejar_servidor_worker(void *arg){
                 pthread_mutex_lock(&mutex_ready);
                 t_qcb* qcb_cabeza = list_get(cola_ready, 0);
                 qcb_cabeza->chequeo_desalojo_pendiente = false;
-                pthread_mutex_lock(&mutex_ready);
+                pthread_mutex_unlock(&mutex_ready);
 
                 list_destroy_and_destroy_elements(recibido, free);
                 break;

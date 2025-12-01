@@ -61,7 +61,7 @@ void* manejar_conexion_worker(void* arg) {
         }
      }
      free(arg);
-     close(*socket_worker);
+     //close(*socket_worker);
      return NULL;
 }
 
