@@ -248,6 +248,5 @@ void ejecutar_end(){
     agregar_a_paquete(paquete, motivo, strlen(motivo) + 1);
     enviar_paquete(paquete, socket_master, logger);
     borrar_paquete(paquete);
-    printf("Enviando FIN: size=%d\n", (int)strlen(motivo)+1);
     //enviar_cod_op(socket_master, END);
 }

@@ -406,5 +406,5 @@ void sumar_worker_libre(int worker_id){
     pthread_mutex_unlock(&mutex_workers_libres);
 
     sem_post(&sem_workers_libres);
-
+    log_debug(logger, "Se agrega el worker %d al diccionario de workers libres y se hace sem_post", worker_id);
 }

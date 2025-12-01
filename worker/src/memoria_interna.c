@@ -85,7 +85,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         if(frame == -1){
             pagina_t* victima = buscar_victima_reemplazo();
             frame = liberar_frame(victima, qid);
-            bitarray_set_bit(bitmap_frames, frame);
+            //bitarray_set_bit(bitmap_frames, frame);
             victima->frame = -1;
             log_info(logger, "## Query %d: Se reemplaza la página %s/%d por la %s/%d", qid, victima->file_tag, victima->nro_pagina, pag->file_tag, pag->nro_pagina);
         }
@@ -93,6 +93,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         if(cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid) < 0){
             return NULL;
         }
+        bitarray_set_bit(bitmap_frames, frame);
         log_info(logger, "Query %d: - Memoria Add - File: %s - Tag: %s - Pagina: %d - Marco: %d", qid, file, tag, nro_pagina, frame);
         if (!pag->bit_presencia) {
             pthread_mutex_lock(&mutex_paginas_en_memoria);
@@ -116,7 +117,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
 int buscar_frame_libre(){
     for(int i = 0; i < cant_frames; i++){
         if(!bitarray_test_bit(bitmap_frames, i)){
-            bitarray_set_bit(bitmap_frames, i);
+            //bitarray_set_bit(bitmap_frames, i);
             return i;
         }
     }
@@ -131,12 +132,14 @@ pagina_t* buscar_victima_reemplazo(){
         for(int i = 0; i < list_size(paginas_en_memoria); i++){
             pagina_t* pag = list_get(paginas_en_memoria, i);
 
-            if(victima == NULL || pag->timestamp < victima->timestamp) victima = pag;
+            if(victima == NULL || pag->timestamp < victima->timestamp) {
+                victima = pag;
+                log_debug(logger, "encontre una victima %d", victima->nro_pagina);
+            }
         }
         pthread_mutex_unlock(&mutex_paginas_en_memoria);
-        if(victima) 
-        log_debug(logger, "Reemplazo LRU eligio frame %d (pagina %d)",
-         victima->frame, victima->nro_pagina);
+        if(victima) log_debug(logger, "Reemplazo LRU eligio frame %d (pagina %d)", victima->frame, victima->nro_pagina);
+        log_debug(logger, "Cayo en LRU");
 
     } else if(strcmp(algoritmo_reemplazo, "CLOCK-M") == 0){
         int cant_pags;
@@ -156,8 +159,7 @@ pagina_t* buscar_victima_reemplazo(){
                         // Primera vuelta: buscamos una pagina (U=0, M=0)
                         if (!pag->bit_uso && !pag->bit_modificado) {
                             victima = pag;
-                            log_debug(logger, "CLOCK-M eligió frame %d (página %d) [U=0,M=0]",
-                             pag->frame, pag->nro_pagina);
+                            log_debug(logger, "CLOCK-M eligió frame %d (página %d) [U=0,M=0]", pag->frame, pag->nro_pagina);
                             puntero_clock = (puntero_clock + 1) % cant_pags;
                             pthread_mutex_unlock(&mutex_paginas_en_memoria);
                             return victima;
@@ -166,8 +168,7 @@ pagina_t* buscar_victima_reemplazo(){
                         // Segunda vuelta: buscamos (U=0, M=1)
                         if (!pag->bit_uso && pag->bit_modificado) {
                             victima = pag;
-                            log_debug(logger, "CLOCK-M eligio frame %d (página %d) [U=0,M=1], puntero clock %d",
-                             pag->frame, pag->nro_pagina, puntero_clock);
+                            log_debug(logger, "CLOCK-M eligio frame %d (página %d) [U=0,M=1], puntero clock %d", pag->frame, pag->nro_pagina, puntero_clock);
 
                             puntero_clock = (puntero_clock + 1) % cant_pags;
                             log_debug(logger, "Despues del calculo, puntero clock es %d", puntero_clock);
@@ -210,12 +211,14 @@ int liberar_frame(pagina_t* victima, int qid){
     //log_warning(logger, "Frame %d limpiado (%d bytes en 0)", victima->frame, tam_pagina);
     int frame_liberado = victima->frame;
 
-    victima->frame = -1;
     bitarray_clean_bit(bitmap_frames, victima->frame);
+    victima->frame = -1;
     victima->bit_presencia = false;
     victima->bit_uso = false;
     victima->bit_modificado = false;
     
+
+
     pthread_mutex_lock(&mutex_paginas_en_memoria);
     list_remove_element(paginas_en_memoria, victima);
 
