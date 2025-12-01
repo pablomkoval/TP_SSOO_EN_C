@@ -117,7 +117,7 @@ void* hilo_aging(){
     int tiempo_chequeo_aging_micro = tiempo_chequeo_aging * 1000; // pasado a milisegundos
 
     t_qcb* qcb_cabeza = NULL;
-
+    int prioridad_maxima_anterior = -1;
     while(1){
         usleep(tiempo_chequeo_aging_micro); // intervalo de chequeo de aging
 
@@ -126,6 +126,8 @@ void* hilo_aging(){
         
         if(list_size(cola_ready)>0){
             qcb_cabeza = list_get(cola_ready, 0);
+            prioridad_maxima_anterior = qcb_cabeza->prioridad;
+
         }
         
         list_iterate(cola_ready, *evaluar_aging_individual);
@@ -141,7 +143,9 @@ void* hilo_aging(){
             list_sort(cola_ready, (void*)comparar_qcb_por_prioridad);
             t_qcb* nueva_qcb_cabeza = list_get(cola_ready, 0);
 
-            if(qcb_cabeza->prioridad != nueva_qcb_cabeza->prioridad){ //cambio la prioridad mayor de la lista
+            log_trace(logger, "Comparacion de prioridades: Anterior: %d, Actual: %d", prioridad_maxima_anterior, nueva_qcb_cabeza->prioridad);
+
+            if(prioridad_maxima_anterior != nueva_qcb_cabeza->prioridad){ //cambio la prioridad mayor de la lista
                 log_trace(logger, "Se debe chequear desalojo");
                 nueva_qcb_cabeza->chequeo_desalojo_pendiente = true;
                 hacer_chequeo_desalojo();
