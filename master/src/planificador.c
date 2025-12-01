@@ -24,7 +24,7 @@ void inicializar_planificador(){
     pthread_mutex_init(&mutex_ready, NULL);
     pthread_mutex_init(&mutex_workers_libres, NULL);
 
-    if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0){
+    if(strcmp(algoritmo_planificacion, "PRIORIDADES") == 0 && tiempo_aging > 0){
         pthread_t hilo_aging_var; 
         pthread_create(&hilo_aging_var, NULL, hilo_aging, NULL);
         pthread_detach(hilo_aging_var);
