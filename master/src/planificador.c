@@ -190,10 +190,10 @@ void hacer_chequeo_desalojo(/* t_qcb* qcb_entrante */){
     //log_debug(logger, "Query %d obtuvo permiso para verificar desalojo", qcb_entrante->qid);
     log_debug(logger, "Se verifica el desalojo");
 
+    t_qcb* query_de_mayor_prioridad = list_get(cola_ready, 0);
     pthread_mutex_lock(&mutex_diccionario_exec);
     int querys_en_exec = dictionary_size(diccionario_exec);
-    t_qcb* query_de_mayor_prioridad = list_get(cola_ready, 0);
-
+    
     if(total_workers == querys_en_exec && total_workers > 0){
         
         dictionary_iterator(diccionario_exec, *buscar_candidato_desalojo);
