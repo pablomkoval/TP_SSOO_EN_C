@@ -144,9 +144,14 @@ void evaluar_aging_individual(void* arg){
         log_error(logger, "Se intento evaluar aging en una qcb Nula");
         return;
     }
+    if(qcb->prioridad == 0){    // se puede juntar con el if de arriba pero mepa que
+        return;                 // es mejor diferenciar el de arriba con el log_error
+    }
+
     if(qcb->tiempo_aging_qcb >= tiempo_aging){
-        qcb->prioridad++;
+        qcb->prioridad--;
         se_aplico_aging = true;
+        log_info(logger, "##<%d> Cambio de prioridad: <%d> - <%d>", qcb->qid, qcb->prioridad + 1, qcb->prioridad);
         log_debug(logger, "Se debe chequear desalojo");
     }else{
         qcb->tiempo_aging_qcb += tiempo_chequeo_aging;
