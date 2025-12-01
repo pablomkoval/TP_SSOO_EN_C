@@ -123,12 +123,14 @@ void* hilo_aging(){
 
         list_iterate(cola_ready, *evaluar_aging_individual);
 
-        t_qcb* qcb_cabeza = list_get(cola_ready, 0);
+        
 
         if(se_aplico_aging){
             log_debug(logger, "Se aplico aging");
             se_aplico_aging = false;
             log_debug(logger, "Ya no deberia hacer chequeo");
+
+            t_qcb* qcb_cabeza = list_get(cola_ready, 0);
             list_sort(cola_ready, (void*)comparar_qcb_por_prioridad);
             t_qcb* nueva_qcb_cabeza = list_get(cola_ready, 0);
 
