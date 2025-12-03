@@ -39,11 +39,7 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
             free(query_a_ejecutar);
             free(instruccion);
             return; // caso para errores
-        }
-
-        //free(query_a_ejecutar->file_tag);
-        
-        if(resultado_ejecucion == -1) {
+        } else if(resultado_ejecucion == -1) {
             free(instruccion);
             free(query_a_ejecutar);
             return; // caso para END 
@@ -73,6 +69,9 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
                 free(instruccion);
                 free(query_a_ejecutar);
             }
+        }else{
+            free(instruccion);
+            free(query_a_ejecutar);
         }
         
         
