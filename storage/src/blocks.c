@@ -53,10 +53,6 @@ void crear_bloques_fisicos() //no hace falta sincro
             perror("ftruncate");
         }
 
-        pthread_mutex_t* mutex = malloc(sizeof(pthread_mutex_t));
-        pthread_mutex_init(mutex, NULL);
-        dictionary_put(mutex_por_bloque_fisico, nombre_bloque, mutex);
-
         close(fd);
         free(nombre_bloque);
     }
