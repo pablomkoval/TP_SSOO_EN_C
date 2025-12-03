@@ -189,7 +189,6 @@ int ejecutar_query(query_t* query, int qid){
             log_debug(logger, "##DEBUG: Se esta por ejecutar un TRUNCATE");
             ejecutar_truncate(file, tag, atoi(query->param1), qid);
             free(query->param1);
-            free(query->file_tag);
             break;
         
         case WRITE_Q:
@@ -218,7 +217,6 @@ int ejecutar_query(query_t* query, int qid){
             log_debug(logger, "##DEBUG: Se esta por ejecutar un TAG");
             ejecutar_tag(file, tag, query->param1, qid);
             free(query->param1);
-            free(query->file_tag);
             break;
             
         case COMMIT_Q:
@@ -242,7 +240,6 @@ int ejecutar_query(query_t* query, int qid){
         case DELETE_Q:
             log_debug(logger, "##DEBUG: Se esta por ejecutar un DELETE");
             ejecutar_delete(file, tag, qid);
-            free(query->file_tag);
             break;
         
         default:
@@ -252,6 +249,7 @@ int ejecutar_query(query_t* query, int qid){
     }
     free(file);
     free(tag);
+    free(query->file_tag);
     return 1;
 }
 

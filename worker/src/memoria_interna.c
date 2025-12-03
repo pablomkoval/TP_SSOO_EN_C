@@ -28,7 +28,7 @@ tabla_paginas_t* crear_tabla(char* file_tag){
     tabla_paginas_t* tabla = malloc(sizeof(tabla_paginas_t));
     tabla->paginas = list_create();
 
-    dictionary_put(tablas_de_paginas, strdup(file_tag), tabla);
+    dictionary_put(tablas_de_paginas, file_tag, tabla);
     return tabla;
 }
 
