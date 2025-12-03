@@ -91,6 +91,7 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         }
         
         if(cargar_pagina_de_storage(file_tag, file, tag, nro_pagina, frame, qid) < 0){
+            string_array_destroy(separado);
             return NULL;
         }
         bitarray_set_bit(bitmap_frames, frame);
@@ -249,7 +250,10 @@ int cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pagi
     } 
 
     t_list* recibido = recibir_paquete(socket_storage);
-    if(!recibido) return 1;
+    if(!recibido) {
+        list_destroy_and_destroy_elements(recibido, free);
+        return 1;
+    }
 
     int resultado = *((int*)list_get(recibido, 0));
     if (list_size(recibido) < 2) {
@@ -258,6 +262,7 @@ int cargar_pagina_de_storage(char* file_tag, char* file, char* tag, int nro_pagi
         
         if(resultado < 0){
             manejar_respuesta(resultado);
+            list_destroy_and_destroy_elements(recibido, free);
             return -1;
         }else if(resultado == PAGINA_VACIA){
             manejar_respuesta(1);

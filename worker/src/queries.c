@@ -92,7 +92,10 @@ int ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
     int pagina_logica_inicial = obtener_pagina_logica(direccion_base);
     int offset_inicial = obtener_offset_pagina(direccion_base);
     pagina_t* pag_inicial = obtener_pagina(file_tag, pagina_logica_inicial, qid);
-    if(pag_inicial == NULL) return -2;
+    if(pag_inicial == NULL){
+        free(buffer);
+        return -2;
+    }
     int direccion_fisica_inicial = pag_inicial->frame * tam_pagina + offset_inicial;
 
     log_debug(logger,
@@ -107,7 +110,10 @@ int ejecutar_read(char* file_tag, int direccion_base, int tamanio, int qid){
         int offset = obtener_offset_pagina(direccion_actual);
 
         pagina_t* pag = obtener_pagina(file_tag, pagina_logica, qid);
-        if(pag == NULL) return -2;
+        if(pag == NULL){
+            free(buffer);
+            return -2;
+        } 
 
         int faltante_pagina = tam_pagina - offset;
 
