@@ -12,7 +12,7 @@ int crear_file(char *file, char *tag)
 
     if (file_tag_existe(file_tag))
     {
-        log_error(logger, "File/Tag preexistente");
+        log_error(logger, "File/Tag <%s> preexistente", file_tag);
 
         free(file_tag);
 
@@ -60,7 +60,7 @@ int copiar_tag(int query_id, char *file_origen, char *tag_origen, char *file_des
     char* file_tag_origen = concatenar_path(file_origen, tag_origen);
 
     if (!file_tag_existe(file_tag_origen)){
-        log_debug(logger, "FILE-TAG INEXISTENTE");
+        log_debug(logger, "FILE:TAG <%s> INEXISTENTE", file_tag_origen);
 
         free(file_tag_destino);
         free(file_tag_origen);
@@ -69,7 +69,7 @@ int copiar_tag(int query_id, char *file_origen, char *tag_origen, char *file_des
     }
 
     if (file_tag_existe(file_tag_destino)){
-        log_error(logger, "FILE/TAG PREEXISTENTE");
+        log_error(logger, "FILE:TAG <%s> PREEXISTENTE", file_tag_destino);
 
         free(file_tag_destino);
         free(file_tag_origen);
@@ -108,7 +108,7 @@ int eliminar_tag(int query_id, char *file, char* tag)    //// Falta eliminar has
 
     if(!file_tag_existe(file_tag)) 
     {
-        log_error(logger, "File/Tag inexistente");
+        log_error(logger, "File:Tag <%s> inexistente", file_tag);
         free(file_tag);
         return -2; 
     }

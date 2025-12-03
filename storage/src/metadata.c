@@ -236,7 +236,8 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
 
     if (!file_tag_existe(file_tag))
     {
-        log_error(logger, "FILE_TAG_INEXISTENTE");
+        log_error(logger, "FILE:TAG <%s> INEXISTENTE", file_tag);
+        free(file_tag);
         return -2;
     }
     
@@ -246,6 +247,8 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
     if (strcmp(estado, "COMMITED") == 0)
     {
         log_error(logger, "el estado del tag ya estaba en COMMITED");
+        free(file_tag);
+        free(estado);
         return 1;
     }
     cambiar_estado_metadata(file_tag, "COMMITED");

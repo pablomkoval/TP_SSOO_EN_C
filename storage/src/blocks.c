@@ -256,7 +256,8 @@ int truncar_archivo(int query_id, int nuevo_tamanio, char *file, char *tag)
 
     if (!file_tag_existe(file_tag))
     {
-        log_error(logger, "file/tag INEXISTENTE");
+        log_error(logger, "file/tag <%s> INEXISTENTE", file_tag);
+        free(file_tag);
         return -2;
     }
         
@@ -305,7 +306,7 @@ int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque, char *c
     char *path = concatenar_path(file, tag);
 
     if (!file_tag_existe(path)){
-        log_error(logger, "FILE-TAG INEXISTENTE");
+        log_error(logger, "FILE:TAG <%s> INEXISTENTE", path);
         free(path);
         return -2;
     }
@@ -313,13 +314,13 @@ int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque, char *c
     lock_metadata(path);
 
     if (escritura_no_permitida(path)){
-        log_error(logger, "ESCRITURA NO PERMITIDA");
+        log_error(logger, "ESCRITURA NO PERMITIDA EN <%s>", path);
         free(path);
         return -4;
     }
         
     if (operacion_fuera_de_rango(nro_bloque, path)){
-        log_error(logger, "OPERACION FUERA DE RANGO");
+        log_error(logger, "OPERACION FUERA DE RANGO EN <%s>", path);
         free(path);
         return -5;
     }
@@ -390,13 +391,15 @@ int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buff
 
     if (!file_tag_existe(file_tag))
     {
-        log_error(logger, "file/tag inexistente");
+        log_error(logger, "file:tag <%s> inexistente", file_tag);
+        free(file_tag);
         return FILE_TAG_INEXISTENTE;
     }
         
     if (operacion_fuera_de_rango(nro_bloque, file_tag))
     {
-        log_error(logger, "operacion fuera de rango");
+        log_error(logger, "operacion fuera de rango en <%S>", file_tag);
+        free(file_tag);
         return LECTURA_O_ESCRITURA_FUERA_DE_RANGO;
     }
         
