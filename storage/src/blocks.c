@@ -336,9 +336,9 @@ int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque, char *c
 
     if (obtener_referencias_bloque(nro_block_f) <= 1)
     {
-        lock_bloque_fisico(bloque_fisico);
+        //lock_bloque_fisico(bloque_fisico);
         escribir_archivo(bloque_fisico, contenido);
-        unlock_bloque_fisico(bloque_fisico);
+        //unlock_bloque_fisico(bloque_fisico);
 
         log_info(logger, "##<%d> - Bloque Lógico Escrito <%s>:<%s> - Número de Bloque: <%i>",query_id, file, tag, nro_bloque);
     }
@@ -359,13 +359,13 @@ int escribir_bloque(int query_id, char *file, char* tag, int nro_bloque, char *c
         char *nuevo_bloque_fisico = bloque_fisico_por_nro(nro_bloque_f_nuevo);
 
         lock_metadata(path);
-        lock_bloque_fisico(nuevo_bloque_fisico);
+        //lock_bloque_fisico(nuevo_bloque_fisico);
 
         escribir_archivo(nuevo_bloque_fisico, contenido);
         cambiar_hard_link(bloque_logico, nuevo_bloque_fisico);
         cambiar_bloque_metadata(path, nro_bloque_f_nuevo, nro_bloque);
 
-        unlock_bloque_fisico(nuevo_bloque_fisico);
+        //unlock_bloque_fisico(nuevo_bloque_fisico);
         unlock_metadata(path);
 
         free(nuevo_bloque_fisico);
@@ -408,9 +408,9 @@ int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buff
     char *bloque_logico = string_from_format("%s/files/%s/logical_blocks/%s", punto_montaje, file_tag, aux);
     char* bloque_fisico = obtener_bloque_fisico_asociado(bloque_logico);
 
-    lock_bloque_fisico(bloque_fisico);
+    //lock_bloque_fisico(bloque_fisico);
     *buffer = leer_archivo(bloque_fisico);
-    unlock_bloque_fisico(bloque_fisico);
+    //unlock_bloque_fisico(bloque_fisico);
 
 
     free(file_tag);
