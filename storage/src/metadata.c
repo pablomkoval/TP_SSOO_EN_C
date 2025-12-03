@@ -290,9 +290,7 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
             }
         }
         else if(nro_bloque == nro_block_f)
-        {
-            break;
-        }
+        {/* No debe hacer nada */}
         else   //si no hay 
         {
             pthread_mutex_lock(&mutex_hash_index);

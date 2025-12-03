@@ -394,7 +394,7 @@ int leer_bloque(int query_id, char* file, char* tag, int nro_bloque, char** buff
         
     if (operacion_fuera_de_rango(nro_bloque, file_tag))
     {
-        log_error(logger, "operacion fuera de rango en <%S>", file_tag);
+        log_error(logger, "operacion fuera de rango en <%s>", file_tag);
         free(file_tag);
         return LECTURA_O_ESCRITURA_FUERA_DE_RANGO;
     }

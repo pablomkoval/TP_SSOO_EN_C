@@ -137,9 +137,8 @@ void* hilo_aging(){
         if(se_aplico_aging){
             log_debug(logger, "Se aplico aging");
             se_aplico_aging = false;
-            log_debug(logger, "Ya no deberia hacer chequeo");
+        
 
-            
             list_sort(cola_ready, (void*)comparar_qcb_por_prioridad);
             t_qcb* nueva_qcb_cabeza = list_get(cola_ready, 0);
 
@@ -149,6 +148,7 @@ void* hilo_aging(){
                 log_trace(logger, "Se debe chequear desalojo");
                 nueva_qcb_cabeza->chequeo_desalojo_pendiente = true;
                 hacer_chequeo_desalojo();
+                log_trace(logger, "Ya no deberia hacer chequeo");
             }
             
         }

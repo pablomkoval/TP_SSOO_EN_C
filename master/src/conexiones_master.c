@@ -41,6 +41,7 @@ void *manejar_servidor_worker(void *arg){
                 t_qcb* qcb_desalojada = dictionary_get(diccionario_querys, qid_str);
                 pthread_mutex_unlock(&mutex_diccionario_querys);
                 
+                free(qid_str);
                 
                 if (qcb_desalojada->estado != EXIT){ // qcb desalojada NO por desconexion de query control
                     char *worker_id_str = string_itoa(worker_id);
@@ -49,6 +50,8 @@ void *manejar_servidor_worker(void *arg){
                     dictionary_remove(diccionario_exec, worker_id_str);
                     log_trace(logger, "Quito de d_exec query [%d]", qcb_desalojada->qid);
                     pthread_mutex_unlock(&mutex_diccionario_exec);
+
+                    free(worker_id_str);
 
                     //sem_post(&sem_permiso_desalojo);
                     log_debug(logger, "Libero semaforo desalojo");
@@ -170,11 +173,6 @@ void hacer_desconexion_worker(int worker_id){
     
     char* wid_str = string_itoa(worker_id);
     
-    pthread_mutex_lock(&mutex_diccionario_workers);
-    dictionary_remove(diccionario_workers, wid_str);
-    pthread_mutex_unlock(&mutex_diccionario_workers);
-
-
     pthread_mutex_lock(&mutex_ready);
     pthread_mutex_lock(&mutex_diccionario_exec);
     t_qcb* qcb = dictionary_remove(diccionario_exec, wid_str);
@@ -322,8 +320,6 @@ t_qcb *hacer_qcb_nueva(int socket_cliente){
 
 void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
 
-    char* qid_str = string_itoa(qcb->qid);
-
     log_debug(logger, "Lockeo mutex ready en linea 269 cm");
     pthread_mutex_lock(&mutex_ready);
     if(qcb->estado == READY){
@@ -347,20 +343,19 @@ void hacer_desconexion_query_control(int socket_cliente, t_qcb *qcb){
         int socket_worker_asociado = *socket_worker_asociado_ptr;
 
         enviar_cod_op(socket_worker_asociado, INTERRUPCION);
+        log_info(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%s> - Motivo: <DESCONEXION>", qcb->qid, qcb->prioridad, wid_asociado_str);
         cambiar_estado(qcb, EXIT);
     }
     pthread_mutex_unlock(&mutex_ready);
     
     log_info(logger, "## Se desconecta un Query Control. Se finaliza la Query <%d> con prioridad <%d>. Nivel multiprocesamiento <%d>", qcb->qid, qcb->prioridad, workers_conectados());
 
-    free(qid_str);
-
 }
 
-bool qcb_esta_en_cola_ready(void* arg, int socket_buscado){
+/* bool qcb_esta_en_cola_ready(void* arg, int socket_buscado){
     t_qcb* qcb = (t_qcb*)arg;
     return qcb->socket == socket_buscado;
-}
+} */
 
 void encolar_qcb(t_qcb *qcb){
     log_debug(logger, "consumo mutex ready en encolar_qcb");
@@ -398,8 +393,6 @@ int workers_conectados(){
     pthread_mutex_unlock(&mutex_diccionario_workers);
     return workers_conectados;
 }
-
-
 
 
 void sumar_worker_libre(int worker_id){

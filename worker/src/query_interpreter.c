@@ -73,6 +73,10 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
                 free(instruccion);
                 free(query_a_ejecutar);
             }
+        } else{
+            log_debug(logger, "No se espera respuesta de storage, Resultado de Ejecucion. %d", resultado_ejecucion);
+            free(instruccion);
+            free(query_a_ejecutar);
         }
         
         
