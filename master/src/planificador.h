@@ -11,16 +11,10 @@ int obtener_worker_libre();
 void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id);
 t_qcb* obtener_query_y_worker(int *worker_libre_id);
 
-
-
-
-//bool chequear_y_hacer_aging(t_qcb* qcb);
 void hacer_chequeo_desalojo();
 void evaluar_aging_individual(void* arg);
 void* hilo_aging_individual(void* arg);
 void* hilo_aging();
-//void satisfacer_chequeos_desalojo();
-//void satisfacer_chequeo_qcb(void* arg);
 
 
 extern t_list* cola_ready;
@@ -28,7 +22,7 @@ extern t_list* workers_libres;
 
 extern sem_t sem_queries_ready;
 extern sem_t sem_workers_libres;
-//extern sem_t sem_permiso_desalojo;
+
 
 extern pthread_mutex_t mutex_ready;
 extern pthread_mutex_t mutex_workers_libres;

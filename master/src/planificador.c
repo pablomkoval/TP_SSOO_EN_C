@@ -5,7 +5,6 @@ t_list* workers_libres;
 
 sem_t sem_queries_ready;
 sem_t sem_workers_libres;
-//sem_t sem_permiso_desalojo;
 
 pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_workers_libres;
@@ -20,7 +19,6 @@ void inicializar_planificador(){
 
     sem_init(&sem_queries_ready, 0, 0);
     sem_init(&sem_workers_libres, 0, 0);
-    //sem_init(&sem_permiso_desalojo, 0, 1);
     pthread_mutex_init(&mutex_ready, NULL);
     pthread_mutex_init(&mutex_workers_libres, NULL);
 
@@ -91,8 +89,6 @@ void enviar_query_a_worker(t_qcb* query_a_ejecutar, int worker_asignado_id){
     query_a_ejecutar->id_worker_asociado = worker_asignado_id;
     //cambiar_estado(query_a_ejecutar, EXEC); movido a obtener_query_y_worker para evitar solapamiento con aging
 
-    //sem_post(&sem_queries_ready); //y este maquina?
-
     free(worker_asignado_id_ptr);
     log_info(logger, "## Se envía la Query <%d> (<%d>) al Worker <%d>", query_a_ejecutar->qid, query_a_ejecutar->prioridad, worker_asignado_id);
 }
@@ -114,7 +110,7 @@ void* hilo_aging(){
     
     log_info(logger, "Hilo de aging iniciado. Intervalo Aging: %d ms. Intervalo de chequeo: %d ms.", tiempo_aging, tiempo_chequeo_aging);
 
-    int tiempo_chequeo_aging_micro = tiempo_chequeo_aging * 1000; // pasado a milisegundos
+    int tiempo_chequeo_aging_micro = tiempo_chequeo_aging * 1000; // pasado a microsegundos
 
     t_qcb* qcb_cabeza = NULL;
     int prioridad_maxima_anterior = -1;
@@ -199,8 +195,7 @@ void hacer_chequeo_desalojo(/* t_qcb* qcb_entrante */){
 
     int total_workers = workers_conectados();
 
-    //sem_wait(&sem_permiso_desalojo);
-    //log_debug(logger, "Query %d obtuvo permiso para verificar desalojo", qcb_entrante->qid);
+
     log_debug(logger, "Se verifica el desalojo");
 
     t_qcb* query_de_mayor_prioridad = list_get(cola_ready, 0);
@@ -210,20 +205,15 @@ void hacer_chequeo_desalojo(/* t_qcb* qcb_entrante */){
     if(total_workers == querys_en_exec && total_workers > 0){
         
         dictionary_iterator(diccionario_exec, *buscar_candidato_desalojo);
-        pthread_mutex_unlock(&mutex_diccionario_exec); //mutex cierra aca o area critica mas grande?
+        pthread_mutex_unlock(&mutex_diccionario_exec); 
         
-        //no necesita mutex, chequeo desalojo siempre se hace en un mutex ready
+        //no necesita mutex ready, chequeo desalojo siempre se hace en un mutex ready
         
-
         log_debug(logger, "Prioridad maxima en lista: %d", query_de_mayor_prioridad->prioridad);
 
         if(query_de_mayor_prioridad->prioridad < qcb_a_desalojar->prioridad){
 
             char *wid_str_asociado = string_itoa(qcb_a_desalojar->id_worker_asociado);
-
-            //pthread_mutex_lock(&mutex_diccionario_exec);
-            //dictionary_remove(diccionario_exec, wid_str_asociado);
-            //pthread_mutex_unlock(&mutex_diccionario_exec);
 
             pthread_mutex_lock(&mutex_diccionario_workers);
             int* socket_worker_asignado_ptr = dictionary_get(diccionario_workers, wid_str_asociado);
@@ -233,93 +223,22 @@ void hacer_chequeo_desalojo(/* t_qcb* qcb_entrante */){
             enviar_cod_op(socket_worker_asignado, INTERRUPCION); 
             
             log_info(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d> - Motivo: <PRIORIDAD>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
-            log_debug(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
+            //log_debug(logger, "## Se desaloja la Query <%d> (<%d>) del Worker <%d>", qcb_a_desalojar->qid, qcb_a_desalojar->prioridad, qcb_a_desalojar->id_worker_asociado);
             pthread_mutex_unlock(&mutex_diccionario_workers);
-            //query_de_mayor_prioridad->
             free(wid_str_asociado);
 
         } else{
-            log_warning(logger, "Hice chequeo desalojo pero no interrumpi");
+            log_debug(logger, "Hice chequeo desalojo pero no interrumpi");
             pthread_mutex_unlock(&mutex_diccionario_exec);
             query_de_mayor_prioridad->chequeo_desalojo_pendiente = false;
-            
-            //satisfacer_chequeos_desalojo();
-            //sem_post(&sem_permiso_desalojo);
-            //log_debug(logger, "Libero semaforo desalojo");
+        
         }
 
     }else{
-        log_warning(logger, "Quise chequear desalojo pero habian workers libres");
+        log_debug(logger, "Quise chequear desalojo pero habian workers libres");
         pthread_mutex_unlock(&mutex_diccionario_exec);
         query_de_mayor_prioridad->chequeo_desalojo_pendiente = false;
-        //satisfacer_chequeos_desalojo();
-        //sem_post(&sem_permiso_desalojo);
-        //log_debug(logger, "Libero semaforo desalojo");
     }
 
     
 }
-
-/* void satisfacer_chequeos_desalojo(){
-    list_iterate(cola_ready, *satisfacer_chequeo_qcb);
-}
-
-void satisfacer_chequeo_qcb(void* arg){
-    t_qcb* qcb = (t_qcb*)arg;
-    qcb->chequeo_desalojo_pendiente = false;
-} */
-
-
-
-/* bool chequear_y_hacer_aging(t_qcb* qcb){
-    int tiempo_qcb = temporal_gettime(qcb->tiempo_aging);
-
-    if(tiempo_qcb >= tiempo_aging){
-        qcb->prioridad--;
-        log_info(logger, "##<%d> Cambio de prioridad: <%d> - <%d>", qcb->qid, qcb->prioridad + 1, qcb->prioridad);
-        temporal_destroy(qcb->tiempo_aging);
-
-        if(qcb->prioridad > 0){
-        qcb->tiempo_aging = temporal_create();
-        }
-        return true;
-    }
-    return false;
-} */
-
-// void* hilo_aging_individual(void* arg){
-//     t_qcb* qcb = (t_qcb*)arg;
-
-//     int tiempo_aging_micro = tiempo_aging * 1000;
-
-//     log_info(logger, "qid %d: Hilo de aging individual iniciado. Intervalo: %d ms", qcb->qid, tiempo_aging);
-
-//     while(qcb->prioridad > 0){
-//         usleep(tiempo_aging_micro); //importante, controla aging y permite pthread_cancel
-
-//         pthread_mutex_lock(&mutex_ready); 
-//         if (qcb->estado == READY){
-
-//             qcb->prioridad--;
-//             log_info(logger, "##<%d> Cambio de prioridad: <%d> - <%d>", qcb->qid, qcb->prioridad + 1, qcb->prioridad);
-
-//             //list_sort(cola_ready, (void*)comparar_qcb_por_prioridad);
-
-//             hacer_chequeo_desalojo(qcb); 
-            
-//         } /* else{ //no necesario, se mata el hilo cuando sale de ready
-//             query_sigue_en_cola = false;
-//             //temporal_destroy(qcb->tiempo_aging);
-//         } */
-//         pthread_mutex_unlock(&mutex_ready);
-//     }
-    
-//     log_info(logger, "qid %d: Hilo de aging individual finalizo.", qcb->qid);
-//     //free(arg);
-
-//     pthread_mutex_lock(&mutex_aging);
-//     qcb->aging_activo = false;
-//     pthread_mutex_unlock(&mutex_aging);
-
-//     return NULL;
-// }
