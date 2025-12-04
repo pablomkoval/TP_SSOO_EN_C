@@ -35,7 +35,7 @@ void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
         resultado_ejecucion = ejecutar_query(query_a_ejecutar, qid);
 
         if(resultado_ejecucion == -2){
-            log_warning(logger, "## Query %d: - Desalojada por error en storage al ejecutar: %s", qid, instruccion);
+            log_error(logger, "## Query %d: - Desalojada por error en storage al ejecutar: %s", qid, instruccion);
             free(query_a_ejecutar);
             free(instruccion);
             return; // caso para errores
