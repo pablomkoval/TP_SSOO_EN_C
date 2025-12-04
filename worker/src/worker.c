@@ -32,25 +32,28 @@ int main(int argc, char** argv) {
      }
      char* nombre_archivo = argv[1];
      worker_id = atoi(argv[2]);
-    // char* nombre_archivo = "worker.config";
-    // worker_id = 1;
     config_worker = iniciar_config(nombre_archivo);
 
     if(config_worker == NULL)
     {
+        printf("No se logro inicializar la config");
         return 0;
     }
 
     logger = iniciar_logger(worker_id);
 
-    log_debug(logger, "se iniciaron logger y config");
+    if(logger == NULL){
+        printf("No se logro inicializar el logger");
+    }
+
+    log_debug(logger, "Se iniciaron logger y config");
 
 
     socket_storage = conectar_storage(worker_id);
     socket_master = conectar_master(worker_id);
     inicializar_memoria_interna();
 
-    log_debug(logger, "se iniciaron conexiones");
+    log_debug(logger, "Se iniciaron conexiones");
 
 
     pthread_create(&thread_escucha_master, NULL, funcion_escucha_master, NULL);

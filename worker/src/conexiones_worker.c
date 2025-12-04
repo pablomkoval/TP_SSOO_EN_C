@@ -68,7 +68,8 @@ int conectar_master(int worker_id){
                                 server_info->ai_socktype,
                                 server_info->ai_protocol);
 
-    connect(socket_servidor, server_info->ai_addr, server_info->ai_addrlen);
+    int err = connect(socket_servidor, server_info->ai_addr, server_info->ai_addrlen);
+    if(err < 0) log_error(logger, "No se pudo conectar a Master");
     freeaddrinfo(server_info);
 
     //realizo un handhsake con master
@@ -92,7 +93,8 @@ int conectar_storage(int worker_id){
                                 server_info->ai_socktype,
                                 server_info->ai_protocol);
 
-    connect(socket_servidor, server_info->ai_addr, server_info->ai_addrlen);
+    int err = connect(socket_servidor, server_info->ai_addr, server_info->ai_addrlen);
+    if(err < 0) log_error(logger, "No se pudo conectar a storage");
     freeaddrinfo(server_info);
 
     //realizo un handhsake con storage
