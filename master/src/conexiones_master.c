@@ -71,7 +71,7 @@ void *manejar_servidor_worker(void *arg){
                 break;
 
             default:
-                log_info(logger, "Error al recibir opcode (%d) de worker", op_code);
+                log_error(logger, "Error al recibir opcode (%d) de worker", op_code);
             break;
         }
         
@@ -96,6 +96,7 @@ void* manejar_servidor_querycontrol(void* arg){
                 }
                 return NULL;
             case PAQUETE:
+                log_trace(logger, "Recibi paquete de query");
                 qcb = hacer_qcb_nueva(socket_cliente);
                 break;
             case 0:
@@ -121,7 +122,7 @@ void *funcion_main_escucha(void *socket_arg){
 
         switch (tipo_conexion){
             case WORKER: //se puede derivar lo de este case para que quede clean como el case query
-                log_info(logger, "Recibi handshake de un worker");
+                log_trace(logger, "Recibi handshake de un worker");
                 int worker_id;
                 recv(socket_cliente, &worker_id, sizeof(int), MSG_WAITALL);
 
@@ -191,11 +192,13 @@ void hacer_desconexion_worker(int worker_id){
         cambiar_estado(qcb, EXIT);
 
         log_info(logger, "## Se desconecta el Worker <%d> - Se finaliza la Query <%d> - Cantidad total de Workers: <%d> ", worker_id, qcb->qid, workers_conectados());
+    } else{
+        log_info(logger, "## Se desconecta el Worker <%d> - Cantidad total de Workers: <%d> ", worker_id, workers_conectados());
     }
     pthread_mutex_unlock(&mutex_ready);
 
     free(wid_str);
-    log_info(logger, "## Se desconecta el Worker <%d> - Cantidad total de Workers: <%d> ", worker_id, workers_conectados());
+    
 }
 
 void hacer_read_worker(int socket_worker, int worker_id){
@@ -264,7 +267,7 @@ void hacer_end_worker(int worker_id, int socket_worker){
 
     log_trace(logger, "Quito de d_exec query [%d]", qcb->qid);
 
-    log_info(logger, "## Se terminó la Query %d en el Worker %d", qcb->qid, worker_id);
+    log_info(logger, "## Se terminó la Query <%d> en el Worker <%d>", qcb->qid, worker_id);
 
     cambiar_estado(qcb, EXIT);
 
@@ -283,7 +286,7 @@ void hacer_end_worker(int worker_id, int socket_worker){
 }
 
 t_qcb *hacer_qcb_nueva(int socket_cliente){
-    log_info(logger, "Recibi paquete de query");
+    
 
     t_list *elementos = recibir_paquete(socket_cliente);
     char *path_query = list_get(elementos, 0);

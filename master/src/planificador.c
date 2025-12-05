@@ -56,7 +56,7 @@ int obtener_worker_libre(){
 
 void* planificador(){
     while(1){
-        log_info(logger,"Planificador esperando query....");
+        log_trace(logger,"Planificador esperando query....");
         sem_wait(&sem_queries_ready);
         log_debug(logger, "##DEBUG: PASO SEMAFORO 1");
         sem_wait(&sem_workers_libres);
@@ -108,7 +108,7 @@ t_qcb* obtener_query_y_worker(int *worker_libre_id){
 void* hilo_aging(){
     tiempo_chequeo_aging = tiempo_aging / 5; //chequeo de aging a un 1/5 del tiempo aging (convencion)
     
-    log_info(logger, "Hilo de aging iniciado. Intervalo Aging: %d ms. Intervalo de chequeo: %d ms.", tiempo_aging, tiempo_chequeo_aging);
+    log_info(logger, "Hilo de Aging iniciado. Intervalo Aging: %d ms. Intervalo de chequeo: %d ms.", tiempo_aging, tiempo_chequeo_aging);
 
     int tiempo_chequeo_aging_micro = tiempo_chequeo_aging * 1000; // pasado a microsegundos
 
