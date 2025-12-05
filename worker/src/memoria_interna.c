@@ -85,7 +85,6 @@ pagina_t* obtener_pagina(char* file_tag, int nro_pagina, int qid){
         if(frame == -1){
             pagina_t* victima = buscar_victima_reemplazo();
             frame = liberar_frame(victima, qid);
-            //bitarray_set_bit(bitmap_frames, frame);
             victima->frame = -1;
             log_info(logger, "## Query %d: Se reemplaza la página %s/%d por la %s/%d", qid, victima->file_tag, victima->nro_pagina, pag->file_tag, pag->nro_pagina);
         }
@@ -198,14 +197,16 @@ int liberar_frame(pagina_t* victima, int qid){
         return -1;
     }
 
+    log_trace(logger, "file tag: %s", victima->file_tag);
+    char** separado = separar_file_tag(victima->file_tag);
+
     if (victima->bit_modificado) {
-        log_trace(logger, "file tag: %s", victima->file_tag);
-        char** separado = separar_file_tag(victima->file_tag);
         hacer_flush_de_pagina(separado[0], separado[1], victima->nro_pagina, victima->frame, qid);
-        log_info(logger, "Query %d: Se libera el Marco: %d perteneciente al - File: %s - Tag: %s", qid, victima->frame, separado[0], separado[1]);
-        string_array_destroy(separado);
         victima->bit_modificado = false;
     }
+
+    log_info(logger, "Query %d: Se libera el Marco: %d perteneciente al - File: %s - Tag: %s", qid, victima->frame, separado[0], separado[1]);
+    string_array_destroy(separado);
 
     void* direccion_frame = memoria_interna + (victima->frame * tam_pagina);
     memset(direccion_frame, 0, tam_pagina);
@@ -218,8 +219,6 @@ int liberar_frame(pagina_t* victima, int qid){
     victima->bit_uso = false;
     victima->bit_modificado = false;
     
-
-
     pthread_mutex_lock(&mutex_paginas_en_memoria);
     list_remove_element(paginas_en_memoria, victima);
 

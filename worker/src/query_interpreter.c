@@ -15,17 +15,13 @@ void* iniciar_query_interpreter(void* args){
     log_info(logger, "## Query %d: Se recibe la Query. El path de operaciones es: %s", qid, nombre_archivo);
     ciclo_ejecucion(nombre_archivo, pc, qid);
     free(nombre_archivo);
-    
-    // pthread_mutex_lock(&mutex_interpreter);
-    // interpreter_ocupado = false;
-    // pthread_mutex_unlock(&mutex_interpreter);
 
     return NULL;
 }
 
 void ciclo_ejecucion(char* nombre_archivo, int pc, int qid){
     int resultado_ejecucion = 1;
-    while(resultado_ejecucion > 0){// > 0
+    while(resultado_ejecucion > 0){
         //fetch
         char* instruccion = NULL;
         query_t* query_a_ejecutar = leer_query(nombre_archivo, pc, &instruccion);
