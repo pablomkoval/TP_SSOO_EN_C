@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
         return 0;
     }
     logger = iniciar_logger();
-    log_debug(logger, "se iniciaron logger y config");
+    log_trace(logger, "Se iniciaron logger y config");
     inicializar_planificador();
 
     int socket_escucha = iniciar_servidor(puerto_escucha, logger);
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
     
     pthread_create(&hilo_planificador, NULL, planificador, NULL);
     pthread_detach(hilo_planificador);
-
+    log_info(logger, "Se inició el modulo Master");
     pause();
 
     return 0;
