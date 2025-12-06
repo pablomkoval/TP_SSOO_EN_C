@@ -426,10 +426,7 @@ bool operacion_fuera_de_rango(int nro_bloque, char *path)
     t_config *meta = config_create(path_meta);
     int tamanio_tag = config_get_int_value(meta, "TAMAÑO");
 
-    log_info(logger, "path %s", path_meta);
-
     int tam = (nro_bloque * block_size) + block_size;
-    log_info(logger, "tamanio tag = %d  tamanio intentado = %d", tamanio_tag, tam );
 
     if ((nro_bloque * block_size + block_size) > tamanio_tag)
     {
