@@ -287,6 +287,7 @@ int commmit_file(int query_id, char *file, char *tag)  //sincronizada
                 pthread_mutex_lock(&mutex_bitmap);
                 bitarray_clean_bit(bitmap, nro_block_f);
                 pthread_mutex_unlock(&mutex_bitmap);
+                log_info(logger, "##<%i> - Bloque Físico Liberado - Número de Bloque: <%i>", query_id, nro_block_f);
             }
         }
         else if(nro_bloque == nro_block_f)
